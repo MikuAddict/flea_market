@@ -1,4 +1,4 @@
-package com.zhp.flea_market.entity;
+package com.zhp.flea_market.model.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
