@@ -9,3 +9,23 @@ spring:
       ddl-auto: update
     show-sql: true
     database-platform: org.hibernate.dialect.MariaDBDialect
+  profiles:
+    active: dev
+
+
+#jwt config
+jwt:
+  tokenHeader: Authorization #JWT存储的请求头
+  secret: mall-jwt-test #jwt加解密使用的密钥
+  expiration: 36000000 #JWT的超时时间
+  tokenHead: Bearer #JWT负载中拿到的开头
+
+# 接口文档配置
+knife4j:
+  production: false
+  basic:
+    enable: true
+    username: admin
+    password: admin
+  setting:
+    language: zh_cn

@@ -2,14 +2,17 @@ package com.zhp.flea_market.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.zhp.flea_market.constant.CommonConstant;
 import com.zhp.flea_market.exception.BusinessException;
-import com.zhp.flea_market.exception.ErrorCode;
+import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.mapper.UserMapper;
+import com.zhp.flea_market.model.dto.request.user.UserQueryRequest;
 import com.zhp.flea_market.model.entity.User;
 import com.zhp.flea_market.model.enums.UserRoleEnum;
 import com.zhp.flea_market.model.vo.LoginUserVO;
 import com.zhp.flea_market.model.vo.UserVO;
 import com.zhp.flea_market.service.UserService;
+import com.zhp.flea_market.utils.SqlUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -192,6 +195,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return true;
     }
 
+    /**
+     * 获取脱敏的已登录用户信息
+     *
+     * @return
+     */
     @Override
     public LoginUserVO getLoginUserVO(User user) {
         if (user == null) {
@@ -202,6 +210,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return loginUserVO;
     }
 
+    /**
+     * 获取脱敏的用户信息
+     *
+     * @param user
+     * @return
+     */
     @Override
     public UserVO getUserVO(User user) {
         if (user == null) {
@@ -213,11 +227,52 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return userVO;
     }
 
+    /**
+     * 获取脱敏的用户信息列表
+     *
+     * @param userList
+     * @return
+     */
     @Override
     public List<UserVO> getUserVO(List<User> userList) {
         if (CollectionUtils.isEmpty(userList)) {
             return new ArrayList<>();
         }
         return userList.stream().map(this::getUserVO).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取查询条件
+     *
+     * @param userQueryRequest
+     * @return
+     */
+    @Override
+    public QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest) {
+        if (userQueryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
+        }
+        Long id = userQueryRequest.getId();
+        String userName = userQueryRequest.getUserName();
+        Integer userPoint = userQueryRequest.getPoint();
+        String userRole = userQueryRequest.getUserRole();
+        String sortField = userQueryRequest.getSortField();
+        String sortOrder = userQueryRequest.getSortOrder();
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq(id != null, "id", id);
+        queryWrapper.eq(StringUtils.isNotBlank(userRole), "userRole", userRole);
+        queryWrapper.eq(userPoint != null, "point", userPoint);
+        queryWrapper.like(StringUtils.isNotBlank(userName), "userName", userName);
+        queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
+                sortField);
+        return queryWrapper;
+    }
+
+    /**
+     * 获取已登录用户的查询条件
+     */
+    @Override
+    public User getByIdWithLock(Long id) {
+        return baseMapper.selectByIdWithLock(id);
     }
 }

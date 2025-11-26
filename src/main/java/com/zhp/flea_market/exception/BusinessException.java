@@ -1,6 +1,8 @@
 package com.zhp.flea_market.exception;
 
 
+import com.zhp.flea_market.common.ErrorCode;
+
 /**
  * 自定义异常类
  *

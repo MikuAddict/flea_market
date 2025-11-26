@@ -1,4 +1,4 @@
-package com.zhp.flea_market.exception;
+package com.zhp.flea_market.common;
 
 /**
  * 自定义错误码

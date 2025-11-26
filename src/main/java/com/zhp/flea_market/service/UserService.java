@@ -1,6 +1,8 @@
 package com.zhp.flea_market.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.zhp.flea_market.model.dto.request.user.UserQueryRequest;
 import com.zhp.flea_market.model.entity.User;
 import com.zhp.flea_market.model.vo.LoginUserVO;
 import com.zhp.flea_market.model.vo.UserVO;
@@ -91,5 +93,19 @@ public interface UserService extends IService<User> {
      * @return
      */
     List<UserVO> getUserVO(List<User> userList);
+    /**
+     * 获取查询条件
+     *
+     * @param userQueryRequest
+     * @return
+     */
+    QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
+    /**
+     * 根据 ID 查询商品信息并加锁
+     *
+     * @param id 商品 ID
+     * @return 商品信息
+     */
+    User getByIdWithLock(Long id);
 
 }
