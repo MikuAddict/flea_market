@@ -22,12 +22,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/test/**").permitAll()
                 .requestMatchers("/user/register").permitAll()
                 .requestMatchers("/user/login").permitAll()
-                .requestMatchers("/doc.html").permitAll()
                 .requestMatchers("/webjars/**").permitAll()
                 .requestMatchers("/swagger-resources/**").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
                 .requestMatchers("/swagger-ui/**").permitAll()
-                .requestMatchers("/knife4j/**").permitAll()
+                .requestMatchers("/api-docs/**").permitAll()
                 // 其他所有请求都需要认证
                 .anyRequest().authenticated()
             )

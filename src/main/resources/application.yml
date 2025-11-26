@@ -29,14 +29,10 @@ jwt:
   tokenHead: Bearer #JWT负载中拿到的开头
 
 # 接口文档配置
-knife4j:
-  production: false
-  enable: true
-  setting:
-    language: zh_cn
-  openapi:
-    title: 跳蚤市场API文档
-    description: 跳蚤市场系统接口文档
-    version: 1.0.0
-    concat: zhp@example.com
-    url: http://localhost:8080
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
