@@ -11,7 +11,11 @@ spring:
     database-platform: org.hibernate.dialect.MariaDBDialect
   profiles:
     active: dev
-
+  security:
+    user:
+      name: admin
+      password: admin
+      roles: ADMIN
 
 #jwt config
 jwt:
@@ -23,9 +27,12 @@ jwt:
 # 接口文档配置
 knife4j:
   production: false
-  basic:
-    enable: true
-    username: admin
-    password: admin
+  enable: true
   setting:
     language: zh_cn
+  openapi:
+    title: 跳蚤市场API文档
+    description: 跳蚤市场系统接口文档
+    version: 1.0.0
+    concat: zhp@example.com
+    url: http://localhost:8080
