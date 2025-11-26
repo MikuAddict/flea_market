@@ -5,6 +5,7 @@ import java.util.Date;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.UpdateTimestamp;
 
 /**
  * 用户表
@@ -43,7 +44,8 @@ public class User implements Serializable {
     /**
      * 用户角色：user/admin/ban
      */
-    private String userRole;
+    @Column(columnDefinition = "varchar(20) default 'user'")
+    private String userRole = "user";
     /**
      * 联系方式
      */
@@ -51,15 +53,28 @@ public class User implements Serializable {
     /**
      * 用户积分
      */
-    private Integer point;
+    @Column(columnDefinition = "int default 0")
+    private Integer point = 0;
     /**
      * 创建时间
      */
+    @Column(name = "create_time", updatable = false)
     private Date createTime;
-    
+
     /**
      * 更新时间
      */
+    @Column(name = "update_time")
     private Date updateTime;
-
+    
+    /**
+     * 在保存实体之前设置创建时间
+     */
+    @PrePersist
+    protected void onCreate() {
+        if (createTime == null) {
+            createTime = new Date();
+        }
+        updateTime = new Date();
+    }
 }

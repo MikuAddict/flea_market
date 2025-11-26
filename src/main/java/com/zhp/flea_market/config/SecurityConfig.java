@@ -18,7 +18,10 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authz -> authz
                 // 允许无需认证访问的路径
+                .requestMatchers("/").permitAll()
                 .requestMatchers("/api/test/**").permitAll()
+                .requestMatchers("/user/register").permitAll()
+                .requestMatchers("/user/login").permitAll()
                 .requestMatchers("/doc.html").permitAll()
                 .requestMatchers("/webjars/**").permitAll()
                 .requestMatchers("/swagger-resources/**").permitAll()
