@@ -30,7 +30,7 @@ public interface UserService extends IService<User> {
      * @param userPassword  用户密码
      * @return 脱敏后的用户信息
      */
-    LoginUserVO login(String userAccount, String userPassword);
+    LoginUserVO login(String userAccount, String userPassword, HttpServletRequest request);
 
     /**
      * 获取当前登录用户

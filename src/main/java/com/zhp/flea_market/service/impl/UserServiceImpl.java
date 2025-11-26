@@ -1,19 +1,28 @@
 package com.zhp.flea_market.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.zhp.flea_market.exception.BusinessException;
+import com.zhp.flea_market.exception.ErrorCode;
 import com.zhp.flea_market.mapper.UserMapper;
 import com.zhp.flea_market.model.entity.User;
+import com.zhp.flea_market.model.enums.UserRoleEnum;
 import com.zhp.flea_market.model.vo.LoginUserVO;
 import com.zhp.flea_market.model.vo.UserVO;
 import com.zhp.flea_market.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.DigestUtils;
+
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.zhp.flea_market.constant.UserConstant.USER_LOGIN_STATE;
 
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
@@ -24,69 +33,162 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     /**
      * 盐值，混淆密码
      */
-    public static final String SALT = "zhanghaipeng";
+    public static final String SALT = "114514";
 
+    /**
+     * 用户注册
+     *
+     * @param userAccount   用户账号
+     * @param userPassword  用户密码
+     * @param userName      用户昵称
+     * @param userPhone     联系方式
+     * @return 新用户 id
+     */
     @Override
     public long register(String userAccount, String userPassword, String userName, String userPhone) {
-        // 检查账号是否已存在
-        if (userMapper.existsByUserAccount(userAccount)) {
-            throw new RuntimeException("账号已存在");
+        if (StringUtils.isAnyBlank(userAccount, userPassword, userName, userPhone)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
         }
-
-        // 创建用户
-        User user = new User();
-        user.setUserAccount(userAccount);
-        // 实际项目中应该使用加密算法处理密码
-        user.setUserPassword(userPassword);
-        user.setUserName(userName);
-        user.setUserPhone(userPhone);
-        user.setUserRole("user"); // 默认角色
-        user.setPoint(0); // 默认积分
-        user.setCreateTime(new Date());
-        user.setUpdateTime(new Date());
-
-        userMapper.insert(user);
-        return user.getId();
+        if (userAccount.length() < 4) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号过短");
+        }
+        if (userPassword.length() < 8) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过短");
+        }
+        if (userPhone.length() != 11){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "手机号长度错误");
+        }
+        synchronized (userAccount.intern()) {
+            // 账户不能重复
+            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("userAccount", userAccount);
+            long count = this.baseMapper.selectCount(queryWrapper);
+            if (count > 0) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
+            }
+            // 2. 加密
+            String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+            // 3. 插入数据
+            User user = new User();
+            user.setUserAccount(userAccount);
+            user.setUserPassword(encryptPassword);
+            boolean saveResult = this.save(user);
+            if (!saveResult) {
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
+            }
+            return user.getId();
+        }
     }
 
+    /**
+     * 用户登录
+     *
+     * @param userAccount   用户账号
+     * @param userPassword  用户密码
+     * @return 脱敏后的用户信息
+     */
     @Override
-    public LoginUserVO login(String userAccount, String userPassword) {
-        User user = userMapper.findByUserAccount(userAccount);
-
-        if (user == null || !user.getUserPassword().equals(userPassword)) {
-            throw new RuntimeException("账号或密码错误");
+    public LoginUserVO login(String userAccount, String userPassword, HttpServletRequest request) {
+// 1. 校验
+        if (StringUtils.isAnyBlank(userAccount, userPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
         }
-
-        return getLoginUserVO(user);
+        if (userAccount.length() < 4) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号错误");
+        }
+        if (userPassword.length() < 8) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码错误");
+        }
+        // 2. 加密
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+        // 查询用户是否存在
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userAccount", userAccount);
+        queryWrapper.eq("userPassword", encryptPassword);
+        User user = this.baseMapper.selectOne(queryWrapper);
+        // 用户不存在
+        if (user == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
+        }
+        // 3. 记录用户的登录态
+        request.getSession().setAttribute(USER_LOGIN_STATE, user);
+        return this.getLoginUserVO(user);
     }
 
+    /**
+     * 获取当前登录用户
+     *
+     * @param request
+     * @return
+     */
     @Override
     public User getLoginUser(HttpServletRequest request) {
-        // 在实际应用中，应该从session或token中获取用户信息
-        // 这里简化处理，返回null
-        return null;
+        // 先判断是否已登录
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        User currentUser = (User) userObj;
+        if (currentUser == null || currentUser.getId() == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+        }
+        long userId = currentUser.getId();
+        currentUser = this.getById(userId);
+        if (currentUser == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+        }
+        return currentUser;
     }
 
+    /**
+     * 获取当前登录用户（允许未登录）
+     *
+     * @param request
+     * @return
+     */
     @Override
     public User getLoginUserPermitNull(HttpServletRequest request) {
-        // 允许未登录的情况下获取用户信息
-        return getLoginUser(request);
+        // 先判断是否已登录
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        User currentUser = (User) userObj;
+        if (currentUser == null || currentUser.getId() == null) {
+            return null;
+        }
+        // 从数据库查询（追求性能的话可以注释，直接走缓存）
+        long userId = currentUser.getId();
+        return this.getById(userId);
     }
 
+    /**
+     * 是否为管理员
+     *
+     * @param request
+     * @return
+     */
     @Override
     public boolean isAdmin(HttpServletRequest request) {
-        User user = getLoginUser(request);
-        return user != null && "admin".equals(user.getUserRole());
+        // 仅管理员可查询
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        User user = (User) userObj;
+        return isAdmin(user);
     }
+
 
     @Override
     public boolean isAdmin(User user) {
-        return user != null && "admin".equals(user.getUserRole());
+        return user != null && UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
     }
 
+    /**
+     * 用户注销
+     *
+     * @param request
+     * @return
+     */
     @Override
     public boolean userLogout(HttpServletRequest request) {
-        // 在实际应用中，应该清除session或token
+        if (request.getSession().getAttribute(USER_LOGIN_STATE) == null) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "未登录");
+        }
+        // 移除登录态
+        request.getSession().removeAttribute(USER_LOGIN_STATE);
         return true;
     }
 
@@ -95,7 +197,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             return null;
         }
-
         LoginUserVO loginUserVO = new LoginUserVO();
         BeanUtils.copyProperties(user, loginUserVO);
         return loginUserVO;
@@ -106,25 +207,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             return null;
         }
-
         UserVO userVO = new UserVO();
-        userVO.setId(user.getId());
-        userVO.setUserName(user.getUserName());
-        userVO.setUserAvatar(user.getUserAvatar());
-        userVO.setUserRole(user.getUserRole());
-        userVO.setPoint(user.getPoint());
+        BeanUtils.copyProperties(user, userVO);
         userVO.setRegisterTime(user.getCreateTime());
         return userVO;
     }
 
     @Override
     public List<UserVO> getUserVO(List<User> userList) {
-        if (userList == null || userList.isEmpty()) {
+        if (CollectionUtils.isEmpty(userList)) {
             return new ArrayList<>();
         }
-
-        return userList.stream()
-                .map(this::getUserVO)
-                .collect(Collectors.toList());
+        return userList.stream().map(this::getUserVO).collect(Collectors.toList());
     }
 }

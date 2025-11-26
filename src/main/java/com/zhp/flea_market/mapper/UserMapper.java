@@ -20,4 +20,7 @@ public interface UserMapper extends BaseMapper<User> {
      */
     @Select("SELECT COUNT(*) > 0 FROM user WHERE user_account = #{userAccount}")
     boolean existsByUserAccount(@Param("userAccount") String userAccount);
+
+    @Select("SELECT * FROM user WHERE id = #{id} FOR UPDATE")
+    User selectByIdWithLock(Long id);
 }
