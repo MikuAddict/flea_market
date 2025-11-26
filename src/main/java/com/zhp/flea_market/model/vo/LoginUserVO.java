@@ -1,10 +1,16 @@
-package com.zhp.flea_market.model.dto;
+package com.zhp.flea_market.model.vo;
 
-import lombok.Data;
+import java.io.Serializable;
 import java.util.Date;
 
+import lombok.Data;
+
+/**
+ * 登录用户信息
+ */
 @Data
-public class UserDTO {
+public class LoginUserVO implements Serializable {
+
     /**
      * id
      */
@@ -15,6 +21,10 @@ public class UserDTO {
      */
     private String userAccount;
 
+    /**
+     * 用户密码
+     */
+    private String userPassword;
     /**
      * 用户昵称
      */
@@ -29,19 +39,22 @@ public class UserDTO {
      * 用户角色：user/admin/ban
      */
     private String userRole;
-
     /**
      * 联系方式
      */
     private String userPhone;
-
     /**
      * 用户积分
      */
     private Integer point;
-
     /**
      * 创建时间
      */
     private Date createTime;
+
+    /**
+     * 更新时间
+     */
+    private Date updateTime;
+
 }
