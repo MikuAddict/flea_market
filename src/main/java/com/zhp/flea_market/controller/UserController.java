@@ -65,7 +65,7 @@ public class UserController {
         String userName = userRegisterRequest.getUserName();
         String userPhone = userRegisterRequest.getUserPhone();
         if (StringUtils.isAnyBlank(userAccount, userPassword, userName, userPhone)) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数不能为空");
         }
         long result = userService.register(userAccount, userPassword, userName, userPhone);
         return ResultUtils.success(result);
