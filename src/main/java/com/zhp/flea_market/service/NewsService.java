@@ -40,5 +40,5 @@ public interface NewsService extends IService<News> {
     /**
      * 获取最新的新闻
      */
-    List<News> getLatestNews();
+    News getLatestNews();
 }

@@ -1,5 +1,6 @@
 package com.zhp.flea_market.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -32,13 +33,20 @@ public class News {
     private String imageUrl;
 
     /**
-     * 新闻作者
+     * 新闻作者ID
      */
-    @ManyToOne
-    @JoinColumn(name = "author_id")
-    private User author;
+    @Column(name = "author_id")
+    private Long authorId;
+
+    /**
+     * 新闻作者名字
+     */
+    @Transient
+    private String author;
+
     /**
      * 创建时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date createTime;
 }
