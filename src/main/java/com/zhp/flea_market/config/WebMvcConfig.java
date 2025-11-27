@@ -12,12 +12,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     @Autowired
-    private AutomatedAuthInterceptor automatedAuthInterceptor;
+    private UnifiedAuthInterceptor unifiedAuthInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // 注册自动化认证拦截器
-        registry.addInterceptor(automatedAuthInterceptor)
+        // 注册统一认证拦截器
+        registry.addInterceptor(unifiedAuthInterceptor)
                 .addPathPatterns("/**") // 拦截所有请求
                 .excludePathPatterns("/user/login", "/user/register", "/", "/swagger-ui/**", 
                         "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/api-docs/**",

@@ -157,9 +157,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     public User getLoginUserPermitNull(HttpServletRequest request) {
-        // 先判断是否已登录
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User currentUser = (User) userObj;
+        // 从统一认证拦截器设置的request属性中获取用户信息
+        User currentUser = (User) request.getAttribute("currentUser");
         if (currentUser == null || currentUser.getId() == null) {
             return null;
         }
@@ -176,9 +175,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     public boolean isAdmin(HttpServletRequest request) {
-        // 仅管理员可查询
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User user = (User) userObj;
+        // 从统一认证拦截器设置的request属性中获取用户信息
+        User user = (User) request.getAttribute("currentUser");
         return isAdmin(user);
     }
 
