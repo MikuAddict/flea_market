@@ -2,6 +2,7 @@ package com.zhp.flea_market.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.zhp.flea_market.annotation.AuthCheck;
+import com.zhp.flea_market.annotation.LoginRequired;
 import com.zhp.flea_market.common.BaseResponse;
 import com.zhp.flea_market.common.JwtKit;
 import com.zhp.flea_market.common.ResultUtils;
@@ -84,7 +85,8 @@ public class UserController extends BaseController {
     @PostMapping("/login")
     public BaseResponse<LoginUserVO> userLogin(
             @Parameter(description = "用户登录信息") @RequestBody UserLoginRequest userLoginRequest,
-            HttpServletRequest request) {
+            HttpServletRequest request,
+            jakarta.servlet.http.HttpServletResponse response) {
         // 参数校验
         validateNotNull(userLoginRequest, "登录信息");
         validateNotBlank(userLoginRequest.getUserAccount(), "账号");
@@ -104,6 +106,13 @@ public class UserController extends BaseController {
         HashMap<String, Object> tokenMap = new HashMap<>();
         tokenMap.put("token", token);
 
+        // 设置Cookie，实现自动登录状态保持
+        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("token", token);
+        cookie.setHttpOnly(true); // 防止XSS攻击
+        cookie.setPath("/"); // 在整个应用范围内有效
+        cookie.setMaxAge(24 * 60 * 60); // 24小时过期
+        response.addCookie(cookie);
+
         logOperation("用户登录", request, "账号", userLoginRequest.getUserAccount());
         return ResultUtils.successDynamic(userVO, tokenMap);
     }
@@ -116,9 +125,17 @@ public class UserController extends BaseController {
      */
     @Operation(summary = "用户注销", description = "用户退出登录")
     @PostMapping("/logout")
-    public BaseResponse<Boolean> userLogout(HttpServletRequest request) {
+    public BaseResponse<Boolean> userLogout(HttpServletRequest request, jakarta.servlet.http.HttpServletResponse response) {
         validateNotNull(request, "HTTP请求");
         boolean result = userService.userLogout(request);
+        
+        // 清除Cookie
+        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("token", "");
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0); // 立即过期
+        response.addCookie(cookie);
+        
         logOperation("用户注销", request);
         return handleOperationResult(result, "注销成功");
     }
@@ -131,9 +148,13 @@ public class UserController extends BaseController {
      */
     @Operation(summary = "获取当前登录用户", description = "获取当前登录用户的详细信息")
     @GetMapping("/get/login")
+    @LoginRequired
     public BaseResponse<LoginUserVO> getLoginUser(HttpServletRequest request) {
         validateNotNull(request, "HTTP请求");
-        User user = userService.getLoginUser(request);
+        User user = (User) request.getAttribute("currentUser");
+        if (user == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
+        }
         logOperation("获取当前登录用户", request, "用户ID", user.getId());
         return ResultUtils.success(userService.getLoginUserVO(user));
     }

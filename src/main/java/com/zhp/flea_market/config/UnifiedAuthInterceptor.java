@@ -78,16 +78,22 @@ public class UnifiedAuthInterceptor implements HandlerInterceptor {
             return null;
         }
 
-        // 从请求头中获取JWT令牌
-        final String requestTokenHeader = request.getHeader(jwtProperties.getTokenHeader());
+        // 1. 优先从Cookie中获取token
+        String jwtToken = getTokenFromCookie(request);
         
-        if (requestTokenHeader == null || !requestTokenHeader.startsWith(jwtProperties.getTokenHead())) {
-            log.debug("请求头中没有token或token格式不正确");
+        // 2. 如果Cookie中没有，再从请求头中获取
+        if (jwtToken == null) {
+            final String requestTokenHeader = request.getHeader(jwtProperties.getTokenHeader());
+            if (requestTokenHeader != null && requestTokenHeader.startsWith(jwtProperties.getTokenHead())) {
+                jwtToken = requestTokenHeader.substring(jwtProperties.getTokenHead().length()).trim();
+            }
+        }
+        
+        // 3. 如果都没有token，返回null
+        if (jwtToken == null) {
+            log.debug("请求中没有找到token");
             return null;
         }
-
-        // 提取JWT令牌
-        String jwtToken = requestTokenHeader.substring(jwtProperties.getTokenHead().length()).trim();
         
         try {
             // 解析JWT令牌获取用户信息
@@ -143,8 +149,22 @@ public class UnifiedAuthInterceptor implements HandlerInterceptor {
      * 处理权限验证
      */
     private void handleAuthorization(LoginRequired loginRequired, AuthCheck authCheck, User currentUser, HttpServletRequest request) {
-        // 如果两个注解都没有，直接放行
+        // 如果两个注解都没有，检查是否为管理接口（自动识别）
         if (loginRequired == null && authCheck == null) {
+            // 自动识别管理接口：以/add、/update、/delete开头的接口需要管理员权限
+            String requestURI = request.getRequestURI();
+            if (isManagementInterface(requestURI)) {
+                if (currentUser == null) {
+                    log.error("管理接口需要登录，但用户未登录");
+                    throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
+                }
+                
+                // 检查是否为管理员
+                if (!UserConstant.ADMIN_ROLE.equals(currentUser.getUserRole())) {
+                    log.error("权限验证失败：用户[{}]没有管理员权限", currentUser.getUserName());
+                    throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "权限不足，需要管理员权限");
+                }
+            }
             return;
         }
 
@@ -177,5 +197,33 @@ public class UnifiedAuthInterceptor implements HandlerInterceptor {
                 }
             }
         }
+    }
+    
+    /**
+     * 判断是否为管理接口
+     */
+    private boolean isManagementInterface(String requestURI) {
+        return requestURI.matches(".*/(add|update|delete)(/.*)?$") && 
+               !requestURI.contains("/user/register") && 
+               !requestURI.contains("/user/login");
+    }
+    
+    /**
+     * 从Cookie中获取token
+     */
+    private String getTokenFromCookie(HttpServletRequest request) {
+        jakarta.servlet.http.Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (jakarta.servlet.http.Cookie cookie : cookies) {
+                if ("token".equals(cookie.getName())) {
+                    String token = cookie.getValue();
+                    if (token != null && !token.trim().isEmpty()) {
+                        log.debug("从Cookie中获取到token");
+                        return token.trim();
+                    }
+                }
+            }
+        }
+        return null;
     }
 }
