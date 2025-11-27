@@ -86,7 +86,9 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
     @Override
     public List<News> getLatestNews() {
         // 按创建时间倒序排列，获取最新的新闻
+        // 只查询数据库表中实际存在的字段，排除关联字段author
         QueryWrapper<News> queryWrapper = new QueryWrapper<>();
+        queryWrapper.select("id", "title", "content", "image_url", "author_id", "create_time");
         queryWrapper.orderByDesc("create_time");
         return this.list(queryWrapper);
     }

@@ -43,6 +43,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
         }).addPathPatterns("/**") // 拦截所有请求
         .excludePathPatterns("/user/login", "/user/register", "/", "/swagger-ui/**", 
                 "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/api-docs/**",
-                "/category/list"); // 排除这些路径，包括获取分类列表
+                "/category/list", "/news/list", "/news/latest", "/news/detail/*"); // 排除这些路径，包括公共访问接口
     }
 }

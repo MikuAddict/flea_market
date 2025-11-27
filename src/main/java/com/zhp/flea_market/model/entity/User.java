@@ -1,11 +1,11 @@
 package com.zhp.flea_market.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.io.Serializable;
 import java.util.Date;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import org.hibernate.annotations.UpdateTimestamp;
 
 /**
  * 用户表
@@ -59,12 +59,14 @@ public class User implements Serializable {
      * 创建时间
      */
     @Column(name = "create_time", updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date createTime;
 
     /**
      * 更新时间
      */
     @Column(name = "update_time")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date updateTime;
     
     /**
