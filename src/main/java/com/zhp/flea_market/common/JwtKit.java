@@ -41,7 +41,20 @@ public class JwtKit {
      */
     public  <T> String generateToken(T user) {
         Map<String, Object> claims = new HashMap<String, Object>(10);
-        claims.put("username", user.toString());
+        
+        // 根据用户对象类型存储正确的用户名
+        if (user instanceof com.zhp.flea_market.model.entity.User) {
+            com.zhp.flea_market.model.entity.User userEntity = (com.zhp.flea_market.model.entity.User) user;
+            claims.put("username", userEntity.getUserAccount());
+            claims.put("userId", userEntity.getId());
+        } else if (user instanceof com.zhp.flea_market.model.vo.LoginUserVO) {
+            com.zhp.flea_market.model.vo.LoginUserVO loginUserVO = (com.zhp.flea_market.model.vo.LoginUserVO) user;
+            claims.put("username", loginUserVO.getUserAccount());
+            claims.put("userId", loginUserVO.getId());
+        } else {
+            claims.put("username", user.toString());
+        }
+        
         claims.put("createdate", new Date());
         claims.put("id", System.currentTimeMillis());
         
@@ -71,6 +84,14 @@ public class JwtKit {
      * @return Claims (过期时间，用户信息，创建时间)
      */
     public Claims parseJwtToken(String token) {
+        // 确保token不为空
+        if (token == null || token.trim().isEmpty()) {
+            throw new IllegalArgumentException("Token不能为空");
+        }
+        
+        // 去除可能的空格
+        token = token.trim();
+        
         SecretKey key = getSecretKey();
         
         JwtParser parser = Jwts.parser()

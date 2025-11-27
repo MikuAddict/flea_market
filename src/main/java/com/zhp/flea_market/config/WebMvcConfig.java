@@ -31,19 +31,18 @@ public class WebMvcConfig implements WebMvcConfigurer {
                     Method method = handlerMethod.getMethod();
                     AuthCheck authCheck = method.getAnnotation(AuthCheck.class);
                     
-                    // 如果没有AuthCheck注解，或者注解的mustRole为空，不需要JWT验证
-                    if (authCheck == null || authCheck.mustRole().isEmpty()) {
-                        return true;
+                    // 如果有AuthCheck注解，需要JWT验证
+                    if (authCheck != null) {
+                        return jwtInterceptor.preHandle(request, response, handler);
                     }
-                    
-                    // 有AuthCheck注解且指定了角色，需要JWT验证
-                    return jwtInterceptor.preHandle(request, response, handler);
                 }
                 
+                // 其他请求不需要JWT验证
                 return true;
             }
         }).addPathPatterns("/**") // 拦截所有请求
         .excludePathPatterns("/user/login", "/user/register", "/", "/swagger-ui/**", 
-                "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/api-docs/**"); // 排除这些路径
+                "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/api-docs/**",
+                "/category/list"); // 排除这些路径，包括获取分类列表
     }
 }
