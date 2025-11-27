@@ -17,18 +17,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authz -> authz
-                // 允许无需认证访问的路径
-                .requestMatchers("/").permitAll()
-                .requestMatchers("/api/test/**").permitAll()
-                .requestMatchers("/user/register").permitAll()
-                .requestMatchers("/user/login").permitAll()
-                .requestMatchers("/webjars/**").permitAll()
-                .requestMatchers("/swagger-resources/**").permitAll()
-                .requestMatchers("/v3/api-docs/**").permitAll()
-                .requestMatchers("/swagger-ui/**").permitAll()
-                .requestMatchers("/api-docs/**").permitAll()
-                // 其他所有请求都需要认证
-                .anyRequest().authenticated()
+                // 允许所有请求，权限验证由拦截器处理
+                .anyRequest().permitAll()
             )
             // 禁用CSRF
             .csrf(csrf -> csrf.disable())
