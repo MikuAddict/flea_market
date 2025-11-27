@@ -1,12 +1,14 @@
 package com.zhp.flea_market.common;
 
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +22,16 @@ import java.util.Map;
 public class JwtKit {
     @Resource
     private JwtProperties jwtProperties;
+    
+    private SecretKey getSecretKey() {
+        // 确保密钥长度至少为256位（32字节）
+        String secret = jwtProperties.getSecret();
+        if (secret.length() < 32) {
+            // 如果密钥太短，使用安全的方式生成足够长的密钥
+            return Jwts.SIG.HS256.key().build();
+        }
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
 
     /**
      * 生成Token
@@ -32,12 +44,16 @@ public class JwtKit {
         claims.put("username", user.toString());
         claims.put("createdate", new Date());
         claims.put("id", System.currentTimeMillis());
+        
+        SecretKey key = getSecretKey();
+        
         // 要存储的数据
-        return Jwts.builder().addClaims(claims)
+        return Jwts.builder()
+                .claims(claims)
                 // 过期时间
-                .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getExpiration()))
+                .expiration(new Date(System.currentTimeMillis() + jwtProperties.getExpiration()))
                 // 加密算法和密钥
-                .signWith(SignatureAlgorithm.HS256, jwtProperties.getSecret())
+                .signWith(key)
                 .compact(); // 打包返回
     }
 
@@ -55,12 +71,12 @@ public class JwtKit {
      * @return Claims (过期时间，用户信息，创建时间)
      */
     public Claims parseJwtToken(String token) {
-        Claims claims = null;
-        // 根据哪个密钥解密
-        claims = Jwts.parser().setSigningKey(jwtProperties.getSecret())
-                // 设置要解析的Token
-                .parseClaimsJws(token)
-                .getBody();
-        return claims;
+        SecretKey key = getSecretKey();
+        
+        JwtParser parser = Jwts.parser()
+                .verifyWith(key)
+                .build();
+                
+        return parser.parseSignedClaims(token).getPayload();
     }
 }

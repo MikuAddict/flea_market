@@ -24,7 +24,7 @@ spring:
 #jwt config
 jwt:
   tokenHeader: Authorization #JWT存储的请求头
-  secret: mall-jwt-test #jwt加解密使用的密钥
+  secret: flea-market-jwt-secret-key-2024-strong-security #jwt加解密使用的密钥，至少32字符
   expiration: 36000000 #JWT的超时时间
   tokenHead: Bearer #JWT负载中拿到的开头
 
