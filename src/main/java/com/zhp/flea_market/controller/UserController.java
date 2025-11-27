@@ -249,21 +249,43 @@ public class UserController {
     /**
      * 分页获取用户封装列表
      *
-     * @param userQueryRequest
-     * @param request
+     * @param current 当前页码
+     * @param size 每页大小
+     * @param id 用户ID
+     * @param userName 用户名
+     * @param userRole 用户角色
+     * @param point 用户积分
+     * @param sortField 排序字段
+     * @param sortOrder 排序顺序
+     * @param request HTTP请求
      * @return
      */
     @Operation(summary = "分页获取用户视图列表", description = "分页获取用户视图信息列表")
-    @PostMapping("/list/page/vo")
-    public BaseResponse<Page<UserVO>> listUserVOByPage(@Parameter(description = "用户查询条件") @RequestBody UserQueryRequest userQueryRequest,
-                                                       HttpServletRequest request) {
-        if (userQueryRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        long current = userQueryRequest.getCurrent();
-        long size = userQueryRequest.getPageSize();
+    @GetMapping("/list/page/vo")
+    public BaseResponse<Page<UserVO>> listUserVOByPage(
+            @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "用户ID") @RequestParam(required = false) Long id,
+            @Parameter(description = "用户名") @RequestParam(required = false) String userName,
+            @Parameter(description = "用户角色") @RequestParam(required = false) String userRole,
+            @Parameter(description = "用户积分") @RequestParam(required = false) Integer point,
+            @Parameter(description = "排序字段") @RequestParam(required = false) String sortField,
+            @Parameter(description = "排序顺序") @RequestParam(defaultValue = "desc") String sortOrder,
+            HttpServletRequest request) {
         // 限制爬虫
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+        
+        // 创建查询请求对象
+        UserQueryRequest userQueryRequest = new UserQueryRequest();
+        userQueryRequest.setCurrent(current);
+        userQueryRequest.setPageSize(size);
+        userQueryRequest.setId(id);
+        userQueryRequest.setUserName(userName);
+        userQueryRequest.setUserRole(userRole);
+        userQueryRequest.setPoint(point);
+        userQueryRequest.setSortField(sortField);
+        userQueryRequest.setSortOrder(sortOrder);
+        
         Page<User> userPage = userService.page(new Page<>(current, size),
                 userService.getQueryWrapper(userQueryRequest));
         Page<UserVO> userVOPage = new Page<>(current, size, userPage.getTotal());
