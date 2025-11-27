@@ -3,24 +3,19 @@ package com.zhp.flea_market.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.zhp.flea_market.annotation.AuthCheck;
 import com.zhp.flea_market.common.BaseResponse;
-import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.common.ResultUtils;
 import com.zhp.flea_market.constant.UserConstant;
-import com.zhp.flea_market.exception.BusinessException;
-import com.zhp.flea_market.exception.ThrowUtils;
 import com.zhp.flea_market.model.dto.request.NewsAddRequest;
 import com.zhp.flea_market.model.dto.request.NewsUpdateRequest;
 import com.zhp.flea_market.model.entity.News;
 import com.zhp.flea_market.model.entity.User;
 import com.zhp.flea_market.service.NewsService;
-import com.zhp.flea_market.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,19 +29,16 @@ import java.util.List;
 @RequestMapping("/news")
 @Slf4j
 @Tag(name = "新闻管理", description = "新闻的增删改查接口")
-public class NewsController {
+public class NewsController extends BaseController {
 
     @Resource
     private NewsService newsService;
-
-    @Resource
-    private UserService userService;
 
     /**
      * 分页获取新闻列表
      *
      * @param current 当前页码
-     * @param size    每页大小
+     * @param size 每页大小
      * @return 分页新闻列表
      */
     @GetMapping("/list")
@@ -54,8 +46,13 @@ public class NewsController {
     public BaseResponse<List<News>> getNewsList(
             @Parameter(description = "当前页码", example = "1") @RequestParam(defaultValue = "1") long current,
             @Parameter(description = "每页大小", example = "10") @RequestParam(defaultValue = "10") long size) {
-        Page<News> page = new Page<>(current, size);
+        // 参数校验
+        Page<News> page = validatePageParams(current, size, 20);
+        
+        // 获取新闻列表
         List<News> newsList = newsService.getNewsList(page);
+        
+        logOperation("分页获取新闻列表", null, "当前页", current, "每页大小", size);
         return ResultUtils.success(newsList);
     }
 
@@ -68,6 +65,7 @@ public class NewsController {
     @Operation(summary = "获取最新新闻", description = "获取系统中最新的一条新闻信息")
     public BaseResponse<News> getLatestNews() {
         News latestNews = newsService.getLatestNews();
+        logOperation("获取最新新闻", null, "新闻ID", latestNews != null ? latestNews.getId() : null);
         return ResultUtils.success(latestNews);
     }
 
@@ -81,15 +79,14 @@ public class NewsController {
     @Operation(summary = "获取新闻详情", description = "根据ID获取新闻的详细信息")
     public BaseResponse<News> getNewsDetail(
             @Parameter(description = "新闻ID") @PathVariable Long id) {
-        if (id == null || id <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "新闻ID无效");
-        }
+        // 参数校验
+        validateId(id, "新闻ID");
         
+        // 获取新闻详情
         News news = newsService.getNewsDetail(id);
-        if (news == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "新闻不存在");
-        }
+        validateResourceExists(news, "新闻");
         
+        logOperation("获取新闻详情", null, "新闻ID", id);
         return ResultUtils.success(news);
     }
 
@@ -103,17 +100,13 @@ public class NewsController {
     @PostMapping("/add")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @Operation(summary = "添加新闻", description = "管理员添加新的新闻")
-    public BaseResponse<Long> addNews(@RequestBody NewsAddRequest newsAddRequest, HttpServletRequest request) {
+    public BaseResponse<Long> addNews(
+            @RequestBody NewsAddRequest newsAddRequest,
+            HttpServletRequest request) {
         // 参数校验
-        if (newsAddRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        if (StringUtils.isBlank(newsAddRequest.getTitle())) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "新闻标题不能为空");
-        }
-        if (StringUtils.isBlank(newsAddRequest.getContent())) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "新闻内容不能为空");
-        }
+        validateNotNull(newsAddRequest, "新闻添加请求");
+        validateNotBlank(newsAddRequest.getTitle(), "新闻标题");
+        validateNotBlank(newsAddRequest.getContent(), "新闻内容");
 
         // 获取当前登录用户
         User currentUser = userService.getLoginUser(request);
@@ -126,9 +119,12 @@ public class NewsController {
 
         // 添加新闻
         boolean result = newsService.addNews(news, request);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         
-        return ResultUtils.success(news.getId());
+        logOperation("添加新闻", result, request, 
+                "新闻标题", newsAddRequest.getTitle(), 
+                "作者ID", currentUser.getId()
+        );
+        return handleOperationResult(result, "新闻添加成功", news.getId());
     }
 
     /**
@@ -141,23 +137,18 @@ public class NewsController {
     @PutMapping("/update")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @Operation(summary = "更新新闻", description = "管理员更新新闻信息")
-    public BaseResponse<Boolean> updateNews(@RequestBody NewsUpdateRequest newsUpdateRequest, HttpServletRequest request) {
+    public BaseResponse<Boolean> updateNews(
+            @RequestBody NewsUpdateRequest newsUpdateRequest,
+            HttpServletRequest request) {
         // 参数校验
-        if (newsUpdateRequest == null || newsUpdateRequest.getId() == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        if (StringUtils.isBlank(newsUpdateRequest.getTitle())) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "新闻标题不能为空");
-        }
-        if (StringUtils.isBlank(newsUpdateRequest.getContent())) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "新闻内容不能为空");
-        }
+        validateNotNull(newsUpdateRequest, "新闻更新请求");
+        validateId(newsUpdateRequest.getId(), "新闻ID");
+        validateNotBlank(newsUpdateRequest.getTitle(), "新闻标题");
+        validateNotBlank(newsUpdateRequest.getContent(), "新闻内容");
         
         // 检查新闻是否存在
         News existNews = newsService.getNewsDetail(newsUpdateRequest.getId());
-        if (existNews == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "新闻不存在");
-        }
+        validateResourceExists(existNews, "新闻");
 
         // 创建新闻对象并更新
         News news = new News();
@@ -168,9 +159,12 @@ public class NewsController {
 
         // 更新新闻
         boolean result = newsService.updateNews(news, request);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         
-        return ResultUtils.success(true);
+        logOperation("更新新闻", result, request, 
+                "新闻ID", newsUpdateRequest.getId(), 
+                "新闻标题", newsUpdateRequest.getTitle()
+        );
+        return handleOperationResult(result, "新闻更新成功");
     }
 
     /**
@@ -184,22 +178,22 @@ public class NewsController {
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @Operation(summary = "删除新闻", description = "管理员根据ID删除新闻")
     public BaseResponse<Boolean> deleteNews(
-            @Parameter(description = "新闻ID") @PathVariable Long id, HttpServletRequest request) {
+            @Parameter(description = "新闻ID") @PathVariable Long id, 
+            HttpServletRequest request) {
         // 参数校验
-        if (id == null || id <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "新闻ID无效");
-        }
+        validateId(id, "新闻ID");
         
         // 检查新闻是否存在
         News existNews = newsService.getNewsDetail(id);
-        if (existNews == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "新闻不存在");
-        }
+        validateResourceExists(existNews, "新闻");
 
         // 删除新闻
         boolean result = newsService.deleteNews(id, request);
-        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         
-        return ResultUtils.success(true);
+        logOperation("删除新闻", result, request, 
+                "新闻ID", id, 
+                "新闻标题", existNews.getTitle()
+        );
+        return handleOperationResult(result, "新闻删除成功");
     }
 }
