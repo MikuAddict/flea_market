@@ -282,4 +282,55 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public User getByIdWithLock(Long id) {
         return baseMapper.selectByIdWithLock(id);
     }
+
+    /**
+     * 更新用户积分
+     *
+     * @param userId 用户ID
+     * @param points 积分变化值（正数为增加，负数为减少）
+     * @return 是否更新成功
+     */
+    @Override
+    public boolean updateUserPoints(Long userId, Integer points) {
+        if (userId == null || userId <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID无效");
+        }
+        
+        // 获取用户当前积分
+        User user = this.getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户不存在");
+        }
+        
+        // 计算新积分（确保积分不为负数）
+        int newPoints = Math.max(0, user.getPoint() + points);
+        
+        // 更新积分
+        User updateUser = new User();
+        updateUser.setId(userId);
+        updateUser.setPoint(newPoints);
+        updateUser.setUpdateTime(new Date());
+        
+        return this.updateById(updateUser);
+    }
+
+    /**
+     * 获取用户积分
+     *
+     * @param userId 用户ID
+     * @return 用户积分
+     */
+    @Override
+    public Integer getUserPoints(Long userId) {
+        if (userId == null || userId <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID无效");
+        }
+        
+        User user = this.getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户不存在");
+        }
+        
+        return user.getPoint();
+    }
 }

@@ -228,7 +228,22 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         updateOrder.setStatus(2); // 已完成
         updateOrder.setFinishTime(new Date());
         
-        return this.updateById(updateOrder);
+        boolean updated = this.updateById(updateOrder);
+        
+        // 订单完成后，给买家和卖家各加100积分
+        if (updated) {
+            try {
+                // 买家加100积分
+                userService.updateUserPoints(order.getBuyer().getId(), 100);
+                // 卖家加100积分
+                userService.updateUserPoints(order.getSeller().getId(), 100);
+            } catch (Exception e) {
+                // 积分更新失败不影响订单完成状态，但记录日志
+                System.err.println("订单完成时积分更新失败: " + e.getMessage());
+            }
+        }
+        
+        return updated;
     }
 
     /**

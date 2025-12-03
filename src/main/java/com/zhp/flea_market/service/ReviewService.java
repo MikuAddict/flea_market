@@ -23,14 +23,7 @@ public interface ReviewService extends IService<Review> {
      */
     boolean addReview(Review review, HttpServletRequest request);
 
-    /**
-     * 更新评价信息
-     *
-     * @param review 评价信息
-     * @param request HTTP请求
-     * @return 是否更新成功
-     */
-    boolean updateReview(Review review, HttpServletRequest request);
+
 
     /**
      * 删除评价

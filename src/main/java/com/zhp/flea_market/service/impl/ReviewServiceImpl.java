@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.exception.BusinessException;
 import com.zhp.flea_market.mapper.ReviewMapper;
+import com.zhp.flea_market.model.dto.request.ReviewRequest;
 import com.zhp.flea_market.model.entity.Order;
 import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.model.entity.Review;
@@ -100,49 +101,29 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         review.setUserId(currentUser.getId());
         review.setCreateTime(new Date());
         
-        return this.save(review);
+        boolean saved = this.save(review);
+        
+        // 评价完成后，根据评分调整卖家积分
+        if (saved) {
+            try {
+                // 根据评分计算积分变化
+                int sellerPointsChange = calculateSellerPointsChange(review.getRating());
+                
+                // 获取卖家ID并更新积分
+                Product sellerProduct = productService.getById(review.getProductId());
+                if (sellerProduct != null && sellerProduct.getUser() != null) {
+                    userService.updateUserPoints(sellerProduct.getUser().getId(), sellerPointsChange);
+                }
+            } catch (Exception e) {
+                // 积分更新失败不影响评价保存状态，但记录日志
+                System.err.println("评价保存时积分更新失败: " + e.getMessage());
+            }
+        }
+        
+        return saved;
     }
 
-    /**
-     * 更新评价信息
-     *
-     * @param review 评价信息
-     * @param request HTTP请求
-     * @return 是否更新成功
-     */
-    @Override
-    public boolean updateReview(Review review, HttpServletRequest request) {
-        // 参数校验
-        if (review.getId() == null || review.getId() <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "评价ID无效");
-        }
-        validateReviewParams(review);
-        
-        // 获取当前登录用户
-        User currentUser = userService.getLoginUserPermitNull(request);
-        if (currentUser == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
-        }
-        
-        // 检查评价是否存在
-        Review existingReview = this.getById(review.getId());
-        if (existingReview == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "评价不存在");
-        }
-        
-        // 权限校验：只能更新自己的评价
-        if (!existingReview.getUserId().equals(currentUser.getId())) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限更新该评价");
-        }
-        
-        // 创建更新对象
-        Review updateReview = new Review();
-        updateReview.setId(review.getId());
-        updateReview.setRating(review.getRating());
-        updateReview.setContent(review.getContent());
-        
-        return this.updateById(updateReview);
-    }
+
 
     /**
      * 删除评价
@@ -472,6 +453,27 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         
         if (review.getContent().length() > 500) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "评价内容不能超过500字");
+        }
+    }
+
+    /**
+     * 根据评分计算卖家积分变化
+     *
+     * @param rating 评分 (1-5分)
+     * @return 积分变化值
+     */
+    private int calculateSellerPointsChange(Integer rating) {
+        if (rating == null) {
+            return 0;
+        }
+        
+        switch (rating) {
+            case 5: return 10;  // 五星评价：卖家增加10积分
+            case 4: return 5;   // 四星评价：卖家增加5积分
+            case 3: return 0;   // 三星评价：不增减积分
+            case 2: return -5;  // 二星评价：卖家扣除5积分
+            case 1: return -10; // 一星评价：卖家扣除10积分
+            default: return 0;
         }
     }
 }

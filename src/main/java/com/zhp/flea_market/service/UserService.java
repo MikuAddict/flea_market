@@ -108,4 +108,21 @@ public interface UserService extends IService<User> {
      */
     User getByIdWithLock(Long id);
 
+    /**
+     * 更新用户积分
+     *
+     * @param userId 用户ID
+     * @param points 积分变化值（正数为增加，负数为减少）
+     * @return 是否更新成功
+     */
+    boolean updateUserPoints(Long userId, Integer points);
+
+    /**
+     * 获取用户积分
+     *
+     * @param userId 用户ID
+     * @return 用户积分
+     */
+    Integer getUserPoints(Long userId);
+
 }
