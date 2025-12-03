@@ -23,12 +23,12 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 新闻接口
+ * 平台公告接口
  */
 @RestController
 @RequestMapping("/news")
 @Slf4j
-@Tag(name = "新闻管理", description = "新闻的增删改查接口")
+@Tag(name = "平台公告管理", description = "平台公告的增删改查接口")
 public class NewsController extends BaseController {
 
     @Resource

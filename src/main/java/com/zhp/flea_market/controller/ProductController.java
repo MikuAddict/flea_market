@@ -26,8 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -76,6 +74,11 @@ public class ProductController extends BaseController {
         BeanUtils.copyProperties(productAddRequest, product);
         product.setCategory(category);
         
+        // 设置支付方式选项，默认为支持所有支付方式
+        if (product.getPaymentOptions() == null) {
+            product.setPaymentOptions(15); // 1+2+4+8=15，表示支持所有支付方式
+        }
+        
         // 获取当前登录用户
         User currentUser = userService.getLoginUser(request);
         product.setUser(currentUser);
@@ -85,7 +88,8 @@ public class ProductController extends BaseController {
         
         logOperation("添加商品", result, request, 
                 "商品名称", productAddRequest.getProductName(),
-                "分类", category.getName()
+                "分类", category.getName(),
+                "支付选项", product.getPaymentOptions()
         );
         return handleOperationResult(result, "商品添加成功", product.getId());
     }
@@ -126,7 +130,8 @@ public class ProductController extends BaseController {
         boolean result = productService.updateProduct(product, request);
         
         logOperation("更新商品", result, request, 
-                "商品ID", productUpdateRequest.getId()
+                "商品ID", productUpdateRequest.getId(),
+                "支付选项", product.getPaymentOptions()
         );
         return handleOperationResult(result, "商品更新成功");
     }

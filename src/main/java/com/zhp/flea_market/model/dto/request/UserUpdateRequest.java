@@ -1,17 +1,14 @@
-package com.zhp.flea_market.model.dto.request.user;
+package com.zhp.flea_market.model.dto.request;
 
 import java.io.Serializable;
 
-import com.zhp.flea_market.model.dto.request.PageRequest;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
- * 用户查询请求
+ * 用户更新请求
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
-public class UserQueryRequest extends PageRequest implements Serializable {
+public class UserUpdateRequest implements Serializable {
     /**
      * id
      */
@@ -23,9 +20,10 @@ public class UserQueryRequest extends PageRequest implements Serializable {
     private String userName;
 
     /**
-     * 用户积分
+     * 用户头像
      */
-    private Integer point;
+    private String userAvatar;
+
 
     /**
      * 用户角色：user/admin/ban

@@ -7,6 +7,8 @@ import com.zhp.flea_market.common.BaseResponse;
 import com.zhp.flea_market.common.ResultUtils;
 import com.zhp.flea_market.constant.UserConstant;
 import com.zhp.flea_market.model.dto.request.OrderRequest;
+import com.zhp.flea_market.model.dto.request.PaymentProofRequest;
+import com.zhp.flea_market.model.dto.request.OrderConfirmRequest;
 import com.zhp.flea_market.model.entity.Order;
 import com.zhp.flea_market.service.OrderService;
 import com.zhp.flea_market.service.UserService;
@@ -324,5 +326,174 @@ public class OrderController extends BaseController {
                 "状态", status
         );
         return ResultUtils.success(page);
+    }
+
+    /**
+     * 提交支付凭证
+     *
+     * @param proofRequest 支付凭证请求
+     * @param request HTTP请求
+     * @return 是否提交成功
+     */
+    @Operation(summary = "提交支付凭证", description = "买家上传现金支付凭证")
+    @PostMapping("/submit/proof")
+    @LoginRequired
+    public BaseResponse<Boolean> submitPaymentProof(
+            @Parameter(description = "支付凭证请求") @RequestBody PaymentProofRequest proofRequest,
+            HttpServletRequest request) {
+        // 参数校验
+        validateNotNull(proofRequest, "支付凭证请求");
+        
+        // 提交支付凭证
+        boolean result = orderService.submitPaymentProof(proofRequest, request);
+        
+        logOperation("提交支付凭证", result, request, "订单ID", proofRequest.getOrderId());
+        return handleOperationResult(result, "支付凭证提交成功");
+    }
+
+    /**
+     * 确认订单
+     *
+     * @param confirmRequest 订单确认请求
+     * @param request HTTP请求
+     * @return 是否确认成功
+     */
+    @Operation(summary = "确认订单", description = "买家确认收货或卖家确认收款")
+    @PostMapping("/confirm")
+    @LoginRequired
+    public BaseResponse<Boolean> confirmOrder(
+            @Parameter(description = "订单确认请求") @RequestBody OrderConfirmRequest confirmRequest,
+            HttpServletRequest request) {
+        // 参数校验
+        validateNotNull(confirmRequest, "订单确认请求");
+        
+        // 确认订单
+        boolean result = orderService.confirmOrder(confirmRequest, request);
+        
+        String confirmTypeStr = confirmRequest.getConfirmType() == 1 ? "买家确认收货" : "卖家确认收款";
+        logOperation(confirmTypeStr, result, request, "订单ID", confirmRequest.getOrderId());
+        return handleOperationResult(result, confirmTypeStr + "成功");
+    }
+
+    /**
+     * 模拟微信支付
+     *
+     * @param orderId 订单ID
+     * @param request HTTP请求
+     * @return 是否支付成功
+     */
+    @Operation(summary = "模拟微信支付", description = "模拟微信支付流程")
+    @PostMapping("/pay/wechat/{orderId}")
+    @LoginRequired
+    public BaseResponse<Boolean> simulateWechatPay(
+            @Parameter(description = "订单ID") @PathVariable Long orderId,
+            HttpServletRequest request) {
+        // 参数校验
+        validateId(orderId, "订单ID");
+
+        // 模拟微信支付
+        boolean result = orderService.simulateWechatPay(orderId, request);
+        
+        logOperation("微信支付", result, request, "订单ID", orderId);
+        return handleOperationResult(result, "微信支付成功");
+    }
+
+    /**
+     * 使用积分兑换商品
+     *
+     * @param orderId 订单ID
+     * @param request HTTP请求
+     * @return 是否兑换成功
+     */
+    @Operation(summary = "积分兑换商品", description = "使用积分兑换商品")
+    @PostMapping("/pay/points/{orderId}")
+    @LoginRequired
+    public BaseResponse<Boolean> exchangeWithPoints(
+            @Parameter(description = "订单ID") @PathVariable Long orderId,
+            HttpServletRequest request) {
+        // 参数校验
+        validateId(orderId, "订单ID");
+
+        // 积分兑换
+        boolean result = orderService.exchangeWithPoints(orderId, request);
+        
+        logOperation("积分兑换", result, request, "订单ID", orderId);
+        return handleOperationResult(result, "积分兑换成功");
+    }
+
+    /**
+     * 申请物品交换
+     *
+     * @param orderId 订单ID
+     * @param request HTTP请求
+     * @return 是否申请成功
+     */
+    @Operation(summary = "申请物品交换", description = "买家申请物品交换")
+    @PostMapping("/exchange/apply/{orderId}")
+    @LoginRequired
+    public BaseResponse<Boolean> applyForExchange(
+            @Parameter(description = "订单ID") @PathVariable Long orderId,
+            HttpServletRequest request) {
+        // 参数校验
+        validateId(orderId, "订单ID");
+
+        // 申请物品交换
+        boolean result = orderService.applyForExchange(orderId, request);
+        
+        logOperation("申请物品交换", result, request, "订单ID", orderId);
+        return handleOperationResult(result, "物品交换申请成功，等待卖家确认");
+    }
+
+    /**
+     * 确认物品交换
+     *
+     * @param orderId 订单ID
+     * @param request HTTP请求
+     * @return 是否确认成功
+     */
+    @Operation(summary = "确认物品交换", description = "卖家确认物品交换")
+    @PostMapping("/exchange/confirm/{orderId}")
+    @LoginRequired
+    public BaseResponse<Boolean> confirmExchange(
+            @Parameter(description = "订单ID") @PathVariable Long orderId,
+            HttpServletRequest request) {
+        // 参数校验
+        validateId(orderId, "订单ID");
+
+        // 确认物品交换
+        boolean result = orderService.confirmExchange(orderId, request);
+        
+        logOperation("确认物品交换", result, request, "订单ID", orderId);
+        return handleOperationResult(result, "物品交换确认成功");
+    }
+
+    /**
+     * 验证支付方式
+     *
+     * @param productId 商品ID
+     * @param paymentMethod 支付方式
+     * @param request HTTP请求
+     * @return 是否支持
+     */
+    @Operation(summary = "验证支付方式", description = "验证商品是否支持指定的支付方式")
+    @GetMapping("/validate/payment")
+    @LoginRequired
+    public BaseResponse<Boolean> validatePaymentMethod(
+            @Parameter(description = "商品ID") @RequestParam Long productId,
+            @Parameter(description = "支付方式 (0-现金, 1-微信, 2-积分兑换, 3-物品交换)") @RequestParam Integer paymentMethod,
+            HttpServletRequest request) {
+        // 参数校验
+        validateId(productId, "商品ID");
+        validateNotNull(paymentMethod, "支付方式");
+
+        // 验证支付方式
+        boolean result = orderService.validatePaymentMethod(productId, paymentMethod);
+        
+        logOperation("验证支付方式", request, 
+                "商品ID", productId,
+                "支付方式", paymentMethod,
+                "验证结果", result
+        );
+        return ResultUtils.success(result);
     }
 }

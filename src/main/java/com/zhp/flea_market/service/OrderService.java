@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zhp.flea_market.model.entity.Order;
 import com.zhp.flea_market.model.dto.request.OrderRequest;
+import com.zhp.flea_market.model.dto.request.PaymentProofRequest;
+import com.zhp.flea_market.model.dto.request.OrderConfirmRequest;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.math.BigDecimal;
@@ -143,5 +145,67 @@ public interface OrderService extends IService<Order> {
      */
     BigDecimal calculateOrderAmount(Long productId);
 
+    /**
+     * 提交支付凭证
+     *
+     * @param proofRequest 支付凭证请求
+     * @param request HTTP请求
+     * @return 是否提交成功
+     */
+    boolean submitPaymentProof(PaymentProofRequest proofRequest, HttpServletRequest request);
+
+    /**
+     * 确认订单（买家确认收货或卖家确认收款）
+     *
+     * @param confirmRequest 订单确认请求
+     * @param request HTTP请求
+     * @return 是否确认成功
+     */
+    boolean confirmOrder(OrderConfirmRequest confirmRequest, HttpServletRequest request);
+
+    /**
+     * 模拟微信支付
+     *
+     * @param orderId 订单ID
+     * @param request HTTP请求
+     * @return 是否支付成功
+     */
+    boolean simulateWechatPay(Long orderId, HttpServletRequest request);
+
+    /**
+     * 使用积分兑换商品
+     *
+     * @param orderId 订单ID
+     * @param request HTTP请求
+     * @return 是否兑换成功
+     */
+    boolean exchangeWithPoints(Long orderId, HttpServletRequest request);
+
+    /**
+     * 申请物品交换
+     *
+     * @param orderId 订单ID
+     * @param request HTTP请求
+     * @return 是否申请成功
+     */
+    boolean applyForExchange(Long orderId, HttpServletRequest request);
+
+    /**
+     * 确认物品交换
+     *
+     * @param orderId 订单ID
+     * @param request HTTP请求
+     * @return 是否确认成功
+     */
+    boolean confirmExchange(Long orderId, HttpServletRequest request);
+
+    /**
+     * 验证商品是否支持指定的支付方式
+     *
+     * @param productId 商品ID
+     * @param paymentMethod 支付方式
+     * @return 是否支持
+     */
+    boolean validatePaymentMethod(Long productId, Integer paymentMethod);
 
 }

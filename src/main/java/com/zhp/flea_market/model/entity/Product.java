@@ -46,6 +46,17 @@ public class Product {
     private Integer status;
 
     /**
+     * 是否允许积分购买
+     */
+    private Boolean allowPointsPurchase;
+
+    /**
+     * 支付方式选项 (位掩码: 1-现金, 2-微信, 4-积分兑换, 8-物品交换)
+     * 例如: 3表示支持现金和微信, 7表示支持现金、微信和积分兑换
+     */
+    private Integer paymentOptions;
+
+    /**
      * 商品分类ID
      */
     @ManyToOne

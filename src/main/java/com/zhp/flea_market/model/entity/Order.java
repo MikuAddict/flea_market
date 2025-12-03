@@ -55,6 +55,21 @@ public class Order {
     private Integer status;
 
     /**
+     * 支付凭证URL (现金支付时买家上传的支付凭证)
+     */
+    private String paymentProof;
+
+    /**
+     * 买家确认收货状态 (false-未确认, true-已确认)
+     */
+    private Boolean buyerConfirmed;
+
+    /**
+     * 卖家确认收款状态 (false-未确认, true-已确认)
+     */
+    private Boolean sellerConfirmed;
+
+    /**
      * 创建时间
      */
     private Date createTime;

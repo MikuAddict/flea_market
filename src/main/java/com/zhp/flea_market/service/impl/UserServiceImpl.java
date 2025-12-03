@@ -6,7 +6,7 @@ import com.zhp.flea_market.constant.CommonConstant;
 import com.zhp.flea_market.exception.BusinessException;
 import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.mapper.UserMapper;
-import com.zhp.flea_market.model.dto.request.user.UserQueryRequest;
+import com.zhp.flea_market.model.dto.request.UserQueryRequest;
 import com.zhp.flea_market.model.entity.User;
 import com.zhp.flea_market.model.enums.UserRoleEnum;
 import com.zhp.flea_market.model.vo.LoginUserVO;

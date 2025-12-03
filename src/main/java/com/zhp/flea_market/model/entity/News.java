@@ -6,40 +6,43 @@ import lombok.Data;
 
 import java.util.Date;
 
+/**
+ * 平台公告实体
+ */
 @Entity
 @Table(name = "news")
 @Data
 public class News {
     /**
-     * 新闻ID
+     * 平台公告ID
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     /**
-     * 新闻标题
+     * 公告标题
      */
     private String title;
 
     /**
-     * 新闻内容
+     * 公告内容
      */
     private String content;
 
     /**
-     * 新闻图片地址
+     * 公告图片地址
      */
     private String imageUrl;
 
     /**
-     * 新闻作者ID
+     * 公告作者ID
      */
     @Column(name = "author_id")
     private Long authorId;
 
     /**
-     * 新闻作者名字
+     * 公告作者名字
      */
     @Transient
     private String author;

@@ -1,4 +1,4 @@
-package com.zhp.flea_market.model.dto.request.user;
+package com.zhp.flea_market.model.dto.request;
 
 import lombok.Data;
 

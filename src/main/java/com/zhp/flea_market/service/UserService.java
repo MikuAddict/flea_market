@@ -2,7 +2,7 @@ package com.zhp.flea_market.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.zhp.flea_market.model.dto.request.user.UserQueryRequest;
+import com.zhp.flea_market.model.dto.request.UserQueryRequest;
 import com.zhp.flea_market.model.entity.User;
 import com.zhp.flea_market.model.vo.LoginUserVO;
 import com.zhp.flea_market.model.vo.UserVO;
