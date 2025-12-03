@@ -5,6 +5,7 @@ import com.zhp.flea_market.common.BaseResponse;
 import com.zhp.flea_market.common.ResultUtils;
 import com.zhp.flea_market.constant.UserConstant;
 import com.zhp.flea_market.exception.BusinessException;
+import com.zhp.flea_market.model.dto.request.CategoryAddRequest;
 import com.zhp.flea_market.model.entity.Category;
 import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.service.CategoryService;
@@ -50,7 +51,7 @@ public class CategoryController extends BaseController {
     /**
      * 添加商品分类
      *
-     * @param category 分类信息
+     * @param categoryAddRequest 分类信息
      * @param request HTTP请求
      * @return 新增分类的ID
      */
@@ -58,23 +59,28 @@ public class CategoryController extends BaseController {
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @Operation(summary = "添加商品分类", description = "管理员添加新的商品分类")
     public BaseResponse<Long> addCategory(
-            @RequestBody Category category,
+            @RequestBody CategoryAddRequest categoryAddRequest,
             HttpServletRequest request) {
         // 参数校验
-        validateNotNull(category, "分类信息");
-        validateNotBlank(category.getName(), "分类名称");
+        validateNotNull(categoryAddRequest, "分类信息");
+        validateNotBlank(categoryAddRequest.getName(), "分类名称");
         
         // 检查分类名称是否已存在
         List<Category> categoryList = categoryService.getCategoryList();
-        boolean isExist = categoryList.stream().anyMatch(c -> c.getName().equals(category.getName()));
+        boolean isExist = categoryList.stream().anyMatch(c -> c.getName().equals(categoryAddRequest.getName()));
         if (isExist) {
             throw new BusinessException(com.zhp.flea_market.common.ErrorCode.PARAMS_ERROR, "分类名称已存在");
         }
 
+        // 创建分类实体
+        Category category = Category.builder()
+                .name(categoryAddRequest.getName())
+                .build();
+
         // 添加分类
         boolean result = categoryService.addCategory(category);
         
-        logOperation("添加商品分类", result, request, "分类名称", category.getName());
+        logOperation("添加商品分类", result, request, "分类名称", categoryAddRequest.getName());
         return handleOperationResult(result, "商品分类添加成功", category.getId());
     }
 
