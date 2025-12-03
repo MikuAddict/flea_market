@@ -13,15 +13,13 @@ import com.zhp.flea_market.service.ProductService;
 import com.zhp.flea_market.service.ShoppingCartService;
 import com.zhp.flea_market.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, ShoppingCart> implements ShoppingCartService {
@@ -32,9 +30,6 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
     @Autowired
     private ProductService productService;
 
-    @Autowired
-    private ProductMapper productMapper;
-
     /**
      * 添加商品到购物车
      *
@@ -43,6 +38,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
      * @return 是否添加成功
      */
     @Override
+    @Transactional
     public boolean addToCart(Long productId, HttpServletRequest request) {
         // 参数校验
         if (productId == null || productId <= 0) {
@@ -93,6 +89,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
      * @return 是否删除成功
      */
     @Override
+    @Transactional
     public boolean removeFromCart(Long cartId, HttpServletRequest request) {
         // 参数校验
         if (cartId == null || cartId <= 0) {
@@ -126,6 +123,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
      * @return 是否清空成功
      */
     @Override
+    @Transactional
     public boolean clearCart(HttpServletRequest request) {
         // 获取当前登录用户
         User currentUser = userService.getLoginUserPermitNull(request);
@@ -194,7 +192,12 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
         }
         
-        List<ShoppingCart> cartItems = this.getUserCart(request);
+        // 直接查询购物车项，避免自调用getUserCart方法
+        QueryWrapper<ShoppingCart> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", currentUser.getId());
+        queryWrapper.orderByDesc("create_time");
+        List<ShoppingCart> cartItems = this.list(queryWrapper);
+        
         if (CollectionUtils.isEmpty(cartItems)) {
             return 0.0;
         }
@@ -218,6 +221,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
      * @return 是否删除成功
      */
     @Override
+    @Transactional
     public boolean batchRemoveFromCart(List<Long> cartIds, HttpServletRequest request) {
         // 参数校验
         if (CollectionUtils.isEmpty(cartIds)) {

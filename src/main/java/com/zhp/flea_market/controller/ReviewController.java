@@ -7,7 +7,6 @@ import com.zhp.flea_market.annotation.LoginRequired;
 import com.zhp.flea_market.common.BaseResponse;
 import com.zhp.flea_market.common.ResultUtils;
 import com.zhp.flea_market.constant.UserConstant;
-import com.zhp.flea_market.exception.BusinessException;
 import com.zhp.flea_market.model.dto.request.DeleteRequest;
 import com.zhp.flea_market.model.dto.request.ReviewRequest;
 import com.zhp.flea_market.model.entity.Order;
@@ -24,7 +23,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

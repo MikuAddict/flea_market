@@ -25,7 +25,6 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 商品评价服务实现类
@@ -568,14 +567,14 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         if (rating == null) {
             return 0;
         }
-        
-        switch (rating) {
-            case 5: return 10;  // 五星评价：卖家增加10积分
-            case 4: return 5;   // 四星评价：卖家增加5积分
-            case 3: return 0;   // 三星评价：不增减积分
-            case 2: return -5;  // 二星评价：卖家扣除5积分
-            case 1: return -10; // 一星评价：卖家扣除10积分
-            default: return 0;
-        }
+
+        return switch (rating) {
+            case 5 -> 10;  // 五星评价：卖家增加10积分
+            case 4 -> 5;   // 四星评价：卖家增加5积分
+            case 3 -> 0;   // 三星评价：不增减积分
+            case 2 -> -5;  // 二星评价：卖家扣除5积分
+            case 1 -> -10; // 一星评价：卖家扣除10积分
+            default -> 0;
+        };
     }
 }
