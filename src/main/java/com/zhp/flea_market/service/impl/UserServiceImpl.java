@@ -355,13 +355,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      *
      * @param userId 用户ID
      * @param auditStatus 审核状态 (0-待审核, 1-已通过, 2-已拒绝)
-     * @param auditRemark 审核说明
      * @param request HTTP请求
      * @return 是否审核成功
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean auditUser(Long userId, Integer auditStatus, String auditRemark, HttpServletRequest request) {
+    public boolean auditUser(Long userId, Integer auditStatus, HttpServletRequest request) {
         // 参数校验
         if (userId == null || userId <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID无效");
@@ -397,7 +396,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User updateUser = new User();
         updateUser.setId(userId);
         updateUser.setUserStatus(auditStatus);
-        updateUser.setAuditRemark(auditRemark);
         updateUser.setAuditTime(new Date());
 
         return this.updateById(updateUser);

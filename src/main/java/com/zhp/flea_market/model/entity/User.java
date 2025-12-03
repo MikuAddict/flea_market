@@ -62,10 +62,6 @@ public class User implements Serializable {
     @Column(columnDefinition = "decimal(10,2) default 0.00")
     private BigDecimal point = BigDecimal.ZERO;
     /**
-     * 审核说明
-     */
-    private String auditRemark;
-    /**
      * 审核时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")

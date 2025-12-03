@@ -431,15 +431,13 @@ public class UserController extends BaseController {
         boolean result = userService.auditUser(
                 userAuditRequest.getUserId(), 
                 userAuditRequest.getAuditStatus(), 
-                userAuditRequest.getAuditRemark(), 
                 request
         );
         
         String statusDesc = userAuditRequest.getAuditStatus() == 1 ? "通过" : "拒绝";
         logOperation("审核用户", result, request, 
                 "用户ID", userAuditRequest.getUserId(),
-                "审核状态", statusDesc,
-                "审核说明", userAuditRequest.getAuditRemark()
+                "审核状态", statusDesc
         );
         return handleOperationResult(result, "用户审核成功");
     }
