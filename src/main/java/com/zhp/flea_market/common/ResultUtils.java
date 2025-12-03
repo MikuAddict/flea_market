@@ -51,6 +51,18 @@ public class ResultUtils {
     public static BaseResponse error(ErrorCode errorCode, String message) {
         return new BaseResponse(errorCode.getCode(), null, message);
     }
+
+    /**
+     * 失败
+     *
+     * @param code
+     * @param message
+     * @param description
+     * @return
+     */
+    public static BaseResponse error(int code, String message, String description) {
+        return new BaseResponse(code, null, message, description);
+    }
     /**
      * 成功并添加动态参数
      * @param data
