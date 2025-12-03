@@ -37,27 +37,23 @@ public class OrderController extends BaseController {
      * 创建订单
      *
      * @param productId 商品ID
-     * @param paymentMethod 支付方式
      * @param request HTTP请求
      * @return 订单ID
      */
-    @Operation(summary = "创建订单", description = "用户创建新的订单")
+    @Operation(summary = "创建订单", description = "用户创建新的订单，自动使用商品设置的支付方式")
     @PostMapping("/create")
     @LoginRequired
     public BaseResponse<Long> createOrder(
             @Parameter(description = "商品ID") @RequestParam Long productId,
-            @Parameter(description = "支付方式 (0-现金, 1-微信, 2-积分兑换, 3-物品交换)") @RequestParam Integer paymentMethod,
             HttpServletRequest request) {
         // 参数校验
         validateId(productId, "商品ID");
-        validateNotNull(paymentMethod, "支付方式");
 
-        // 创建订单
-        Long orderId = orderService.createOrder(productId, paymentMethod, request);
+        // 创建订单（自动使用商品设置的支付方式）
+        Long orderId = orderService.createOrder(productId, request);
         
         logOperation("创建订单", true, request, 
                 "商品ID", productId,
-                "支付方式", paymentMethod,
                 "订单ID", orderId
         );
         return handleOperationResult(true, "订单创建成功", orderId);
@@ -462,33 +458,5 @@ public class OrderController extends BaseController {
         return handleOperationResult(result, "物品交换确认成功");
     }
 
-    /**
-     * 验证支付方式
-     *
-     * @param productId 商品ID
-     * @param paymentMethod 支付方式
-     * @param request HTTP请求
-     * @return 是否支持
-     */
-    @Operation(summary = "验证支付方式", description = "验证商品是否支持指定的支付方式")
-    @GetMapping("/validate/payment")
-    @LoginRequired
-    public BaseResponse<Boolean> validatePaymentMethod(
-            @Parameter(description = "商品ID") @RequestParam Long productId,
-            @Parameter(description = "支付方式 (0-现金, 1-微信, 2-积分兑换, 3-物品交换)") @RequestParam Integer paymentMethod,
-            HttpServletRequest request) {
-        // 参数校验
-        validateId(productId, "商品ID");
-        validateNotNull(paymentMethod, "支付方式");
 
-        // 验证支付方式
-        boolean result = orderService.validatePaymentMethod(productId, paymentMethod);
-        
-        logOperation("验证支付方式", request, 
-                "商品ID", productId,
-                "支付方式", paymentMethod,
-                "验证结果", result
-        );
-        return ResultUtils.success(result);
-    }
 }

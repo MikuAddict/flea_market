@@ -39,21 +39,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 创建订单
-     *
      * @param productId 商品ID
-     * @param paymentMethod 支付方式
      * @param request HTTP请求
      * @return 创建的订单ID
      */
     @Override
-    public Long createOrder(Long productId, Integer paymentMethod, HttpServletRequest request) {
+    public Long createOrder(Long productId, HttpServletRequest request) {
         // 参数校验
         if (productId == null || productId <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID无效");
-        }
-        
-        if (paymentMethod == null || paymentMethod < 0 || paymentMethod > 3) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "支付方式无效");
         }
         
         // 获取当前登录用户
@@ -72,9 +66,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品未上架，无法购买");
         }
         
-        // 验证商品是否支持该支付方式（商品支付方式必须与订单支付方式一致）
-        if (!product.getPaymentMethod().equals(paymentMethod)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "该商品不支持此支付方式");
+        // 自动使用商品设置的支付方式
+        Integer paymentMethod = product.getPaymentMethod();
+        if (paymentMethod == null || paymentMethod < 0 || paymentMethod > 3) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品支付方式设置无效");
         }
         
         // 检查不能购买自己的商品
@@ -105,9 +100,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 支付订单
-     *
      * @param orderId 订单ID
-     * @param request HTTP请求
      * @return 是否支付成功
      */
     @Override
@@ -130,7 +123,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 权限校验：只能支付自己的订单
-        if (!validateOrderPermission(order, currentUser.getId())) {
+        if (validateOrderPermission(order, currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限支付该订单");
         }
         
@@ -162,10 +155,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 取消订单
-     *
      * @param orderId 订单ID
-     * @param request HTTP请求
-     * @return 是否取消成功
      */
     @Override
     public boolean cancelOrder(Long orderId, HttpServletRequest request) {
@@ -187,7 +177,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 权限校验：只能取消自己的订单
-        if (!validateOrderPermission(order, currentUser.getId())) {
+        if (validateOrderPermission(order, currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限取消该订单");
         }
         
@@ -206,10 +196,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 买家确认收货（完成订单）
-     *
      * @param orderId 订单ID
-     * @param request HTTP请求
-     * @return 是否确认成功
      */
     @Override
     public boolean completeOrder(Long orderId, HttpServletRequest request) {
@@ -290,10 +277,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 获取订单详情
-     *
      * @param orderId 订单ID
-     * @param request HTTP请求
-     * @return 订单详情
      */
     @Override
     public Order getOrderDetail(Long orderId, HttpServletRequest request) {
@@ -315,7 +299,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 权限校验：只能查看自己的订单
-        if (!validateOrderPermission(order, currentUser.getId())) {
+        if (validateOrderPermission(order, currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限查看该订单");
         }
         
@@ -324,10 +308,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 获取买家订单列表
-     *
-     * @param request HTTP请求
      * @param page 分页参数
-     * @return 订单列表
      */
     @Override
     public List<Order> getBuyerOrders(HttpServletRequest request, Page<Order> page) {
@@ -347,8 +328,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 获取卖家订单列表
-     *
-     * @param request HTTP请求
      * @param page 分页参数
      * @return 订单列表
      */
@@ -370,10 +349,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 根据状态获取买家订单列表
-     *
      * @param status 订单状态
-     * @param request HTTP请求
-     * @param page 分页参数
      * @return 订单列表
      */
     @Override
@@ -400,10 +376,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 根据状态获取卖家订单列表
-     *
      * @param status 订单状态
-     * @param request HTTP请求
-     * @param page 分页参数
      * @return 订单列表
      */
     @Override
@@ -430,9 +403,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 获取订单统计信息
-     *
-     * @param request HTTP请求
-     * @return 订单统计信息
      */
     @Override
     public OrderRequest getOrderStatistics(HttpServletRequest request) {
@@ -483,8 +453,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 获取所有订单（管理员权限）
-     *
-     * @param page 分页参数
      * @param status 订单状态
      * @return 订单列表
      */
@@ -498,10 +466,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 获取订单查询条件
-     *
      * @param buyerId 买家ID
      * @param sellerId 卖家ID
-     * @param status 订单状态
      * @return 查询条件
      */
     @Override
@@ -527,20 +493,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 验证订单权限
-     *
      * @param order 订单
      * @param userId 用户ID
-     * @return 是否有权限
      */
     @Override
     public boolean validateOrderPermission(Order order, Long userId) {
-        return order.getBuyer().getId().equals(userId) || 
-               order.getSeller().getId().equals(userId);
+        return !order.getBuyer().getId().equals(userId) &&
+                !order.getSeller().getId().equals(userId);
     }
 
     /**
      * 计算订单金额
-     *
      * @param productId 商品ID
      * @return 订单金额
      */
@@ -556,10 +519,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 提交支付凭证
-     *
      * @param proofRequest 支付凭证请求
-     * @param request HTTP请求
-     * @return 是否提交成功
      */
     @Override
     public boolean submitPaymentProof(PaymentProofRequest proofRequest, HttpServletRequest request) {
@@ -610,10 +570,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 确认订单（买家确认收货）
-     *
      * @param confirmRequest 订单确认请求
-     * @param request HTTP请求
-     * @return 是否确认成功
      */
     @Override
     public boolean confirmOrder(OrderConfirmRequest confirmRequest, HttpServletRequest request) {
@@ -674,7 +631,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 模拟微信支付
-     *
      * @param orderId 订单ID
      * @param request HTTP请求
      * @return 是否支付成功
@@ -739,10 +695,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 使用积分兑换商品
-     *
      * @param orderId 订单ID
-     * @param request HTTP请求
-     * @return 是否兑换成功
      */
     @Override
     public boolean exchangeWithPoints(Long orderId, HttpServletRequest request) {
@@ -818,9 +771,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 申请物品交换
-     *
      * @param orderId 订单ID
-     * @param request HTTP请求
      * @return 是否申请成功
      */
     @Override
@@ -911,33 +862,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         updateOrder.setId(orderId);
         updateOrder.setStatus(2); // 已完成
         updateOrder.setFinishTime(new Date());
-        
-        boolean updated = this.updateById(updateOrder);
-        
-        return updated;
+
+        return this.updateById(updateOrder);
     }
 
-    /**
-     * 验证商品是否支持指定的支付方式
-     *
-     * @param productId 商品ID
-     * @param paymentMethod 支付方式
-     * @return 是否支持
-     */
-    @Override
-    public boolean validatePaymentMethod(Long productId, Integer paymentMethod) {
-        if (productId == null || productId <= 0 || paymentMethod == null || paymentMethod < 0 || paymentMethod > 3) {
-            return false;
-        }
-        
-        Product product = productService.getById(productId);
-        if (product == null || product.getPaymentMethod() == null) {
-            return false;
-        }
-        
-        // 检查商品支付方式是否与订单支付方式一致
-        return product.getPaymentMethod().equals(paymentMethod);
-    }
+
 
     /**
      * 获取支付方式描述

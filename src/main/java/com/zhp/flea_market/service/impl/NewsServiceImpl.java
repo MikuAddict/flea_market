@@ -23,8 +23,8 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
 
     /**
      * 分页获取新闻列表
-     * @param page
-     * @return
+     * @param page 分页参数
+     * @return 新闻列表
      */
     @Override
     public List<News> getNewsList(Page<News> page) {
@@ -42,8 +42,7 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
 
     /**
      * 添加新闻
-     * @param news
-     * @return
+     * @param news 新闻信息
      */
     @Override
     public boolean addNews(News news, HttpServletRequest request) {
@@ -56,8 +55,7 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
 
     /**
      * 更新新闻
-     * @param news
-     * @return
+     * @param news 新闻信息
      */
     @Override
     public boolean updateNews(News news, HttpServletRequest request) {
@@ -69,8 +67,6 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
 
     /**
      * 删除新闻
-     * @param id
-     * @return
      */
     @Override
     public boolean deleteNews(Long id, HttpServletRequest request) {
@@ -82,8 +78,6 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
 
     /**
      * 获取新闻详情
-     * @param id
-     * @return
      */
     @Override
     public News getNewsDetail(Long id) {
@@ -118,8 +112,7 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
     }
 
     /**
-     * 为单个新闻加载作者信息
-     * @param news
+     * 为单条新闻加载作者信息
      */
     private void loadAuthorInfo(News news) {
         if (news != null && news.getAuthorId() != null) {
@@ -132,8 +125,7 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
 
     /**
      * 为新闻列表加载作者信息
-     * @param newsList
-     * @return
+     * @param newsList 新闻列表
      */
     private List<News> loadAuthorInfo(List<News> newsList) {
         if (newsList == null || newsList.isEmpty()) {

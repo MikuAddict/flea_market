@@ -21,11 +21,10 @@ public interface OrderService extends IService<Order> {
      * 创建订单
      *
      * @param productId 商品ID
-     * @param paymentMethod 支付方式
      * @param request HTTP请求
      * @return 创建的订单ID
      */
-    Long createOrder(Long productId, Integer paymentMethod, HttpServletRequest request);
+    Long createOrder(Long productId, HttpServletRequest request);
 
     /**
      * 支付订单
@@ -199,13 +198,6 @@ public interface OrderService extends IService<Order> {
      */
     boolean confirmExchange(Long orderId, HttpServletRequest request);
 
-    /**
-     * 验证商品是否支持指定的支付方式
-     *
-     * @param productId 商品ID
-     * @param paymentMethod 支付方式
-     * @return 是否支持
-     */
-    boolean validatePaymentMethod(Long productId, Integer paymentMethod);
+
 
 }

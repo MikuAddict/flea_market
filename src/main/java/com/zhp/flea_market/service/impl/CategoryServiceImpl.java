@@ -13,7 +13,6 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
 
     /**
      * 获取所有分类信息
-     * @return
      */
     @Override
     public List<Category> getCategoryList() {
@@ -22,8 +21,6 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
 
     /**
      * 添加分类信息
-     * @param category
-     * @return
      */
     @Override
     public boolean addCategory(Category category) {
@@ -33,8 +30,6 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
 
     /**
      * 更新分类信息
-     * @param category
-     * @return
      */
     @Override
     public boolean updateCategory(Category category) {
@@ -44,8 +39,6 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
 
     /**
      * 删除分类信息
-     * @param id
-     * @return
      */
     @Override
     public boolean deleteCategory(Long id) {
