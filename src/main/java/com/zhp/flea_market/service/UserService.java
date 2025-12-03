@@ -144,4 +144,19 @@ public interface UserService extends IService<User> {
      */
     List<User> getPendingAuditUsers(com.baomidou.mybatisplus.extension.plugins.pagination.Page<User> page);
 
+    /**
+     * 批量删除所有已拒绝的用户
+     *
+     * @param request HTTP请求
+     * @return 删除的用户数量
+     */
+    int batchDeleteRejectedUsers(HttpServletRequest request);
+
+    /**
+     * 获取已拒绝用户数量
+     *
+     * @return 已拒绝用户数量
+     */
+    int getRejectedUserCount();
+
 }

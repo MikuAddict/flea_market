@@ -123,6 +123,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
         }
+        
+        // 检查用户审核状态
+        if (user.getUserStatus() == null) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "用户账号未初始化，请联系管理员");
+        }
+        
+        // 0-待审核, 1-已通过, 2-已拒绝
+        if (user.getUserStatus() == 0) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "您的账号正在审核中，请耐心等待");
+        }
+        
+        if (user.getUserStatus() == 2) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_ERROR, "您的账号审核未通过，无法登录");
+        }
+        
         // 3. 记录用户的登录态
         request.getSession().setAttribute(USER_LOGIN_STATE, user);
         return this.getLoginUserVO(user);
@@ -404,5 +419,60 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<User> resultPage = this.page(page, queryWrapper);
         return resultPage.getRecords();
+    }
+
+    /**
+     * 批量删除所有已拒绝的用户
+     *
+     * @param request HTTP请求
+     * @return 删除的用户数量
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int batchDeleteRejectedUsers(HttpServletRequest request) {
+        // 获取当前登录用户
+        User currentUser = getLoginUser(request);
+        if (currentUser == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
+        }
+        
+        // 权限校验：只有管理员可以删除已拒绝用户
+        if (!isAdmin(currentUser)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限执行此操作");
+        }
+        
+        // 查询所有已拒绝用户
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_status", 2); // 2表示已拒绝
+        queryWrapper.ne("user_role", "admin"); // 不能删除管理员
+        
+        List<User> rejectedUsers = this.list(queryWrapper);
+        if (CollectionUtils.isEmpty(rejectedUsers)) {
+            return 0; // 没有已拒绝用户需要删除
+        }
+        
+        // 提取用户ID列表
+        List<Long> userIds = rejectedUsers.stream()
+                .map(User::getId)
+                .collect(Collectors.toList());
+        
+        // 执行批量删除
+        int deletedCount = this.baseMapper.deleteBatchIds(userIds);
+        
+        return deletedCount;
+    }
+
+    /**
+     * 获取已拒绝用户数量
+     *
+     * @return 已拒绝用户数量
+     */
+    @Override
+    public int getRejectedUserCount() {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_status", 2); // 2表示已拒绝
+        queryWrapper.ne("user_role", "admin"); // 不包括管理员
+        
+        return (int) this.count(queryWrapper);
     }
 }
