@@ -11,7 +11,6 @@ import com.zhp.flea_market.model.dto.request.PaymentProofRequest;
 import com.zhp.flea_market.model.dto.request.OrderConfirmRequest;
 import com.zhp.flea_market.model.entity.Order;
 import com.zhp.flea_market.service.OrderService;
-import com.zhp.flea_market.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,9 +32,6 @@ public class OrderController extends BaseController {
 
     @Resource
     private OrderService orderService;
-
-    @Resource
-    private UserService userService;
 
     /**
      * 创建订单
@@ -352,13 +348,13 @@ public class OrderController extends BaseController {
     }
 
     /**
-     * 确认订单
+     * 确认订单（买家确认收货）
      *
      * @param confirmRequest 订单确认请求
      * @param request HTTP请求
      * @return 是否确认成功
      */
-    @Operation(summary = "确认订单", description = "买家确认收货或卖家确认收款")
+    @Operation(summary = "确认订单", description = "买家确认收货")
     @PostMapping("/confirm")
     @LoginRequired
     public BaseResponse<Boolean> confirmOrder(
@@ -370,9 +366,8 @@ public class OrderController extends BaseController {
         // 确认订单
         boolean result = orderService.confirmOrder(confirmRequest, request);
         
-        String confirmTypeStr = confirmRequest.getConfirmType() == 1 ? "买家确认收货" : "卖家确认收款";
-        logOperation(confirmTypeStr, result, request, "订单ID", confirmRequest.getOrderId());
-        return handleOperationResult(result, confirmTypeStr + "成功");
+        logOperation("买家确认收货", result, request, "订单ID", confirmRequest.getOrderId());
+        return handleOperationResult(result, "确认收货成功");
     }
 
     /**

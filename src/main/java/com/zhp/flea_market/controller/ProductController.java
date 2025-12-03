@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.zhp.flea_market.annotation.AuthCheck;
 import com.zhp.flea_market.annotation.LoginRequired;
 import com.zhp.flea_market.common.BaseResponse;
+import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.common.ResultUtils;
 import com.zhp.flea_market.constant.UserConstant;
 import com.zhp.flea_market.exception.BusinessException;
@@ -64,6 +65,14 @@ public class ProductController extends BaseController {
         validateNotBlank(productAddRequest.getProductName(), "商品名称");
         validateNotNull(productAddRequest.getPrice(), "商品价格");
         validateId(productAddRequest.getCategoryId(), "分类ID");
+        validateNotNull(productAddRequest.getPaymentMethod(), "支付方式");
+        if (productAddRequest.getPaymentMethod() < 0 || productAddRequest.getPaymentMethod() > 3) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "支付方式无效，请选择：0-现金支付, 1-微信支付, 2-积分兑换, 3-二手物品交换");
+        }
+        validateNotNull(productAddRequest.getPaymentMethod(), "支付方式");
+        if (productAddRequest.getPaymentMethod() < 0 || productAddRequest.getPaymentMethod() > 3) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "支付方式无效，请选择：0-现金支付, 1-微信支付, 2-积分兑换, 3-二手物品交换");
+        }
 
         // 检查分类是否存在
         Category category = categoryService.getById(productAddRequest.getCategoryId());
@@ -74,10 +83,8 @@ public class ProductController extends BaseController {
         BeanUtils.copyProperties(productAddRequest, product);
         product.setCategory(category);
         
-        // 设置支付方式选项，默认为支持所有支付方式
-        if (product.getPaymentOptions() == null) {
-            product.setPaymentOptions(15); // 1+2+4+8=15，表示支持所有支付方式
-        }
+        // 设置支付方式，使用用户选择的支付方式
+        product.setPaymentMethod(productAddRequest.getPaymentMethod());
         
         // 获取当前登录用户
         User currentUser = userService.getLoginUser(request);
@@ -89,7 +96,7 @@ public class ProductController extends BaseController {
         logOperation("添加商品", result, request, 
                 "商品名称", productAddRequest.getProductName(),
                 "分类", category.getName(),
-                "支付选项", product.getPaymentOptions()
+                "支付方式", product.getPaymentMethod()
         );
         return handleOperationResult(result, "商品添加成功", product.getId());
     }
@@ -131,7 +138,7 @@ public class ProductController extends BaseController {
         
         logOperation("更新商品", result, request, 
                 "商品ID", productUpdateRequest.getId(),
-                "支付选项", product.getPaymentOptions()
+                "支付方式", product.getPaymentMethod()
         );
         return handleOperationResult(result, "商品更新成功");
     }

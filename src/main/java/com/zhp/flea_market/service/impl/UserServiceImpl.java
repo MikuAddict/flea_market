@@ -16,12 +16,12 @@ import com.zhp.flea_market.utils.SqlUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -31,9 +31,6 @@ import static com.zhp.flea_market.constant.UserConstant.USER_LOGIN_STATE;
 
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
-
-    @Autowired
-    private UserMapper userMapper;
 
     /**
      * 盐值，混淆密码
@@ -81,7 +78,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             user.setUserPhone(userPhone);
             // 设置默认值
             user.setUserRole("user");
-            user.setPoint(0);
+            user.setPoint(BigDecimal.ZERO);
             // 设置创建时间
             user.setCreateTime(new Date());
             user.setUpdateTime(new Date());
@@ -307,7 +304,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return 是否更新成功
      */
     @Override
-    public boolean updateUserPoints(Long userId, Integer points) {
+    public boolean updateUserPoints(Long userId, BigDecimal points) {
         if (userId == null || userId <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID无效");
         }
@@ -319,7 +316,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         
         // 计算新积分（确保积分不为负数）
-        int newPoints = Math.max(0, user.getPoint() + points);
+        BigDecimal newPoints = user.getPoint().add(points);
+        if (newPoints.compareTo(BigDecimal.ZERO) < 0) {
+            newPoints = BigDecimal.ZERO;
+        }
         
         // 更新积分
         User updateUser = new User();
@@ -337,7 +337,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @return 用户积分
      */
     @Override
-    public Integer getUserPoints(Long userId) {
+    public BigDecimal getUserPoints(Long userId) {
         if (userId == null || userId <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID无效");
         }
@@ -399,10 +399,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         updateUser.setUserStatus(auditStatus);
         updateUser.setAuditRemark(auditRemark);
         updateUser.setAuditTime(new Date());
-        
-        boolean updated = this.updateById(updateUser);
-        
-        return updated;
+
+        return this.updateById(updateUser);
     }
 
     /**
@@ -457,9 +455,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .collect(Collectors.toList());
         
         // 执行批量删除
-        int deletedCount = this.baseMapper.deleteBatchIds(userIds);
-        
-        return deletedCount;
+
+        return this.baseMapper.deleteBatchIds(userIds);
     }
 
     /**

@@ -8,6 +8,7 @@ import com.zhp.flea_market.model.vo.LoginUserVO;
 import com.zhp.flea_market.model.vo.UserVO;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -115,7 +116,7 @@ public interface UserService extends IService<User> {
      * @param points 积分变化值（正数为增加，负数为减少）
      * @return 是否更新成功
      */
-    boolean updateUserPoints(Long userId, Integer points);
+    boolean updateUserPoints(Long userId, BigDecimal points);
 
     /**
      * 获取用户积分
@@ -123,7 +124,7 @@ public interface UserService extends IService<User> {
      * @param userId 用户ID
      * @return 用户积分
      */
-    Integer getUserPoints(Long userId);
+    BigDecimal getUserPoints(Long userId);
 
     /**
      * 审核用户

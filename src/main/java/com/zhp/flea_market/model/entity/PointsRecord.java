@@ -2,6 +2,8 @@ package com.zhp.flea_market.model.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -27,12 +29,12 @@ public class PointsRecord {
     /**
      * 积分变化值（正数为增加，负数为减少）
      */
-    private Integer pointsChange;
+    private BigDecimal pointsChange;
 
     /**
      * 变化后的积分
      */
-    private Integer pointsAfter;
+    private BigDecimal pointsAfter;
 
     /**
      * 积分变动类型

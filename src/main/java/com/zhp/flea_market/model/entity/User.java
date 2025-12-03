@@ -2,6 +2,7 @@ package com.zhp.flea_market.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 
 import jakarta.persistence.*;
@@ -58,8 +59,8 @@ public class User implements Serializable {
     /**
      * 用户积分
      */
-    @Column(columnDefinition = "int default 0")
-    private Integer point = 0;
+    @Column(columnDefinition = "decimal(10,2) default 0.00")
+    private BigDecimal point = BigDecimal.ZERO;
     /**
      * 审核说明
      */

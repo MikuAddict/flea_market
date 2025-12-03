@@ -107,39 +107,22 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         
         boolean saved = this.save(review);
         
-        // 评价完成后，根据评分调整卖家积分，并关联交易记录
-        if (saved) {
+        // 评价完成后，关联交易记录
+        if (saved && review.getOrderId() != null) {
             try {
-                // 根据评分计算积分变化
-                int sellerPointsChange = calculateSellerPointsChange(review.getRating());
+                // 获取订单对应的交易记录
+                List<TradeRecord> tradeRecords = tradeRecordService.list(
+                    tradeRecordService.getQueryWrapper(null, null, null, null, null)
+                        .eq("order_id", review.getOrderId())
+                );
                 
-                // 获取卖家ID并更新积分
-                Product sellerProduct = productService.getById(review.getProductId());
-                if (sellerProduct != null && sellerProduct.getUser() != null) {
-                    userService.updateUserPoints(sellerProduct.getUser().getId(), sellerPointsChange);
-                }
-                
-                // 关联交易记录
-                if (review.getOrderId() != null) {
-                    try {
-                        // 获取订单对应的交易记录
-                        List<TradeRecord> tradeRecords = tradeRecordService.list(
-                            tradeRecordService.getQueryWrapper(null, null, null, null, null)
-                                .eq("order_id", review.getOrderId())
-                        );
-                        
-                        if (!tradeRecords.isEmpty()) {
-                            TradeRecord tradeRecord = tradeRecords.get(0);
-                            tradeRecordService.linkReview(tradeRecord.getId(), review.getId());
-                        }
-                    } catch (Exception e) {
-                        // 交易记录关联失败不影响评价保存状态，但记录日志
-                        System.err.println("评价保存时关联交易记录失败: " + e.getMessage());
-                    }
+                if (!tradeRecords.isEmpty()) {
+                    TradeRecord tradeRecord = tradeRecords.get(0);
+                    tradeRecordService.linkReview(tradeRecord.getId(), review.getId());
                 }
             } catch (Exception e) {
-                // 积分更新失败不影响评价保存状态，但记录日志
-                System.err.println("评价保存时积分更新失败: " + e.getMessage());
+                // 交易记录关联失败不影响评价保存状态，但记录日志
+                System.err.println("评价保存时关联交易记录失败: " + e.getMessage());
             }
         }
         
@@ -201,29 +184,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         // 记录原始评分，用于后续积分调整
         Integer oldRating = existingReview.getRating();
         Integer newRating = review.getRating() != null ? review.getRating() : oldRating;
-        
-        boolean result = this.updateById(updateReview);
-        
-        // 评价更新成功后，如果评分发生变化，需要调整卖家积分
-        if (result && !oldRating.equals(newRating)) {
-            try {
-                // 计算积分变化（新评分积分变化 - 旧评分积分变化）
-                int oldPointsChange = calculateSellerPointsChange(oldRating);
-                int newPointsChange = calculateSellerPointsChange(newRating);
-                int pointsDifference = newPointsChange - oldPointsChange;
-                
-                // 获取商品信息，从而获取卖家ID
-                Product product = productService.getById(existingReview.getProductId());
-                if (product != null && product.getUser() != null) {
-                    userService.updateUserPoints(product.getUser().getId(), pointsDifference);
-                }
-            } catch (Exception e) {
-                // 积分更新失败不影响评价保存状态，但记录日志
-                System.err.println("评价更新时积分调整失败: " + e.getMessage());
-            }
-        }
-        
-        return result;
+
+        return this.updateById(updateReview);
     }
 
     /**

@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 
@@ -71,14 +72,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品未上架，无法购买");
         }
         
-        // 验证商品是否支持该支付方式
-        if (!validatePaymentMethod(productId, paymentMethod)) {
+        // 验证商品是否支持该支付方式（商品支付方式必须与订单支付方式一致）
+        if (!product.getPaymentMethod().equals(paymentMethod)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "该商品不支持此支付方式");
-        }
-        
-        // 如果是积分兑换，检查商品是否允许积分购买
-        if (paymentMethod == 2 && (product.getAllowPointsPurchase() == null || !product.getAllowPointsPurchase())) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "该商品不支持积分兑换");
         }
         
         // 检查不能购买自己的商品
@@ -149,10 +145,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品已下架或不存在，无法支付");
         }
         
-        // 更新订单状态为已支付
+        // 根据支付方式更新订单状态
         Order updateOrder = new Order();
         updateOrder.setId(orderId);
-        updateOrder.setStatus(1); // 已支付
+        
+        // 除积分兑换外，其他支付方式点击即支付成功
+        if (order.getPaymentMethod() == 2) { // 积分兑换
+            updateOrder.setStatus(0); // 待支付，需要调用积分兑换接口
+        } else {
+            updateOrder.setStatus(1); // 已支付
+            updateOrder.setBuyerConfirmed(false); // 等待买家确认收货
+        }
         
         return this.updateById(updateOrder);
     }
@@ -202,11 +205,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 完成订单
+     * 买家确认收货（完成订单）
      *
      * @param orderId 订单ID
      * @param request HTTP请求
-     * @return 是否完成成功
+     * @return 是否确认成功
      */
     @Override
     public boolean completeOrder(Long orderId, HttpServletRequest request) {
@@ -227,20 +230,25 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "订单不存在");
         }
         
-        // 权限校验：卖家或买家可以完成订单
-        if (!order.getBuyer().getId().equals(currentUser.getId()) && 
-            !order.getSeller().getId().equals(currentUser.getId())) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限完成该订单");
+        // 权限校验：只有买家可以确认收货
+        if (!order.getBuyer().getId().equals(currentUser.getId())) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "只有买家可以确认收货");
         }
         
         // 检查订单状态
         if (order.getStatus() != 1) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单未支付，无法完成");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单未支付，无法确认收货");
+        }
+        
+        // 检查是否已经确认过
+        if (order.getBuyerConfirmed() != null && order.getBuyerConfirmed()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单已经确认收货");
         }
         
         // 更新订单状态为已完成
         Order updateOrder = new Order();
         updateOrder.setId(orderId);
+        updateOrder.setBuyerConfirmed(true);
         updateOrder.setStatus(2); // 已完成
         updateOrder.setFinishTime(new Date());
         
@@ -250,9 +258,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (updated) {
             try {
                 // 买家加100积分
-                userService.updateUserPoints(order.getBuyer().getId(), 100);
+                userService.updateUserPoints(order.getBuyer().getId(), new BigDecimal("100"));
                 // 卖家加100积分
-                userService.updateUserPoints(order.getSeller().getId(), 100);
+                userService.updateUserPoints(order.getSeller().getId(), new BigDecimal("100"));
                 
                 // 创建交易记录
                 Product product = productService.getById(order.getProductId());
@@ -601,7 +609,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 确认订单（买家确认收货或卖家确认收款）
+     * 确认订单（买家确认收货）
      *
      * @param confirmRequest 订单确认请求
      * @param request HTTP请求
@@ -614,8 +622,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单ID无效");
         }
         
-        if (confirmRequest.getConfirmType() == null || confirmRequest.getConfirmType() < 1 || confirmRequest.getConfirmType() > 2) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "确认类型无效");
+        // 确认类型只能是买家确认收货（1）
+        if (confirmRequest.getConfirmType() == null || confirmRequest.getConfirmType() != 1) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "确认类型无效，只能进行买家确认收货");
         }
         
         // 获取当前登录用户
@@ -630,13 +639,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "订单不存在");
         }
         
-        // 根据确认类型进行权限校验
-        if (confirmRequest.getConfirmType() == 1 && !order.getBuyer().getId().equals(currentUser.getId())) {
+        // 权限校验：只有买家可以确认收货
+        if (!order.getBuyer().getId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "只有买家可以确认收货");
-        }
-        
-        if (confirmRequest.getConfirmType() == 2 && !order.getSeller().getId().equals(currentUser.getId())) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "只有卖家可以确认收款");
         }
         
         // 检查订单状态
@@ -648,39 +653,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         Order updateOrder = new Order();
         updateOrder.setId(confirmRequest.getOrderId());
         
-        if (confirmRequest.getConfirmType() == 1) {
-            // 买家确认收货
-            updateOrder.setBuyerConfirmed(true);
-            
-            // 如果是微信支付或积分兑换，买家确认后直接完成订单
-            if (order.getPaymentMethod() == 1 || order.getPaymentMethod() == 2) {
-                updateOrder.setStatus(2); // 已完成
-                updateOrder.setFinishTime(new Date());
-                
-                // 订单完成后，给买家和卖家各加100积分
-                try {
-                    userService.updateUserPoints(order.getBuyer().getId(), 100);
-                    userService.updateUserPoints(order.getSeller().getId(), 100);
-                } catch (Exception e) {
-                    System.err.println("订单完成时积分更新失败: " + e.getMessage());
-                }
-            }
-        } else if (confirmRequest.getConfirmType() == 2) {
-            // 卖家确认收款
-            updateOrder.setSellerConfirmed(true);
-            
-            // 如果是现金支付，卖家确认后直接完成订单
-            if (order.getPaymentMethod() == 0) {
-                updateOrder.setStatus(2); // 已完成
-                updateOrder.setFinishTime(new Date());
-                
-                // 订单完成后，给买家和卖家各加100积分
-                try {
-                    userService.updateUserPoints(order.getBuyer().getId(), 100);
-                    userService.updateUserPoints(order.getSeller().getId(), 100);
-                } catch (Exception e) {
-                    System.err.println("订单完成时积分更新失败: " + e.getMessage());
-                }
+        // 买家确认收货，订单直接完成
+        updateOrder.setBuyerConfirmed(true);
+        updateOrder.setStatus(2); // 已完成
+        updateOrder.setFinishTime(new Date());
+        
+        // 订单完成后，给买家发放积分（积分支付订单除外）
+        if (order.getPaymentMethod() != 2) { // 2表示积分兑换
+            try {
+                // 计算买家获得的积分：商品价格除以10，保留小数点后一位
+                BigDecimal pointsToAdd = order.getAmount().divide(new BigDecimal("10"), 1, RoundingMode.HALF_UP);
+                userService.updateUserPoints(order.getBuyer().getId(), pointsToAdd);
+            } catch (Exception e) {
+                System.err.println("订单完成时积分发放失败: " + e.getMessage());
             }
         }
         
@@ -737,10 +722,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "支付过程被中断");
         }
         
-        // 更新订单状态为已支付
+        // 根据支付方式更新订单状态
         Order updateOrder = new Order();
         updateOrder.setId(orderId);
-        updateOrder.setStatus(1); // 已支付
+        
+        // 除积分兑换外，其他支付方式点击即支付成功
+        if (order.getPaymentMethod() == 2) { // 积分兑换
+            updateOrder.setStatus(0); // 待支付，需要调用积分兑换接口
+        } else {
+            updateOrder.setStatus(1); // 已支付
+            updateOrder.setBuyerConfirmed(false); // 等待买家确认收货
+        }
         
         return this.updateById(updateOrder);
     }
@@ -792,26 +784,34 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "商品不存在");
         }
         
-        if (product.getAllowPointsPurchase() == null || !product.getAllowPointsPurchase()) {
+        // 检查商品支付方式是否为积分兑换
+        if (product.getPaymentMethod() == null || product.getPaymentMethod() != 2) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "该商品不支持积分兑换");
         }
         
         // 检查用户积分是否足够（假设商品价格1元=1积分）
-        Integer userPoints = userService.getUserPoints(currentUser.getId());
-        if (userPoints == null || userPoints < order.getAmount().intValue()) {
+        BigDecimal userPoints = userService.getUserPoints(currentUser.getId());
+        if (userPoints == null || userPoints.compareTo(order.getAmount()) < 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "积分不足，无法兑换");
         }
         
         // 扣除用户积分
-        boolean pointsDeducted = userService.updateUserPoints(currentUser.getId(), -order.getAmount().intValue());
+        boolean pointsDeducted = userService.updateUserPoints(currentUser.getId(), order.getAmount().negate());
         if (!pointsDeducted) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "积分扣除失败");
         }
         
-        // 更新订单状态为已支付
+        // 根据支付方式更新订单状态
         Order updateOrder = new Order();
         updateOrder.setId(orderId);
-        updateOrder.setStatus(1); // 已支付
+        
+        // 除积分兑换外，其他支付方式点击即支付成功
+        if (order.getPaymentMethod() == 2) { // 积分兑换
+            updateOrder.setStatus(0); // 待支付，需要调用积分兑换接口
+        } else {
+            updateOrder.setStatus(1); // 已支付
+            updateOrder.setBuyerConfirmed(false); // 等待买家确认收货
+        }
         
         return this.updateById(updateOrder);
     }
@@ -914,16 +914,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         
         boolean updated = this.updateById(updateOrder);
         
-        // 订单完成后，给买家和卖家各加100积分
-        if (updated) {
-            try {
-                userService.updateUserPoints(order.getBuyer().getId(), 100);
-                userService.updateUserPoints(order.getSeller().getId(), 100);
-            } catch (Exception e) {
-                System.err.println("订单完成时积分更新失败: " + e.getMessage());
-            }
-        }
-        
         return updated;
     }
 
@@ -941,12 +931,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         Product product = productService.getById(productId);
-        if (product == null || product.getPaymentOptions() == null) {
+        if (product == null || product.getPaymentMethod() == null) {
             return false;
         }
         
-        // 检查支付方式是否在商品支持的支付方式中
-        return (product.getPaymentOptions() & (1 << paymentMethod)) != 0;
+        // 检查商品支付方式是否与订单支付方式一致
+        return product.getPaymentMethod().equals(paymentMethod);
     }
 
     /**
@@ -956,12 +946,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * @return 支付方式描述
      */
     private String getPaymentMethodDesc(Integer paymentMethod) {
-        switch (paymentMethod) {
-            case 0: return "现金支付";
-            case 1: return "微信支付";
-            case 2: return "积分兑换";
-            case 3: return "物品交换";
-            default: return "未知支付方式";
-        }
+        return switch (paymentMethod) {
+            case 0 -> "现金支付";
+            case 1 -> "微信支付";
+            case 2 -> "积分兑换";
+            case 3 -> "物品交换";
+            default -> "未知支付方式";
+        };
     }
 }
