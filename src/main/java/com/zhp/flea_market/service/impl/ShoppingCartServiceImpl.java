@@ -39,19 +39,14 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
      * 添加商品到购物车
      *
      * @param productId 商品ID
-     * @param quantity 商品数量
      * @param request HTTP请求
      * @return 是否添加成功
      */
     @Override
-    public boolean addToCart(Long productId, Integer quantity, HttpServletRequest request) {
+    public boolean addToCart(Long productId, HttpServletRequest request) {
         // 参数校验
         if (productId == null || productId <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID无效");
-        }
-        
-        if (quantity == null || quantity <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品数量必须大于0");
         }
         
         // 获取当前登录用户
@@ -77,69 +72,17 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
         ShoppingCart existingCartItem = this.getOne(queryWrapper);
         
         if (existingCartItem != null) {
-            // 如果商品已在购物车中，更新数量
-            existingCartItem.setQuantity(existingCartItem.getQuantity() + quantity);
-            existingCartItem.setCreateTime(new Date());
-            return this.updateById(existingCartItem);
+            // 如果商品已在购物车中，直接返回成功（单件模式）
+            return true;
         } else {
             // 创建新的购物车项
             ShoppingCart cartItem = new ShoppingCart();
             cartItem.setUserId(currentUser.getId());
             cartItem.setProductId(productId);
-            cartItem.setQuantity(quantity);
             cartItem.setCreateTime(new Date());
             
             return this.save(cartItem);
         }
-    }
-
-    /**
-     * 更新购物车商品数量
-     *
-     * @param cartId 购物车项ID
-     * @param quantity 商品数量
-     * @param request HTTP请求
-     * @return 是否更新成功
-     */
-    @Override
-    public boolean updateCartQuantity(Long cartId, Integer quantity, HttpServletRequest request) {
-        // 参数校验
-        if (cartId == null || cartId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "购物车项ID无效");
-        }
-        
-        if (quantity == null || quantity <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品数量必须大于0");
-        }
-        
-        // 获取当前登录用户
-        User currentUser = userService.getLoginUserPermitNull(request);
-        if (currentUser == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
-        }
-        
-        // 检查购物车项是否存在
-        ShoppingCart cartItem = this.getById(cartId);
-        if (cartItem == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "购物车项不存在");
-        }
-        
-        // 权限校验：只能修改自己的购物车项
-        if (!cartItem.getUserId().equals(currentUser.getId())) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限修改该购物车项");
-        }
-        
-        // 检查商品是否仍然有效
-        Product product = productService.getById(cartItem.getProductId());
-        if (product == null || product.getStatus() != 1) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品已下架或不存在，无法更新数量");
-        }
-        
-        // 更新数量
-        cartItem.setQuantity(quantity);
-        cartItem.setCreateTime(new Date());
-        
-        return this.updateById(cartItem);
     }
 
     /**
@@ -260,7 +203,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
         for (ShoppingCart cartItem : cartItems) {
             Product product = productService.getById(cartItem.getProductId());
             if (product != null && product.getStatus() == 1) {
-                totalAmount += product.getPrice().doubleValue() * cartItem.getQuantity();
+                totalAmount += product.getPrice().doubleValue();
             }
         }
         

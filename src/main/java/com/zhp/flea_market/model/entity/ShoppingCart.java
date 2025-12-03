@@ -30,11 +30,6 @@ public class ShoppingCart {
     private Long productId;
 
     /**
-     * 商品数量
-     */
-    private Integer quantity;
-
-    /**
      * 添加时间
      */
     private Date createTime;

@@ -15,21 +15,10 @@ public interface ShoppingCartService extends IService<ShoppingCart> {
      * 添加商品到购物车
      *
      * @param productId 商品ID
-     * @param quantity 商品数量
      * @param request HTTP请求
      * @return 是否添加成功
      */
-    boolean addToCart(Long productId, Integer quantity, HttpServletRequest request);
-
-    /**
-     * 更新购物车商品数量
-     *
-     * @param cartId 购物车项ID
-     * @param quantity 商品数量
-     * @param request HTTP请求
-     * @return 是否更新成功
-     */
-    boolean updateCartQuantity(Long cartId, Integer quantity, HttpServletRequest request);
+    boolean addToCart(Long productId, HttpServletRequest request);
 
     /**
      * 从购物车删除商品

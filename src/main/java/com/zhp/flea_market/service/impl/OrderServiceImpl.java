@@ -36,20 +36,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * 创建订单
      *
      * @param productId 商品ID
-     * @param quantity 购买数量
      * @param paymentMethod 支付方式
      * @param request HTTP请求
      * @return 创建的订单ID
      */
     @Override
-    public Long createOrder(Long productId, Integer quantity, Integer paymentMethod, HttpServletRequest request) {
+    public Long createOrder(Long productId, Integer paymentMethod, HttpServletRequest request) {
         // 参数校验
         if (productId == null || productId <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID无效");
-        }
-        
-        if (quantity == null || quantity <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "购买数量必须大于0");
         }
         
         if (paymentMethod == null || paymentMethod < 0 || paymentMethod > 3) {
@@ -78,7 +73,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 计算订单金额
-        BigDecimal amount = calculateOrderAmount(productId, quantity);
+        BigDecimal amount = calculateOrderAmount(productId);
         
         // 创建订单
         Order order = new Order();
@@ -492,16 +487,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * 计算订单金额
      *
      * @param productId 商品ID
-     * @param quantity 数量
      * @return 订单金额
      */
     @Override
-    public BigDecimal calculateOrderAmount(Long productId, Integer quantity) {
+    public BigDecimal calculateOrderAmount(Long productId) {
         Product product = productService.getById(productId);
         if (product == null || product.getPrice() == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品价格信息错误");
         }
         
-        return product.getPrice().multiply(BigDecimal.valueOf(quantity));
+        return product.getPrice();
     }
 }

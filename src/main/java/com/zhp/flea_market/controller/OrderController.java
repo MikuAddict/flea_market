@@ -42,7 +42,6 @@ public class OrderController extends BaseController {
      * 创建订单
      *
      * @param productId 商品ID
-     * @param quantity 购买数量
      * @param paymentMethod 支付方式
      * @param request HTTP请求
      * @return 订单ID
@@ -52,23 +51,17 @@ public class OrderController extends BaseController {
     @LoginRequired
     public BaseResponse<Long> createOrder(
             @Parameter(description = "商品ID") @RequestParam Long productId,
-            @Parameter(description = "购买数量") @RequestParam Integer quantity,
             @Parameter(description = "支付方式 (0-现金, 1-微信, 2-积分兑换, 3-物品交换)") @RequestParam Integer paymentMethod,
             HttpServletRequest request) {
         // 参数校验
         validateId(productId, "商品ID");
-        validateNotNull(quantity, "购买数量");
-        if (quantity <= 0) {
-            throw new BusinessException(com.zhp.flea_market.common.ErrorCode.PARAMS_ERROR, "购买数量必须大于0");
-        }
         validateNotNull(paymentMethod, "支付方式");
 
         // 创建订单
-        Long orderId = orderService.createOrder(productId, quantity, paymentMethod, request);
+        Long orderId = orderService.createOrder(productId, paymentMethod, request);
         
         logOperation("创建订单", true, request, 
                 "商品ID", productId,
-                "数量", quantity,
                 "支付方式", paymentMethod,
                 "订单ID", orderId
         );

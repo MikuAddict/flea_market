@@ -18,12 +18,11 @@ public interface OrderService extends IService<Order> {
      * 创建订单
      *
      * @param productId 商品ID
-     * @param quantity 购买数量
      * @param paymentMethod 支付方式
      * @param request HTTP请求
      * @return 创建的订单ID
      */
-    Long createOrder(Long productId, Integer quantity, Integer paymentMethod, HttpServletRequest request);
+    Long createOrder(Long productId, Integer paymentMethod, HttpServletRequest request);
 
     /**
      * 支付订单
@@ -139,10 +138,9 @@ public interface OrderService extends IService<Order> {
      * 计算订单金额
      *
      * @param productId 商品ID
-     * @param quantity 数量
      * @return 订单金额
      */
-    BigDecimal calculateOrderAmount(Long productId, Integer quantity);
+    BigDecimal calculateOrderAmount(Long productId);
 
     /**
      * 订单统计信息类
