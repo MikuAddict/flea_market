@@ -15,6 +15,7 @@ import com.zhp.flea_market.model.entity.User;
 import com.zhp.flea_market.service.OrderService;
 import com.zhp.flea_market.service.ProductService;
 import com.zhp.flea_market.service.UserService;
+import com.zhp.flea_market.service.TradeRecordService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Autowired
     private ProductService productService;
+    
+    @Autowired
+    private TradeRecordService tradeRecordService;
 
     /**
      * 创建订单
@@ -242,16 +246,34 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         
         boolean updated = this.updateById(updateOrder);
         
-        // 订单完成后，给买家和卖家各加100积分
+        // 订单完成后，给买家和卖家各加100积分，并创建交易记录
         if (updated) {
             try {
                 // 买家加100积分
                 userService.updateUserPoints(order.getBuyer().getId(), 100);
                 // 卖家加100积分
                 userService.updateUserPoints(order.getSeller().getId(), 100);
+                
+                // 创建交易记录
+                Product product = productService.getById(order.getProductId());
+                String paymentMethodDesc = getPaymentMethodDesc(order.getPaymentMethod());
+                
+                tradeRecordService.createTradeRecord(
+                        orderId,
+                        order.getProductId(),
+                        product.getProductName(),
+                        order.getBuyer().getId(),
+                        order.getBuyer().getUserName(),
+                        order.getSeller().getId(),
+                        order.getSeller().getUserName(),
+                        order.getAmount(),
+                        order.getPaymentMethod(),
+                        paymentMethodDesc,
+                        "订单完成自动创建交易记录"
+                );
             } catch (Exception e) {
-                // 积分更新失败不影响订单完成状态，但记录日志
-                System.err.println("订单完成时积分更新失败: " + e.getMessage());
+                // 积分更新和交易记录创建失败不影响订单完成状态，但记录日志
+                System.err.println("订单完成时积分更新或交易记录创建失败: " + e.getMessage());
             }
         }
         
@@ -925,5 +947,21 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         
         // 检查支付方式是否在商品支持的支付方式中
         return (product.getPaymentOptions() & (1 << paymentMethod)) != 0;
+    }
+
+    /**
+     * 获取支付方式描述
+     *
+     * @param paymentMethod 支付方式
+     * @return 支付方式描述
+     */
+    private String getPaymentMethodDesc(Integer paymentMethod) {
+        switch (paymentMethod) {
+            case 0: return "现金支付";
+            case 1: return "微信支付";
+            case 2: return "积分兑换";
+            case 3: return "物品交换";
+            default: return "未知支付方式";
+        }
     }
 }

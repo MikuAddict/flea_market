@@ -10,10 +10,12 @@ import com.zhp.flea_market.model.dto.request.ReviewRequest;
 import com.zhp.flea_market.model.entity.Order;
 import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.model.entity.Review;
+import com.zhp.flea_market.model.entity.TradeRecord;
 import com.zhp.flea_market.model.entity.User;
 import com.zhp.flea_market.service.OrderService;
 import com.zhp.flea_market.service.ProductService;
 import com.zhp.flea_market.service.ReviewService;
+import com.zhp.flea_market.service.TradeRecordService;
 import com.zhp.flea_market.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +41,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
 
     @Autowired
     private OrderService orderService;
+    
+    @Autowired
+    private TradeRecordService tradeRecordService;
 
     /**
      * 添加评价
@@ -103,7 +108,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         
         boolean saved = this.save(review);
         
-        // 评价完成后，根据评分调整卖家积分
+        // 评价完成后，根据评分调整卖家积分，并关联交易记录
         if (saved) {
             try {
                 // 根据评分计算积分变化
@@ -114,6 +119,25 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 if (sellerProduct != null && sellerProduct.getUser() != null) {
                     userService.updateUserPoints(sellerProduct.getUser().getId(), sellerPointsChange);
                 }
+                
+                // 关联交易记录
+                if (review.getOrderId() != null) {
+                    try {
+                        // 获取订单对应的交易记录
+                        List<TradeRecord> tradeRecords = tradeRecordService.list(
+                            tradeRecordService.getQueryWrapper(null, null, null, null, null)
+                                .eq("order_id", review.getOrderId())
+                        );
+                        
+                        if (!tradeRecords.isEmpty()) {
+                            TradeRecord tradeRecord = tradeRecords.get(0);
+                            tradeRecordService.linkReview(tradeRecord.getId(), review.getId());
+                        }
+                    } catch (Exception e) {
+                        // 交易记录关联失败不影响评价保存状态，但记录日志
+                        System.err.println("评价保存时关联交易记录失败: " + e.getMessage());
+                    }
+                }
             } catch (Exception e) {
                 // 积分更新失败不影响评价保存状态，但记录日志
                 System.err.println("评价保存时积分更新失败: " + e.getMessage());
@@ -123,7 +147,85 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         return saved;
     }
 
-
+    /**
+     * 更新评价
+     *
+     * @param review 评价信息
+     * @param request HTTP请求
+     * @return 是否更新成功
+     */
+    @Override
+    public boolean updateReview(Review review, HttpServletRequest request) {
+        // 参数校验
+        if (review == null || review.getId() == null || review.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "评价ID无效");
+        }
+        
+        // 获取当前登录用户
+        User currentUser = userService.getLoginUserPermitNull(request);
+        if (currentUser == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
+        }
+        
+        // 检查评价是否存在
+        Review existingReview = this.getById(review.getId());
+        if (existingReview == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "评价不存在");
+        }
+        
+        // 权限校验：只能更新自己的评价
+        if (!existingReview.getUserId().equals(currentUser.getId())) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限修改该评价");
+        }
+        
+        // 校验评分和内容
+        if (review.getRating() != null && (review.getRating() < 1 || review.getRating() > 5)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "评分必须在1-5分之间");
+        }
+        
+        if (StringUtils.isNotBlank(review.getContent()) && review.getContent().length() > 500) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "评价内容不能超过500字");
+        }
+        
+        // 更新评价信息
+        Review updateReview = new Review();
+        updateReview.setId(review.getId());
+        
+        // 只更新允许修改的字段
+        if (review.getRating() != null) {
+            updateReview.setRating(review.getRating());
+        }
+        if (StringUtils.isNotBlank(review.getContent())) {
+            updateReview.setContent(review.getContent());
+        }
+        
+        // 记录原始评分，用于后续积分调整
+        Integer oldRating = existingReview.getRating();
+        Integer newRating = review.getRating() != null ? review.getRating() : oldRating;
+        
+        boolean result = this.updateById(updateReview);
+        
+        // 评价更新成功后，如果评分发生变化，需要调整卖家积分
+        if (result && !oldRating.equals(newRating)) {
+            try {
+                // 计算积分变化（新评分积分变化 - 旧评分积分变化）
+                int oldPointsChange = calculateSellerPointsChange(oldRating);
+                int newPointsChange = calculateSellerPointsChange(newRating);
+                int pointsDifference = newPointsChange - oldPointsChange;
+                
+                // 获取商品信息，从而获取卖家ID
+                Product product = productService.getById(existingReview.getProductId());
+                if (product != null && product.getUser() != null) {
+                    userService.updateUserPoints(product.getUser().getId(), pointsDifference);
+                }
+            } catch (Exception e) {
+                // 积分更新失败不影响评价保存状态，但记录日志
+                System.err.println("评价更新时积分调整失败: " + e.getMessage());
+            }
+        }
+        
+        return result;
+    }
 
     /**
      * 删除评价
