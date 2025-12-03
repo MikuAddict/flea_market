@@ -10,10 +10,12 @@ import com.zhp.flea_market.model.dto.request.ReviewRequest;
 import com.zhp.flea_market.model.entity.Order;
 import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.model.entity.Review;
+import com.zhp.flea_market.model.entity.TradeRecord;
 import com.zhp.flea_market.model.entity.User;
 import com.zhp.flea_market.service.OrderService;
 import com.zhp.flea_market.service.ProductService;
 import com.zhp.flea_market.service.ReviewService;
+import com.zhp.flea_market.service.TradeRecordService;
 import com.zhp.flea_market.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +41,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
 
     @Autowired
     private OrderService orderService;
+    
+    @Autowired
+    private TradeRecordService tradeRecordService;
 
     /**
      * 添加评价
@@ -103,7 +108,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         
         boolean saved = this.save(review);
         
-        // 评价完成后，根据评分调整卖家积分
+        // 评价完成后，根据评分调整卖家积分，并关联交易记录
         if (saved) {
             try {
                 // 根据评分计算积分变化
@@ -113,6 +118,25 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 Product sellerProduct = productService.getById(review.getProductId());
                 if (sellerProduct != null && sellerProduct.getUser() != null) {
                     userService.updateUserPoints(sellerProduct.getUser().getId(), sellerPointsChange);
+                }
+                
+                // 关联交易记录
+                if (review.getOrderId() != null) {
+                    try {
+                        // 获取订单对应的交易记录
+                        List<TradeRecord> tradeRecords = tradeRecordService.list(
+                            tradeRecordService.getQueryWrapper(null, null, null, null, null)
+                                .eq("order_id", review.getOrderId())
+                        );
+                        
+                        if (!tradeRecords.isEmpty()) {
+                            TradeRecord tradeRecord = tradeRecords.get(0);
+                            tradeRecordService.linkReview(tradeRecord.getId(), review.getId());
+                        }
+                    } catch (Exception e) {
+                        // 交易记录关联失败不影响评价保存状态，但记录日志
+                        System.err.println("评价保存时关联交易记录失败: " + e.getMessage());
+                    }
                 }
             } catch (Exception e) {
                 // 积分更新失败不影响评价保存状态，但记录日志
