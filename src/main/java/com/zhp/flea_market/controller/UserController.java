@@ -11,6 +11,7 @@ import com.zhp.flea_market.exception.BusinessException;
 import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.model.dto.request.*;
 import com.zhp.flea_market.model.entity.User;
+import com.zhp.flea_market.service.UserService;
 import com.zhp.flea_market.model.vo.LoginUserVO;
 import com.zhp.flea_market.model.vo.UserVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,6 +40,9 @@ public class UserController extends BaseController {
 
     @Autowired
     private JwtKit jwtKit;
+
+    @Autowired
+    private UserService userService;
 
     /**
      * 用户注册
@@ -403,5 +407,68 @@ public class UserController extends BaseController {
         
         logOperation("更新个人信息", result, request, "用户ID", loginUser.getId());
         return handleOperationResult(result, "个人信息更新成功");
+    }
+
+    /**
+     * 审核用户
+     *
+     * @param userAuditRequest 用户审核请求
+     * @param request HTTP请求
+     * @return 是否审核成功
+     */
+    @Operation(summary = "审核用户", description = "管理员审核用户申请")
+    @PostMapping("/admin/audit")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> auditUser(
+            @Parameter(description = "用户审核请求") @RequestBody UserAuditRequest userAuditRequest,
+            HttpServletRequest request) {
+        // 参数校验
+        validateNotNull(userAuditRequest, "用户审核请求");
+        validateId(userAuditRequest.getUserId(), "用户ID");
+        validateNotNull(userAuditRequest.getAuditStatus(), "审核状态");
+
+        // 审核用户
+        boolean result = userService.auditUser(
+                userAuditRequest.getUserId(), 
+                userAuditRequest.getAuditStatus(), 
+                userAuditRequest.getAuditRemark(), 
+                request
+        );
+        
+        String statusDesc = userAuditRequest.getAuditStatus() == 1 ? "通过" : "拒绝";
+        logOperation("审核用户", result, request, 
+                "用户ID", userAuditRequest.getUserId(),
+                "审核状态", statusDesc,
+                "审核说明", userAuditRequest.getAuditRemark()
+        );
+        return handleOperationResult(result, "用户审核成功");
+    }
+
+    /**
+     * 获取待审核用户列表
+     *
+     * @param current 当前页码
+     * @param size 每页大小
+     * @param request HTTP请求
+     * @return 待审核用户列表
+     */
+    @Operation(summary = "获取待审核用户列表", description = "管理员获取待审核用户列表")
+    @GetMapping("/admin/pending")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Page<User>> getPendingAuditUsers(
+            @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) {
+        // 参数校验
+        Page<User> page = validatePageParams(current, size);
+
+        // 获取待审核用户列表
+        List<User> users = userService.getPendingAuditUsers(page);
+        
+        logOperation("获取待审核用户列表", request, 
+                "当前页", current,
+                "每页大小", size
+        );
+        return ResultUtils.success(page);
     }
 }

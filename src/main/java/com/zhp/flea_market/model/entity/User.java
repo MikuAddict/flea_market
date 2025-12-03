@@ -47,6 +47,11 @@ public class User implements Serializable {
     @Column(columnDefinition = "varchar(20) default 'user'")
     private String userRole = "user";
     /**
+     * 用户状态 (0-待审核, 1-已通过, 2-已拒绝)
+     */
+    @Column(columnDefinition = "int default 0")
+    private Integer userStatus = 0;
+    /**
      * 联系方式
      */
     private String userPhone;
@@ -55,6 +60,15 @@ public class User implements Serializable {
      */
     @Column(columnDefinition = "int default 0")
     private Integer point = 0;
+    /**
+     * 审核说明
+     */
+    private String auditRemark;
+    /**
+     * 审核时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date auditTime;
     /**
      * 创建时间
      */

@@ -18,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 
@@ -332,5 +333,76 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         
         return user.getPoint();
+    }
+
+    /**
+     * 审核用户
+     *
+     * @param userId 用户ID
+     * @param auditStatus 审核状态 (0-待审核, 1-已通过, 2-已拒绝)
+     * @param auditRemark 审核说明
+     * @param request HTTP请求
+     * @return 是否审核成功
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean auditUser(Long userId, Integer auditStatus, String auditRemark, HttpServletRequest request) {
+        // 参数校验
+        if (userId == null || userId <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID无效");
+        }
+        
+        if (auditStatus == null || auditStatus < 0 || auditStatus > 2) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "审核状态无效");
+        }
+        
+        // 获取当前登录用户
+        User currentUser = getLoginUser(request);
+        if (currentUser == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
+        }
+        
+        // 权限校验：只有管理员可以审核用户
+        if (!isAdmin(currentUser)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限审核用户");
+        }
+        
+        // 检查用户是否存在
+        User user = this.getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户不存在");
+        }
+        
+        // 不能审核管理员
+        if (UserRoleEnum.ADMIN.getValue().equals(user.getUserRole())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "不能审核管理员账户");
+        }
+        
+        // 更新用户审核信息
+        User updateUser = new User();
+        updateUser.setId(userId);
+        updateUser.setUserStatus(auditStatus);
+        updateUser.setAuditRemark(auditRemark);
+        updateUser.setAuditTime(new Date());
+        
+        boolean updated = this.updateById(updateUser);
+        
+        return updated;
+    }
+
+    /**
+     * 获取待审核用户列表
+     *
+     * @param page 分页参数
+     * @return 待审核用户列表
+     */
+    @Override
+    public List<User> getPendingAuditUsers(com.baomidou.mybatisplus.extension.plugins.pagination.Page<User> page) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_status", 0); // 0表示待审核
+        queryWrapper.orderByDesc("create_time");
+        
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<User> resultPage = this.page(page, queryWrapper);
+        return resultPage.getRecords();
     }
 }

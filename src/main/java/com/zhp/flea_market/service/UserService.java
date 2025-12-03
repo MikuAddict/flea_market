@@ -125,4 +125,23 @@ public interface UserService extends IService<User> {
      */
     Integer getUserPoints(Long userId);
 
+    /**
+     * 审核用户
+     *
+     * @param userId 用户ID
+     * @param auditStatus 审核状态 (0-待审核, 1-已通过, 2-已拒绝)
+     * @param auditRemark 审核说明
+     * @param request HTTP请求
+     * @return 是否审核成功
+     */
+    boolean auditUser(Long userId, Integer auditStatus, String auditRemark, HttpServletRequest request);
+
+    /**
+     * 获取待审核用户列表
+     *
+     * @param page 分页参数
+     * @return 待审核用户列表
+     */
+    List<User> getPendingAuditUsers(com.baomidou.mybatisplus.extension.plugins.pagination.Page<User> page);
+
 }
