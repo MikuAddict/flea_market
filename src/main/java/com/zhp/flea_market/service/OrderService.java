@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zhp.flea_market.model.entity.Order;
+import com.zhp.flea_market.model.dto.request.OrderRequest;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.math.BigDecimal;
@@ -104,7 +105,7 @@ public interface OrderService extends IService<Order> {
      * @param request HTTP请求
      * @return 订单统计信息
      */
-    OrderStatistics getOrderStatistics(HttpServletRequest request);
+    OrderRequest getOrderStatistics(HttpServletRequest request);
 
     /**
      * 获取所有订单（管理员权限）
@@ -142,36 +143,5 @@ public interface OrderService extends IService<Order> {
      */
     BigDecimal calculateOrderAmount(Long productId);
 
-    /**
-     * 订单统计信息类
-     */
-    class OrderStatistics {
-        private int totalOrders;
-        private int pendingPaymentOrders;
-        private int paidOrders;
-        private int completedOrders;
-        private int cancelledOrders;
-        private BigDecimal totalAmount;
 
-        // 构造函数、getter和setter
-        public OrderStatistics() {}
-
-        public int getTotalOrders() { return totalOrders; }
-        public void setTotalOrders(int totalOrders) { this.totalOrders = totalOrders; }
-
-        public int getPendingPaymentOrders() { return pendingPaymentOrders; }
-        public void setPendingPaymentOrders(int pendingPaymentOrders) { this.pendingPaymentOrders = pendingPaymentOrders; }
-
-        public int getPaidOrders() { return paidOrders; }
-        public void setPaidOrders(int paidOrders) { this.paidOrders = paidOrders; }
-
-        public int getCompletedOrders() { return completedOrders; }
-        public void setCompletedOrders(int completedOrders) { this.completedOrders = completedOrders; }
-
-        public int getCancelledOrders() { return cancelledOrders; }
-        public void setCancelledOrders(int cancelledOrders) { this.cancelledOrders = cancelledOrders; }
-
-        public BigDecimal getTotalAmount() { return totalAmount; }
-        public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
-    }
 }

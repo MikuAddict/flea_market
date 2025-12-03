@@ -9,6 +9,7 @@ import com.zhp.flea_market.common.ResultUtils;
 import com.zhp.flea_market.constant.UserConstant;
 import com.zhp.flea_market.exception.BusinessException;
 import com.zhp.flea_market.model.dto.request.DeleteRequest;
+import com.zhp.flea_market.model.dto.request.ReviewRequest;
 import com.zhp.flea_market.model.entity.Order;
 import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.model.entity.Review;
@@ -383,7 +384,7 @@ public class ReviewController extends BaseController {
      */
     @Operation(summary = "获取商品评价统计信息", description = "获取指定商品的评价统计信息")
     @GetMapping("/statistics/{productId}")
-    public BaseResponse<ReviewService.ReviewStatistics> getReviewStatistics(
+    public BaseResponse<ReviewRequest> getReviewStatistics(
             @Parameter(description = "商品ID") @PathVariable Long productId) {
         // 参数校验
         validateId(productId, "商品ID");
@@ -392,7 +393,7 @@ public class ReviewController extends BaseController {
         validateResourceExists(productService.getById(productId), "商品");
 
         // 获取评价统计信息
-        ReviewService.ReviewStatistics statistics = reviewService.getReviewStatisticsByProductId(productId);
+        ReviewRequest statistics = reviewService.getReviewStatisticsByProductId(productId);
         
         logOperation("获取商品评价统计信息", null, "商品ID", productId);
         return ResultUtils.success(statistics);

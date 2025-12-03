@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zhp.flea_market.model.entity.Review;
+import com.zhp.flea_market.model.dto.request.ReviewRequest;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
@@ -106,7 +107,7 @@ public interface ReviewService extends IService<Review> {
      * @param productId 商品ID
      * @return 评价统计信息
      */
-    ReviewStatistics getReviewStatisticsByProductId(Long productId);
+    ReviewRequest getReviewStatisticsByProductId(Long productId);
 
     /**
      * 获取查询条件
@@ -119,41 +120,4 @@ public interface ReviewService extends IService<Review> {
      * @return 查询条件
      */
     QueryWrapper<Review> getQueryWrapper(Long productId, Long userId, Long orderId, Integer minRating, Integer maxRating);
-
-    /**
-     * 评价统计信息类
-     */
-    class ReviewStatistics {
-        private int totalReviews;
-        private double averageRating;
-        private int fiveStarCount;
-        private int fourStarCount;
-        private int threeStarCount;
-        private int twoStarCount;
-        private int oneStarCount;
-
-        // 构造函数、getter和setter
-        public ReviewStatistics() {}
-
-        public int getTotalReviews() { return totalReviews; }
-        public void setTotalReviews(int totalReviews) { this.totalReviews = totalReviews; }
-
-        public double getAverageRating() { return averageRating; }
-        public void setAverageRating(double averageRating) { this.averageRating = averageRating; }
-
-        public int getFiveStarCount() { return fiveStarCount; }
-        public void setFiveStarCount(int fiveStarCount) { this.fiveStarCount = fiveStarCount; }
-
-        public int getFourStarCount() { return fourStarCount; }
-        public void setFourStarCount(int fourStarCount) { this.fourStarCount = fourStarCount; }
-
-        public int getThreeStarCount() { return threeStarCount; }
-        public void setThreeStarCount(int threeStarCount) { this.threeStarCount = threeStarCount; }
-
-        public int getTwoStarCount() { return twoStarCount; }
-        public void setTwoStarCount(int twoStarCount) { this.twoStarCount = twoStarCount; }
-
-        public int getOneStarCount() { return oneStarCount; }
-        public void setOneStarCount(int oneStarCount) { this.oneStarCount = oneStarCount; }
-    }
 }

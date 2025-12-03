@@ -1,16 +1,13 @@
 package com.zhp.flea_market.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.zhp.flea_market.annotation.AuthCheck;
 import com.zhp.flea_market.annotation.LoginRequired;
 import com.zhp.flea_market.common.BaseResponse;
 import com.zhp.flea_market.common.ResultUtils;
 import com.zhp.flea_market.constant.UserConstant;
-import com.zhp.flea_market.exception.BusinessException;
-import com.zhp.flea_market.model.dto.request.DeleteRequest;
+import com.zhp.flea_market.model.dto.request.OrderRequest;
 import com.zhp.flea_market.model.entity.Order;
-import com.zhp.flea_market.model.entity.User;
 import com.zhp.flea_market.service.OrderService;
 import com.zhp.flea_market.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -290,9 +287,9 @@ public class OrderController extends BaseController {
     @Operation(summary = "获取订单统计信息", description = "获取当前用户的订单统计信息")
     @GetMapping("/statistics")
     @LoginRequired
-    public BaseResponse<OrderService.OrderStatistics> getOrderStatistics(HttpServletRequest request) {
+    public BaseResponse<OrderRequest> getOrderStatistics(HttpServletRequest request) {
         // 获取订单统计信息
-        OrderService.OrderStatistics statistics = orderService.getOrderStatistics(request);
+        OrderRequest statistics = orderService.getOrderStatistics(request);
         
         logOperation("获取订单统计信息", request);
         return ResultUtils.success(statistics);

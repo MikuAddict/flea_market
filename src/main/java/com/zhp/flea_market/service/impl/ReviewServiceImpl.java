@@ -57,32 +57,43 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
         }
         
+        // 约束条件1：评论功能仅限买家对订单进行评价
+        // 必须提供订单ID，且订单必须存在
+        if (review.getOrderId() == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "必须提供订单ID进行评价");
+        }
+        
+        // 检查订单是否存在且已完成
+        Order order = orderService.getById(review.getOrderId());
+        if (order == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "订单不存在");
+        }
+        
+        // 检查订单是否已完成
+        if (order.getStatus() != 2) { // 订单状态2表示已完成
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "只能对已完成的订单进行评价");
+        }
+        
+        // 检查当前用户是否为订单的买家
+        if (!order.getBuyer().getId().equals(currentUser.getId())) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "只有订单买家才能进行评价");
+        }
+        
+        // 约束条件2：每个订单仅允许买家提交一条评论
+        Review existingReview = getReviewByOrderId(review.getOrderId());
+        if (existingReview != null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "该订单已经评价过，每个订单只能评价一次");
+        }
+        
         // 检查商品是否存在
         Product product = productService.getById(review.getProductId());
         if (product == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "商品不存在");
         }
         
-        // 检查订单是否存在且已完成
-        if (review.getOrderId() != null) {
-            Order order = orderService.getById(review.getOrderId());
-            if (order == null) {
-                throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "订单不存在");
-            }
-            if (order.getStatus() != 2) { // 订单状态2表示已完成
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "只能对已完成的订单进行评价");
-            }
-            
-            // 检查订单是否属于当前用户
-            if (!order.getBuyer().getId().equals(currentUser.getId())) {
-                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限评价该订单");
-            }
-        }
-        
-        // 检查是否已经评价过该商品
-        Review existingReview = getUserReviewForProduct(currentUser.getId(), review.getProductId());
-        if (existingReview != null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "您已经评价过该商品");
+        // 验证商品ID与订单中的商品ID一致
+        if (!order.getProductId().equals(review.getProductId())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID与订单中的商品不一致");
         }
         
         // 设置评价信息
@@ -329,19 +340,31 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
+     * 根据订单ID获取评价
+     *
+     * @param orderId 订单ID
+     * @return 评价信息
+     */
+    private Review getReviewByOrderId(Long orderId) {
+        QueryWrapper<Review> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("order_id", orderId);
+        return this.getOne(queryWrapper);
+    }
+
+    /**
      * 获取商品评价统计信息
      *
      * @param productId 商品ID
      * @return 评价统计信息
      */
     @Override
-    public ReviewStatistics getReviewStatisticsByProductId(Long productId) {
+    public ReviewRequest getReviewStatisticsByProductId(Long productId) {
         // 参数校验
         if (productId == null || productId <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID无效");
         }
         
-        ReviewStatistics statistics = new ReviewStatistics();
+        ReviewRequest statistics = new ReviewRequest();
         
         // 获取所有评价
         QueryWrapper<Review> queryWrapper = new QueryWrapper<>();

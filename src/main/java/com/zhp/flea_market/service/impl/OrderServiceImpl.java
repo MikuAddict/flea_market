@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.exception.BusinessException;
 import com.zhp.flea_market.mapper.OrderMapper;
+import com.zhp.flea_market.model.dto.request.OrderRequest;
 import com.zhp.flea_market.model.entity.Order;
 import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.model.entity.User;
@@ -13,15 +14,12 @@ import com.zhp.flea_market.service.OrderService;
 import com.zhp.flea_market.service.ProductService;
 import com.zhp.flea_market.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements OrderService {
@@ -380,14 +378,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * @return 订单统计信息
      */
     @Override
-    public OrderStatistics getOrderStatistics(HttpServletRequest request) {
+    public OrderRequest getOrderStatistics(HttpServletRequest request) {
         // 获取当前登录用户
         User currentUser = userService.getLoginUserPermitNull(request);
         if (currentUser == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
         }
         
-        OrderStatistics statistics = new OrderStatistics();
+        OrderRequest statistics = new OrderRequest();
         
         // 获取买家订单统计
         QueryWrapper<Order> buyerWrapper = new QueryWrapper<>();
