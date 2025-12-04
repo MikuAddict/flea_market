@@ -742,7 +742,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "该商品不支持积分兑换");
         }
         
-        // 检查用户积分是否足够（假设商品价格1元=1积分）
+        // 检查用户积分是否足够
         BigDecimal userPoints = userService.getUserPoints(currentUser.getId());
         if (userPoints == null || userPoints.compareTo(order.getAmount()) < 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "积分不足，无法兑换");

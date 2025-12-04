@@ -76,6 +76,23 @@ public interface ProductService extends IService<Product> {
     List<Product> searchProducts(String keyword, Page<Product> page);
 
     /**
+     * 高级搜索商品
+     *
+     * @param keyword 关键词
+     * @param categoryId 分类ID
+     * @param minPrice 最低价格
+     * @param maxPrice 最高价格
+     * @param paymentMethod 支付方式
+     * @param sortField 排序字段
+     * @param sortOrder 排序顺序
+     * @param page 分页参数
+     * @return 商品列表
+     */
+    List<Product> advancedSearchProducts(String keyword, Long categoryId, BigDecimal minPrice, 
+                                        BigDecimal maxPrice, Integer paymentMethod, String sortField, 
+                                        String sortOrder, Page<Product> page);
+
+    /**
      * 获取用户发布的商品列表
      *
      * @param userId 用户ID

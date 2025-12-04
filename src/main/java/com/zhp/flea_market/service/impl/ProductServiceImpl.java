@@ -11,6 +11,7 @@ import com.zhp.flea_market.model.entity.User;
 import com.zhp.flea_market.service.ProductService;
 import com.zhp.flea_market.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.Date;
 import java.util.List;
 
 @Service
+@Slf4j
 public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> implements ProductService {
 
     @Autowired
@@ -219,6 +221,81 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
                    .like("description", keyword);
         queryWrapper.eq("status", 1); // 只查询已上架的商品
         queryWrapper.orderByDesc("create_time");
+        
+        Page<Product> resultPage = this.page(page, queryWrapper);
+        return resultPage.getRecords();
+    }
+
+    /**
+     * 高级搜索商品
+     *
+     * @param keyword 关键词
+     * @param categoryId 分类ID
+     * @param minPrice 最低价格
+     * @param maxPrice 最高价格
+     * @param paymentMethod 支付方式
+     * @param sortField 排序字段
+     * @param sortOrder 排序顺序
+     * @param page 分页参数
+     * @return 商品列表
+     */
+    @Override
+    public List<Product> advancedSearchProducts(String keyword, Long categoryId, BigDecimal minPrice, 
+                                               BigDecimal maxPrice, Integer paymentMethod, String sortField, 
+                                               String sortOrder, Page<Product> page) {
+        QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
+        
+        // 关键词搜索（支持商品名称和描述）
+        if (StringUtils.isNotBlank(keyword)) {
+            queryWrapper.and(wrapper -> wrapper
+                .like("product_name", keyword)
+                .or()
+                .like("description", keyword)
+            );
+        }
+        
+        // 分类筛选
+        if (categoryId != null && categoryId > 0) {
+            queryWrapper.eq("category_id", categoryId);
+        }
+        
+        // 价格范围筛选
+        if (minPrice != null && minPrice.compareTo(BigDecimal.ZERO) >= 0) {
+            queryWrapper.ge("price", minPrice);
+        }
+        
+        if (maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) >= 0) {
+            queryWrapper.le("price", maxPrice);
+        }
+        
+        // 支付方式筛选
+        if (paymentMethod != null && paymentMethod >= 0 && paymentMethod <= 3) {
+            queryWrapper.eq("payment_method", paymentMethod);
+        }
+        
+        // 只查询已上架的商品
+        queryWrapper.eq("status", 1);
+        
+        // 排序处理
+        if (StringUtils.isNotBlank(sortField)) {
+            boolean isAsc = "asc".equalsIgnoreCase(sortOrder);
+            switch (sortField.toLowerCase()) {
+                case "price":
+                    queryWrapper.orderBy(true, isAsc, "price");
+                    break;
+                case "createtime":
+                    queryWrapper.orderBy(true, isAsc, "create_time");
+                    break;
+                case "name":
+                    queryWrapper.orderBy(true, isAsc, "product_name");
+                    break;
+                default:
+                    queryWrapper.orderByDesc("create_time");
+                    break;
+            }
+        } else {
+            queryWrapper.orderByDesc("create_time");
+        }
         
         Page<Product> resultPage = this.page(page, queryWrapper);
         return resultPage.getRecords();

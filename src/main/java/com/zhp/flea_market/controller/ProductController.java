@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -271,6 +272,64 @@ public class ProductController extends BaseController {
         
         logOperation("搜索商品", null, 
                 "关键词", keyword,
+                "当前页", current,
+                "每页大小", size
+        );
+        return ResultUtils.success(page);
+    }
+
+    /**
+     * 高级搜索商品
+     *
+     * @param keyword 关键词
+     * @param categoryId 分类ID
+     * @param minPrice 最低价格
+     * @param maxPrice 最高价格
+     * @param paymentMethod 支付方式
+     * @param sortField 排序字段
+     * @param sortOrder 排序顺序
+     * @param current 当前页码
+     * @param size 每页大小
+     * @param request HTTP请求
+     * @return 分页商品列表
+     */
+    @Operation(summary = "高级搜索商品", description = "多条件组合搜索商品，支持分类、价格、支付方式筛选和排序")
+    @GetMapping("/advanced-search")
+    public BaseResponse<Page<Product>> advancedSearchProducts(
+            @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword,
+            @Parameter(description = "分类ID") @RequestParam(required = false) Long categoryId,
+            @Parameter(description = "最低价格") @RequestParam(required = false) BigDecimal minPrice,
+            @Parameter(description = "最高价格") @RequestParam(required = false) BigDecimal maxPrice,
+            @Parameter(description = "支付方式 (0-现金, 1-微信, 2-积分, 3-交换)") @RequestParam(required = false) Integer paymentMethod,
+            @Parameter(description = "排序字段 (price/createtime/name)") @RequestParam(required = false) String sortField,
+            @Parameter(description = "排序顺序 (asc/desc)") @RequestParam(required = false, defaultValue = "desc") String sortOrder,
+            @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) {
+        // 参数校验
+        Page<Product> page = validatePageParams(current, size);
+
+        // 验证价格范围
+        if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "最低价格不能高于最高价格");
+        }
+
+        // 验证支付方式
+        if (paymentMethod != null && (paymentMethod < 0 || paymentMethod > 3)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "支付方式无效");
+        }
+
+        // 执行高级搜索
+        List<Product> productList = productService.advancedSearchProducts(
+                keyword, categoryId, minPrice, maxPrice, paymentMethod, sortField, sortOrder, page);
+
+        
+        logOperation("高级搜索商品", request, 
+                "关键词", keyword,
+                "分类ID", categoryId,
+                "价格区间", minPrice + "-" + maxPrice,
+                "支付方式", paymentMethod,
+                "排序", sortField + " " + sortOrder,
                 "当前页", current,
                 "每页大小", size
         );
