@@ -1,5 +1,6 @@
 package com.zhp.flea_market.model.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -53,6 +54,7 @@ public class Product {
     /**
      * 商品分类ID
      */
+    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
@@ -60,6 +62,7 @@ public class Product {
     /**
      * 发布者ID
      */
+    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

@@ -1,4 +1,4 @@
-# 跳蚤市场 API 文档
+#  
 
 本文档详细描述了跳蚤市场系统的各个 API 接口，包括 URL 路径、请求方法、请求参数、响应数据结构和错误码说明。
 
@@ -582,7 +582,7 @@
 
 - **URL**: `/product/get/{id}`
 - **方法**: GET
-- **描述**: 根据商品ID获取商品详细信息
+- **描述**: 根据商品ID获取商品详细信息（包含关联的分类和用户信息）
 
 #### 请求参数
 
@@ -603,6 +603,8 @@
     "imageUrl": "image_url",
     "status": 1,
     "paymentMethod": 1,
+    "categoryId": 1,
+    "userId": 456,
     "category": {
       "id": 1,
       "name": "电子产品"
@@ -2800,5 +2802,541 @@
     ]
   },
   "message": "ok"
+}
+```
+
+## 图片管理接口
+
+### 上传用户头像
+
+- **URL**: `/image/upload/avatar`
+- **方法**: POST
+- **描述**: 用户上传个人头像图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 头像图片文件 |
+
+#### 响应数据
+
+```json
+{
+  "code": 0,
+  "data": {
+    "originalUrl": "/api/images/avatars/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/avatars/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/avatars/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/avatars/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "AVATAR",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 上传商品图片
+
+- **URL**: `/image/upload/product`
+- **方法**: POST
+- **描述**: 上传商品相关图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 商品图片文件 |
+
+#### 响应数据
+
+```json
+{
+  "code": 0,
+  "data": {
+    "originalUrl": "/api/images/products/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/products/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/products/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/products/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "PRODUCT",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 上传新闻配图
+
+- **URL**: `/image/upload/news`
+- **方法**: POST
+- **描述**: 上传新闻文章配图
+- **权限要求**: 管理员权限
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 新闻配图文件 |
+
+#### 响应数据
+
+```json
+{
+  "code": 0,
+  "data": {
+    "originalUrl": "/api/images/news/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/news/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/news/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/news/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "NEWS",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 上传横幅图片
+
+- **URL**: `/image/upload/banner`
+- **方法**: POST
+- **描述**: 上传网站横幅或广告图片
+- **权限要求**: 管理员权限
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 横幅图片文件 |
+
+#### 响应数据
+
+```json
+{
+  "code": 0,
+  "data": {
+    "originalUrl": "/api/images/banners/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/banners/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/banners/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/banners/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "BANNER",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 通用图片上传
+
+- **URL**: `/image/upload`
+- **方法**: POST
+- **描述**: 通用图片上传接口，可指定图片类型
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 图片文件 |
+| type | string | 是 | 图片类型 (AVATAR, PRODUCT, NEWS, BANNER, OTHER) |
+
+#### 响应数据
+
+```json
+{
+  "code": 0,
+  "data": {
+    "originalUrl": "/api/images/other/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/other/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/other/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/other/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "OTHER",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 批量上传图片
+
+- **URL**: `/image/upload/batch`
+- **方法**: POST
+- **描述**: 批量上传多张图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| files | file[] | 是 | 图片文件数组 |
+| type | string | 是 | 图片类型 (AVATAR, PRODUCT, NEWS, BANNER, OTHER) |
+
+#### 响应数据
+
+```json
+{
+  "code": 0,
+  "data": [
+    {
+      "originalUrl": "/api/images/other/2024/01/01/uuid_filename1.jpg",
+      "thumbnailUrls": {
+        "small": "/api/images/thumbnails/other/2024/01/01/uuid_filename1_small.jpg",
+        "medium": "/api/images/thumbnails/other/2024/01/01/uuid_filename1_medium.jpg",
+        "large": "/api/images/thumbnails/other/2024/01/01/uuid_filename1_large.jpg"
+      },
+      "fileName": "uuid_filename1.jpg",
+      "fileSize": 102400,
+      "imageType": "OTHER",
+      "uploadTime": "2024-01-01 12:00:00"
+    },
+    {
+      "originalUrl": "/api/images/other/2024/01/01/uuid_filename2.jpg",
+      "thumbnailUrls": {
+        "small": "/api/images/thumbnails/other/2024/01/01/uuid_filename2_small.jpg",
+        "medium": "/api/images/thumbnails/other/2024/01/01/uuid_filename2_medium.jpg",
+        "large": "/api/images/thumbnails/other/2024/01/01/uuid_filename2_large.jpg"
+      },
+      "fileName": "uuid_filename2.jpg",
+      "fileSize": 204800,
+      "imageType": "OTHER",
+      "uploadTime": "2024-01-01 12:00:00"
+    }
+  ],
+  "message": "批量图片上传成功"
+}
+```
+
+### 删除图片
+
+- **URL**: `/image/delete`
+- **方法**: DELETE
+- **描述**: 根据图片URL删除图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| imageUrl | string | 是 | 图片URL |
+
+#### 响应数据
+
+```json
+{
+  "code": 0,
+  "data": true,
+  "message": "图片删除成功"
+}
+```
+
+### 批量删除图片
+
+- **URL**: `/image/delete/batch`
+- **方法**: DELETE
+- **描述**: 批量删除多张图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| imageUrls | string[] | 是 | 图片URL数组 |
+
+#### 响应数据
+
+```json
+{
+  "code": 0,
+  "data": true,
+  "message": "批量图片删除成功"
+}
+```
+
+## 图片管理接口
+
+### 上传用户头像
+
+- **URL**: `/image/upload/avatar`
+- **方法**: POST
+- **描述**: 用户上传个人头像图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 头像图片文件 |
+
+#### 响应数据
+
+```json
+{
+  "code": 0,
+  "data": {
+    "originalUrl": "/api/images/avatars/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/avatars/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/avatars/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/avatars/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "AVATAR",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 上传商品图片
+
+- **URL**: `/image/upload/product`
+- **方法**: POST
+- **描述**: 上传商品相关图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 商品图片文件 |
+
+#### 响应数据
+
+```json
+{
+  "code": 0,
+  "data": {
+    "originalUrl": "/api/images/products/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/products/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/products/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/products/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "PRODUCT",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 上传新闻配图
+
+- **URL**: `/image/upload/news`
+- **方法**: POST
+- **描述**: 上传新闻文章配图
+- **权限要求**: 管理员权限
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 新闻配图文件 |
+
+#### 响应数据
+
+```json
+{
+  "code": 0,
+  "data": {
+    "originalUrl": "/api/images/news/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/news/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/news/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/news/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "NEWS",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 上传横幅图片
+
+- **URL**: `/image/upload/banner`
+- **方法**: POST
+- **描述**: 上传网站横幅或广告图片
+- **权限要求**: 管理员权限
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 横幅图片文件 |
+
+#### 响应数据
+
+```json
+{
+  "code": 0,
+  "data": {
+    "originalUrl": "/api/images/banners/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/banners/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/banners/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/banners/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "BANNER",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 通用图片上传
+
+- **URL**: `/image/upload`
+- **方法**: POST
+- **描述**: 通用图片上传接口，可指定图片类型
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| file | file | 是 | 图片文件 |
+| type | string | 是 | 图片类型 (AVATAR, PRODUCT, NEWS, BANNER, OTHER) |
+
+#### 响应数据
+
+```json
+{
+  "code": 0,
+  "data": {
+    "originalUrl": "/api/images/other/2024/01/01/uuid_filename.jpg",
+    "thumbnailUrls": {
+      "small": "/api/images/thumbnails/other/2024/01/01/uuid_filename_small.jpg",
+      "medium": "/api/images/thumbnails/other/2024/01/01/uuid_filename_medium.jpg",
+      "large": "/api/images/thumbnails/other/2024/01/01/uuid_filename_large.jpg"
+    },
+    "fileName": "uuid_filename.jpg",
+    "fileSize": 102400,
+    "imageType": "OTHER",
+    "uploadTime": "2024-01-01 12:00:00"
+  },
+  "message": "图片上传成功"
+}
+```
+
+### 批量上传图片
+
+- **URL**: `/image/upload/batch`
+- **方法**: POST
+- **描述**: 批量上传多张图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| files | file[] | 是 | 图片文件数组 |
+| type | string | 是 | 图片类型 (AVATAR, PRODUCT, NEWS, BANNER, OTHER) |
+
+#### 响应数据
+
+```json
+{
+  "code": 0,
+  "data": [
+    {
+      "originalUrl": "/api/images/other/2024/01/01/uuid_filename1.jpg",
+      "thumbnailUrls": {
+        "small": "/api/images/thumbnails/other/2024/01/01/uuid_filename1_small.jpg",
+        "medium": "/api/images/thumbnails/other/2024/01/01/uuid_filename1_medium.jpg",
+        "large": "/api/images/thumbnails/other/2024/01/01/uuid_filename1_large.jpg"
+      },
+      "fileName": "uuid_filename1.jpg",
+      "fileSize": 102400,
+      "imageType": "OTHER",
+      "uploadTime": "2024-01-01 12:00:00"
+    },
+    {
+      "originalUrl": "/api/images/other/2024/01/01/uuid_filename2.jpg",
+      "thumbnailUrls": {
+        "small": "/api/images/thumbnails/other/2024/01/01/uuid_filename2_small.jpg",
+        "medium": "/api/images/thumbnails/other/2024/01/01/uuid_filename2_medium.jpg",
+        "large": "/api/images/thumbnails/other/2024/01/01/uuid_filename2_large.jpg"
+      },
+      "fileName": "uuid_filename2.jpg",
+      "fileSize": 204800,
+      "imageType": "OTHER",
+      "uploadTime": "2024-01-01 12:00:00"
+    }
+  ],
+  "message": "批量图片上传成功"
+}
+```
+
+### 删除图片
+
+- **URL**: `/image/delete`
+- **方法**: DELETE
+- **描述**: 根据图片URL删除图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| imageUrl | string | 是 | 图片URL |
+
+#### 响应数据
+
+```json
+{
+  "code": 0,
+  "data": true,
+  "message": "图片删除成功"
+}
+```
+
+### 批量删除图片
+
+- **URL**: `/image/delete/batch`
+- **方法**: DELETE
+- **描述**: 批量删除多张图片
+- **权限要求**: 需要登录
+
+#### 请求参数
+
+| 名称 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| imageUrls | string[] | 是 | 图片URL数组 |
+
+#### 响应数据
+
+```json
+{
+  "code": 0,
+  "data": true,
+  "message": "批量图片删除成功"
 }
 ```

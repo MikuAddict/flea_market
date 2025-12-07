@@ -1,5 +1,6 @@
 package com.zhp.flea_market.model.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.util.Date;
@@ -22,17 +23,44 @@ public class Review {
     /**
      * 商品ID
      */
+    @Column(name = "product_id")
     private Long productId;
 
     /**
      * 订单ID
      */
+    @Column(name = "order_id")
     private Long orderId;
 
     /**
      * 评价用户ID
      */
+    @Column(name = "user_id")
     private Long userId;
+
+    /**
+     * 关联用户
+     */
+    @TableField(exist = false)
+    @ManyToOne
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
+
+    /**
+     * 关联商品
+     */
+    @TableField(exist = false)
+    @ManyToOne
+    @JoinColumn(name = "product_id", insertable = false, updatable = false)
+    private Product product;
+
+    /**
+     * 关联订单
+     */
+    @TableField(exist = false)
+    @ManyToOne
+    @JoinColumn(name = "order_id", insertable = false, updatable = false)
+    private Order order;
 
     /**
      * 评分 (1-5分)

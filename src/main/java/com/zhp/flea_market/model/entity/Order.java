@@ -1,5 +1,6 @@
 package com.zhp.flea_market.model.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -23,20 +24,43 @@ public class Order {
     /**
      * 商品ID
      */
+    @Column(name = "product_id")
     private Long productId;
 
     /**
      * 买家ID
      */
-    @ManyToOne
-    @JoinColumn(name = "buyer_id")
-    private User buyer;
+    @Column(name = "buyer_id")
+    private Long buyerId;
 
     /**
      * 卖家ID
      */
+    @Column(name = "seller_id")
+    private Long sellerId;
+
+    /**
+     * 关联商品
+     */
+    @TableField(exist = false)
     @ManyToOne
-    @JoinColumn(name = "seller_id")
+    @JoinColumn(name = "product_id", insertable = false, updatable = false)
+    private Product product;
+
+    /**
+     * 关联买家
+     */
+    @TableField(exist = false)
+    @ManyToOne
+    @JoinColumn(name = "buyer_id", insertable = false, updatable = false)
+    private User buyer;
+
+    /**
+     * 关联卖家
+     */
+    @TableField(exist = false)
+    @ManyToOne
+    @JoinColumn(name = "seller_id", insertable = false, updatable = false)
     private User seller;
 
     /**

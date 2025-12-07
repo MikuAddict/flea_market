@@ -1,5 +1,6 @@
 package com.zhp.flea_market.model.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -38,6 +39,7 @@ public class News {
     /**
      * 公告作者ID
      */
+    @TableField(exist = false)
     @Column(name = "author_id")
     private Long authorId;
 

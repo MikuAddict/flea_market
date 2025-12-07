@@ -1,5 +1,6 @@
 package com.zhp.flea_market.model.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -24,7 +25,16 @@ public class PointsRecord {
     /**
      * 用户ID
      */
+    @Column(name = "user_id")
     private Long userId;
+
+    /**
+     * 关联用户
+     */
+    @TableField(exist = false)
+    @ManyToOne
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
 
     /**
      * 积分变化值（正数为增加，负数为减少）
