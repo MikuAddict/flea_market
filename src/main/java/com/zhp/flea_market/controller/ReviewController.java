@@ -63,17 +63,18 @@ public class ReviewController extends BaseController {
             HttpServletRequest request) {
         // 参数校验
         validateNotNull(review, "评价信息");
-        validateId(review.getProductId(), "商品ID");
+        validateNotNull(review.getProduct(), "商品信息");
+        validateId(review.getProduct().getId(), "商品ID");
         validateNotNull(review.getRating(), "评分");
         validateNotBlank(review.getContent(), "评价内容");
 
         // 检查商品是否存在
-        Product product = productService.getById(review.getProductId());
+        Product product = productService.getById(review.getProduct().getId());
         validateResourceExists(product, "商品");
 
         // 检查订单是否存在（如果提供了订单ID）
-        if (review.getOrderId() != null) {
-            Order order = orderService.getById(review.getOrderId());
+        if (review.getOrder() != null && review.getOrder().getId() != null) {
+            Order order = orderService.getById(review.getOrder().getId());
             validateResourceExists(order, "订单");
         }
 
@@ -81,44 +82,11 @@ public class ReviewController extends BaseController {
         boolean result = reviewService.addReview(review, request);
         
         logOperation("添加评价", result, request, 
-                "商品ID", review.getProductId(),
-                "订单ID", review.getOrderId(),
+                "商品ID", review.getProduct(),
+                "订单ID", review.getOrder(),
                 "评分", review.getRating()
         );
         return handleOperationResult(result, "评价添加成功", review.getId());
-    }
-
-    /**
-     * 更新评价信息
-     *
-     * @param review 评价信息
-     * @param request HTTP请求
-     * @return 是否更新成功
-     */
-    @Operation(summary = "更新评价信息", description = "用户更新自己的评价信息")
-    @PutMapping("/update")
-    @LoginRequired
-    public BaseResponse<Boolean> updateReview(
-            @Parameter(description = "评价信息") @RequestBody Review review,
-            HttpServletRequest request) {
-        // 参数校验
-        validateNotNull(review, "评价信息");
-        validateId(review.getId(), "评价ID");
-        validateNotNull(review.getRating(), "评分");
-        validateNotBlank(review.getContent(), "评价内容");
-
-        // 检查评价是否存在
-        Review existingReview = reviewService.getById(review.getId());
-        validateResourceExists(existingReview, "评价");
-
-        // 更新评价
-        boolean result = reviewService.updateReview(review, request);
-        
-        logOperation("更新评价", result, request, 
-                "评价ID", review.getId(),
-                "评分", review.getRating()
-        );
-        return handleOperationResult(result, "评价更新成功");
     }
 
     /**

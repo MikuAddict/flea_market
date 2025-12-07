@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -115,11 +116,8 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
      * 为单条新闻加载作者信息
      */
     private void loadAuthorInfo(News news) {
-        if (news != null && news.getAuthorId() != null) {
-            User author = userService.getById(news.getAuthorId());
-            if (author != null) {
-                news.setAuthor(author.getUserName()); // 只设置作者名字
-            }
+        if (news != null && news.getUser() != null) {
+            User author = userService.getById(news.getUser().getId());
         }
     }
 
@@ -134,9 +132,14 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
         
         // 获取所有作者ID
         List<Long> authorIds = newsList.stream()
-                .map(News::getAuthorId)
+                .map(news -> news.getUser() != null ? news.getUser().getId() : null)
+                .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
+        
+        if (authorIds.isEmpty()) {
+            return newsList;
+        }
         
         // 批量查询作者信息
         List<User> authors = userService.listByIds(authorIds);
@@ -144,14 +147,7 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
         // 构建作者ID到作者名字的映射
         java.util.Map<Long, String> authorNameMap = authors.stream()
                 .collect(Collectors.toMap(User::getId, User::getUserName));
-        
-        // 为每个新闻设置作者名字
-        newsList.forEach(news -> {
-            if (news.getAuthorId() != null) {
-                news.setAuthor(authorNameMap.get(news.getAuthorId()));
-            }
-        });
-        
+
         return newsList;
     }
 }

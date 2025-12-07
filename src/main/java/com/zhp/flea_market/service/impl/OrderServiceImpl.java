@@ -73,7 +73,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 检查不能购买自己的商品
-        if (product.getUser().getId().equals(currentUser.getId())) {
+        if (product.getUser() != null && product.getUser().getId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "不能购买自己的商品");
         }
         
@@ -82,7 +82,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         
         // 创建订单
         Order order = new Order();
-        order.setProductId(productId);
+        order.setProduct(product);
         order.setBuyer(currentUser);
         order.setSeller(product.getUser());
         order.setAmount(amount);
@@ -133,7 +133,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 检查商品是否仍然有效
-        Product product = productService.getById(order.getProductId());
+        Product product = order.getProduct();
         if (product == null || product.getStatus() != 1) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品已下架或不存在，无法支付");
         }
@@ -218,7 +218,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 权限校验：只有买家可以确认收货
-        if (!order.getBuyer().getId().equals(currentUser.getId())) {
+        if (order.getBuyer() == null || !order.getBuyer().getId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "只有买家可以确认收货");
         }
         
@@ -242,7 +242,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         boolean updated = this.updateById(updateOrder);
         
         // 订单完成后，给买家和卖家各加100积分，并创建交易记录
-        if (updated) {
+        if (updated && order.getBuyer() != null && order.getSeller() != null) {
             try {
                 // 买家加100积分
                 userService.updateUserPoints(order.getBuyer().getId(), new BigDecimal("100"));
@@ -250,12 +250,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 userService.updateUserPoints(order.getSeller().getId(), new BigDecimal("100"));
                 
                 // 创建交易记录
-                Product product = productService.getById(order.getProductId());
+                Product product = order.getProduct();
                 String paymentMethodDesc = getPaymentMethodDesc(order.getPaymentMethod());
                 
                 tradeRecordService.createTradeRecord(
                         orderId,
-                        order.getProductId(),
+                        product.getId(),
                         product.getProductName(),
                         order.getBuyer().getId(),
                         order.getBuyer().getUserName(),
@@ -597,7 +597,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 权限校验：只有买家可以确认收货
-        if (!order.getBuyer().getId().equals(currentUser.getId())) {
+        if (order.getBuyer() == null || !order.getBuyer().getId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "只有买家可以确认收货");
         }
         
@@ -732,7 +732,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 检查商品是否允许积分购买
-        Product product = productService.getById(order.getProductId());
+        Product product = order.getProduct();
         if (product == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "商品不存在");
         }

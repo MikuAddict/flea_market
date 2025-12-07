@@ -114,7 +114,7 @@ public class NewsController extends BaseController {
         // 创建新闻对象
         News news = new News();
         BeanUtils.copyProperties(newsAddRequest, news);
-        news.setAuthorId(currentUser.getId());
+        news.setUser(currentUser);
         news.setCreateTime(new Date());
 
         // 添加新闻
@@ -154,7 +154,7 @@ public class NewsController extends BaseController {
         News news = new News();
         BeanUtils.copyProperties(newsUpdateRequest, news);
         // 保留原有的作者ID和创建时间
-        news.setAuthorId(existNews.getAuthorId());
+        news.setUser(existNews.getUser());
         news.setCreateTime(existNews.getCreateTime());
 
         // 更新新闻

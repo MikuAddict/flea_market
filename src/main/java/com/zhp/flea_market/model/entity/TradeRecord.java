@@ -1,10 +1,10 @@
 package com.zhp.flea_market.model.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.util.Date;
 
 /**
@@ -23,58 +23,39 @@ public class TradeRecord {
     private Long id;
 
     /**
-     * 订单ID
+     * 订单信息
      */
-    @Column(name = "order_id")
-    private Long orderId;
+    @TableField(exist = false)
+    @ManyToOne
+    @JoinColumn(name = "order_id", insertable = false, updatable = false)
+    private Order order;
 
     /**
-     * 商品ID
+     * 商品信息
      */
-    @Column(name = "product_id")
-    private Long productId;
+    @TableField(exist = false)
+    @ManyToOne
+    @JoinColumn(name = "product_id", insertable = false, updatable = false)
+    private Product product;
 
     /**
-     * 商品名称
+     * 买家信息
      */
-    @Column(name = "product_name")
-    private String productName;
+    @TableField(exist = false)
+    @ManyToOne
+    @JoinColumn(name = "buyer_id", insertable = false, updatable = false)
+    private User buyer;
+
+
 
     /**
-     * 买家ID
+     * 卖家信息
      */
-    @Column(name = "buyer_id")
-    private Long buyerId;
+    @TableField(exist = false)
+    @ManyToOne
+    @JoinColumn(name = "seller_id", insertable = false, updatable = false)
+    private User seller;
 
-    /**
-     * 买家用户名
-     */
-    @Column(name = "buyer_name")
-    private String buyerName;
-
-    /**
-     * 卖家ID
-     */
-    @Column(name = "seller_id")
-    private Long sellerId;
-
-    /**
-     * 卖家用户名
-     */
-    @Column(name = "seller_name")
-    private String sellerName;
-
-    /**
-     * 交易金额
-     */
-    @Column(precision = 10, scale = 2)
-    private BigDecimal amount;
-
-    /**
-     * 支付方式 (0-现金, 1-微信, 2-积分兑换, 3-物品交换)
-     */
-    @Column(name = "payment_method")
-    private Integer paymentMethod;
 
     /**
      * 支付方式描述
@@ -101,10 +82,12 @@ public class TradeRecord {
     private String remark;
 
     /**
-     * 评价ID（如果已评价）
+     * 评价信息
      */
-    @Column(name = "review_id")
-    private Long reviewId;
+    @TableField(exist = false)
+    @ManyToOne
+    @JoinColumn(name = "review_id", insertable = false, updatable = false)
+    private Review review;
 
     /**
      * 在保存实体之前设置创建时间

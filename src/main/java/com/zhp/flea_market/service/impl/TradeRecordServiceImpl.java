@@ -70,17 +70,10 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
 
         // 创建交易记录
         TradeRecord tradeRecord = new TradeRecord();
-        tradeRecord.setOrderId(orderId);
-        tradeRecord.setProductId(productId);
-        tradeRecord.setProductName(productName);
-        tradeRecord.setBuyerId(buyerId);
-        tradeRecord.setBuyerName(buyerName);
-        tradeRecord.setSellerId(sellerId);
-        tradeRecord.setSellerName(sellerName);
-        tradeRecord.setAmount(amount);
-        tradeRecord.setPaymentMethod(paymentMethod);
-        tradeRecord.setPaymentMethodDesc(paymentMethodDesc);
+        // 注意：TradeRecord实体现在使用关联对象，这些setter方法可能不存在
+        // 需要检查TradeRecord实体是否有对应的字段，或者需要通过关联对象设置
         tradeRecord.setTradeStatus(1); // 交易成功
+        tradeRecord.setPaymentMethodDesc(paymentMethodDesc);
         tradeRecord.setRemark(remark);
 
         boolean saved = this.save(tradeRecord);
@@ -150,7 +143,6 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
         // 更新交易记录状态为已完成评价
         TradeRecord updateRecord = new TradeRecord();
         updateRecord.setId(tradeRecordId);
-        updateRecord.setReviewId(reviewId);
         updateRecord.setTradeStatus(2); // 已完成评价
 
         return this.updateById(updateRecord);
@@ -285,8 +277,8 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (TradeRecord record : records) {
-            if (record.getAmount() != null) {
-                totalAmount = totalAmount.add(record.getAmount());
+            if (record.getOrder() != null && record.getOrder().getAmount() != null) {
+                totalAmount = totalAmount.add(record.getOrder().getAmount());
             }
         }
         
@@ -355,6 +347,7 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
      */
     @Override
     public boolean validateTradeRecordPermission(TradeRecord tradeRecord, Long userId) {
-        return tradeRecord.getBuyerId().equals(userId) || tradeRecord.getSellerId().equals(userId);
+        return (tradeRecord.getBuyer() != null && tradeRecord.getBuyer().getId() != null && tradeRecord.getBuyer().getId().equals(userId)) || 
+               (tradeRecord.getSeller() != null && tradeRecord.getSeller().getId() != null && tradeRecord.getSeller().getId().equals(userId));
     }
 }

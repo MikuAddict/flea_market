@@ -23,12 +23,6 @@ public class PointsRecord {
     private Long id;
 
     /**
-     * 用户ID
-     */
-    @Column(name = "user_id")
-    private Long userId;
-
-    /**
      * 关联用户
      */
     @TableField(exist = false)

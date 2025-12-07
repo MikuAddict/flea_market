@@ -21,18 +21,6 @@ public class ShoppingCart {
     private Long id;
 
     /**
-     * 用户ID
-     */
-    @Column(name = "user_id")
-    private Long userId;
-
-    /**
-     * 商品ID
-     */
-    @Column(name = "product_id")
-    private Long productId;
-
-    /**
      * 关联用户
      */
     @TableField(exist = false)

@@ -22,24 +22,6 @@ public class Order {
     private Long id;
 
     /**
-     * 商品ID
-     */
-    @Column(name = "product_id")
-    private Long productId;
-
-    /**
-     * 买家ID
-     */
-    @Column(name = "buyer_id")
-    private Long buyerId;
-
-    /**
-     * 卖家ID
-     */
-    @Column(name = "seller_id")
-    private Long sellerId;
-
-    /**
      * 关联商品
      */
     @TableField(exist = false)

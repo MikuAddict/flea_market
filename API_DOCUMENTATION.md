@@ -4,18 +4,18 @@
 
 ## 错误码说明
 
-| 错误码 | 说明 |
-|--------|------|
-| 0 | 成功 |
-| 40000 | 请求参数错误 |
-| 40100 | 未登录 |
-| 40101 | 无权限 |
-| 40400 | 请求数据不存在 |
-| 40300 | 禁止访问 |
-| 50000 | 系统内部异常 |
-| 50001 | 操作失败 |
-| 422200 | 包含违禁词，多次违禁将封禁账号 |
-| 50002 | 用户余额不足，无法调用 AI |
+| 错误码 | 含义 | 使用场景 |
+|--------|------|----------|
+| 200 | 成功 | 所有成功的业务操作，如查询成功、操作成功等 |
+| 400 | 请求参数错误 | 参数校验失败、格式错误、必填参数缺失等 |
+| 401 | 未登录 | 需要登录但未提供有效认证信息 |
+| 402 | 用户余额不足 | 用户余额不足，无法完成操作（如调用AI服务） |
+| 403 | 无权限 | 用户权限不足，无法访问资源 |
+| 404 | 请求数据不存在 | 请求的资源不存在 |
+| 405 | 禁止访问 | 访问被明确禁止（如违禁操作） |
+| 422 | 包含违禁词 | 用户输入包含违禁词，需要修改内容 |
+| 500 | 系统内部异常 | 服务器内部错误、数据库异常等 |
+| 501 | 操作失败 | 业务操作失败，如数据更新失败等 |
 
 ## 用户管理接口
 
@@ -38,7 +38,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 123,
   "message": "注册成功"
 }
@@ -61,7 +61,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "userAccount": "test",
@@ -89,7 +89,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "注销成功"
 }
@@ -106,7 +106,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "userAccount": "test",
@@ -147,7 +147,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 123,
   "message": "用户创建成功"
 }
@@ -170,7 +170,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "用户删除成功"
 }
@@ -200,7 +200,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "用户更新成功"
 }
@@ -223,7 +223,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "userAccount": "test",
@@ -258,7 +258,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "userName": "测试用户",
@@ -294,7 +294,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -343,7 +343,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -381,7 +381,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "个人信息更新成功"
 }
@@ -405,7 +405,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "用户审核成功"
 }
@@ -429,7 +429,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -466,7 +466,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 5,
   "message": "ok"
 }
@@ -490,7 +490,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": "成功删除了 5 个已拒绝用户",
   "message": "ok"
 }
@@ -520,7 +520,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 123,
   "message": "商品添加成功"
 }
@@ -549,7 +549,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "商品更新成功"
 }
@@ -572,7 +572,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "商品删除成功"
 }
@@ -594,7 +594,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "productName": "测试商品",
@@ -646,7 +646,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -704,7 +704,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -762,7 +762,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -826,7 +826,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -884,7 +884,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -942,7 +942,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -1000,7 +1000,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "商品状态更新成功"
 }
@@ -1022,7 +1022,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": [
     {
       "id": 123,
@@ -1075,7 +1075,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "商品审核成功"
 }
@@ -1102,7 +1102,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -1154,7 +1154,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": [
     {
       "id": 1,
@@ -1186,7 +1186,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 123,
   "message": "商品分类添加成功"
 }
@@ -1210,7 +1210,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "商品分类更新成功"
 }
@@ -1233,7 +1233,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "商品分类删除成功"
 }
@@ -1258,7 +1258,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 123,
   "message": "订单创建成功"
 }
@@ -1281,7 +1281,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "订单支付成功"
 }
@@ -1304,7 +1304,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "订单取消成功"
 }
@@ -1327,7 +1327,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "订单完成成功"
 }
@@ -1350,7 +1350,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "productId": 456,
@@ -1411,7 +1411,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -1479,7 +1479,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -1548,7 +1548,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -1617,7 +1617,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -1678,7 +1678,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "pendingPayment": 1,
     "paid": 2,
@@ -1708,7 +1708,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -1776,7 +1776,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "支付凭证提交成功"
 }
@@ -1799,7 +1799,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "确认收货成功"
 }
@@ -1822,7 +1822,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "微信支付成功"
 }
@@ -1845,7 +1845,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "积分兑换成功"
 }
@@ -1868,7 +1868,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "物品交换申请成功，等待卖家确认"
 }
@@ -1891,7 +1891,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "物品交换确认成功"
 }
@@ -1916,7 +1916,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": [
     {
       "id": 123,
@@ -1942,7 +1942,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "title": "平台公告标题",
@@ -1972,7 +1972,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "title": "平台公告标题",
@@ -2005,7 +2005,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 123,
   "message": "新闻添加成功"
 }
@@ -2031,7 +2031,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "新闻更新成功"
 }
@@ -2054,7 +2054,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "新闻删除成功"
 }
@@ -2082,7 +2082,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 123,
   "message": "评价添加成功"
 }
@@ -2107,7 +2107,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "评价更新成功"
 }
@@ -2130,7 +2130,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "评价删除成功"
 }
@@ -2152,7 +2152,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "productId": 456,
@@ -2183,7 +2183,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -2222,7 +2222,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -2261,7 +2261,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -2300,7 +2300,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -2338,7 +2338,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "productId": 456,
@@ -2369,7 +2369,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "id": 123,
     "productId": 456,
@@ -2399,7 +2399,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": 4.5,
   "message": "ok"
 }
@@ -2421,7 +2421,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "productId": 123,
     "totalReviews": 10,
@@ -2456,7 +2456,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -2500,7 +2500,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "records": [
       {
@@ -2542,7 +2542,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": [
     {
       "productId": 123,
@@ -2574,7 +2574,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": [
     {
       "userId": 123,
@@ -2603,7 +2603,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": [
     {
       "productId": 123,
@@ -2633,7 +2633,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": [
     {
       "productId": 123,
@@ -2664,7 +2664,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "totalUsers": 1000,
     "totalProducts": 5000,
@@ -2704,7 +2704,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "year": 2023,
     "month": 1,
@@ -2741,7 +2741,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "userId": 123,
     "totalPurchases": 10,
@@ -2784,7 +2784,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "productId": 123,
     "totalSales": 10,
@@ -2824,7 +2824,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "originalUrl": "/api/images/avatars/2024/01/01/uuid_filename.jpg",
     "thumbnailUrls": {
@@ -2858,7 +2858,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "originalUrl": "/api/images/products/2024/01/01/uuid_filename.jpg",
     "thumbnailUrls": {
@@ -2892,7 +2892,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "originalUrl": "/api/images/news/2024/01/01/uuid_filename.jpg",
     "thumbnailUrls": {
@@ -2926,7 +2926,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "originalUrl": "/api/images/banners/2024/01/01/uuid_filename.jpg",
     "thumbnailUrls": {
@@ -2961,7 +2961,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "originalUrl": "/api/images/other/2024/01/01/uuid_filename.jpg",
     "thumbnailUrls": {
@@ -2996,7 +2996,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": [
     {
       "originalUrl": "/api/images/other/2024/01/01/uuid_filename1.jpg",
@@ -3044,7 +3044,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "图片删除成功"
 }
@@ -3067,7 +3067,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "批量图片删除成功"
 }
@@ -3092,7 +3092,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "originalUrl": "/api/images/avatars/2024/01/01/uuid_filename.jpg",
     "thumbnailUrls": {
@@ -3126,7 +3126,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "originalUrl": "/api/images/products/2024/01/01/uuid_filename.jpg",
     "thumbnailUrls": {
@@ -3160,7 +3160,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "originalUrl": "/api/images/news/2024/01/01/uuid_filename.jpg",
     "thumbnailUrls": {
@@ -3194,7 +3194,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "originalUrl": "/api/images/banners/2024/01/01/uuid_filename.jpg",
     "thumbnailUrls": {
@@ -3229,7 +3229,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": {
     "originalUrl": "/api/images/other/2024/01/01/uuid_filename.jpg",
     "thumbnailUrls": {
@@ -3264,7 +3264,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": [
     {
       "originalUrl": "/api/images/other/2024/01/01/uuid_filename1.jpg",
@@ -3312,7 +3312,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "图片删除成功"
 }
@@ -3335,7 +3335,7 @@
 
 ```json
 {
-  "code": 0,
+  "code": 200,
   "data": true,
   "message": "批量图片删除成功"
 }

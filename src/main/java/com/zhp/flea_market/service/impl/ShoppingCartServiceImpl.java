@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.exception.BusinessException;
-import com.zhp.flea_market.mapper.ProductMapper;
 import com.zhp.flea_market.mapper.ShoppingCartMapper;
 import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.model.entity.ShoppingCart;
@@ -73,8 +72,8 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
         } else {
             // 创建新的购物车项
             ShoppingCart cartItem = new ShoppingCart();
-            cartItem.setUserId(currentUser.getId());
-            cartItem.setProductId(productId);
+            cartItem.setUser(currentUser);
+            cartItem.setProduct(product);
             cartItem.setCreateTime(new Date());
             
             return this.save(cartItem);
@@ -109,7 +108,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
         }
         
         // 权限校验：只能删除自己的购物车项
-        if (!cartItem.getUserId().equals(currentUser.getId())) {
+        if (cartItem.getUser() == null || !cartItem.getUser().getId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限删除该购物车项");
         }
         
@@ -204,7 +203,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
         
         double totalAmount = 0.0;
         for (ShoppingCart cartItem : cartItems) {
-            Product product = productService.getById(cartItem.getProductId());
+            Product product = cartItem.getProduct();
             if (product != null && product.getStatus() == 1) {
                 totalAmount += product.getPrice().doubleValue();
             }

@@ -3,6 +3,7 @@ package com.zhp.flea_market.model.entity;
 import com.baomidou.mybatisplus.annotation.TableField;
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.util.Date;
 
 /**
@@ -19,24 +20,6 @@ public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    /**
-     * 商品ID
-     */
-    @Column(name = "product_id")
-    private Long productId;
-
-    /**
-     * 订单ID
-     */
-    @Column(name = "order_id")
-    private Long orderId;
-
-    /**
-     * 评价用户ID
-     */
-    @Column(name = "user_id")
-    private Long userId;
 
     /**
      * 关联用户

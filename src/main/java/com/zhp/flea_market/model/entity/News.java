@@ -40,14 +40,10 @@ public class News {
      * 公告作者ID
      */
     @TableField(exist = false)
-    @Column(name = "author_id")
-    private Long authorId;
+    @ManyToOne
+    @JoinColumn(name = "author_id")
+    private User user;
 
-    /**
-     * 公告作者名字
-     */
-    @Transient
-    private String author;
 
     /**
      * 创建时间
