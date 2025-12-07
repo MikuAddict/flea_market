@@ -2,6 +2,10 @@ server:
   port: 7023
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
   datasource:
     url: jdbc:mariadb://localhost:3307/flea_market_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
     username: root
@@ -23,6 +27,27 @@ spring:
       name: admin
       password: admin
       roles: ADMIN
+
+# 图片存储配置
+image:
+  storage:
+    base-path: "uploads/images"
+    base-url: "/api/images"
+    max-file-size: 10
+    allowed-formats: ["jpg", "jpeg", "png", "webp", "gif"]
+    enable-compression: true
+    compression-quality: 0.8
+    generate-thumbnails: true
+    thumbnail-sizes:
+      - name: "small"
+        width: 100
+        height: 100
+      - name: "medium"
+        width: 300
+        height: 300
+      - name: "large"
+        width: 800
+        height: 800
 
 #jwt config
 jwt:

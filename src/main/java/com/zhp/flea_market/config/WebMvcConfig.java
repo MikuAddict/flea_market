@@ -2,25 +2,30 @@ package com.zhp.flea_market.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Web MVC配置类
+ * Web MVC 配置
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
     @Autowired
-    private UnifiedAuthInterceptor unifiedAuthInterceptor;
+    private ImageStorageConfig storageConfig;
 
+    /**
+     * 配置静态资源映射
+     */
     @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        // 注册统一认证拦截器
-        registry.addInterceptor(unifiedAuthInterceptor)
-                .addPathPatterns("/**") // 拦截所有请求
-                .excludePathPatterns("/user/login", "/user/register", "/", "/swagger-ui/**", 
-                        "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**", "/api-docs/**",
-                        "/category/list", "/news/list", "/news/latest", "/news/detail/*"); // 排除这些路径，包括公共访问接口
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // 映射图片访问路径到本地存储目录
+        registry.addResourceHandler(storageConfig.getBaseUrl() + "/**")
+                .addResourceLocations("file:" + storageConfig.getBasePath() + "/");
+        
+        // 配置静态资源缓存
+        registry.addResourceHandler("/**")
+                .addResourceLocations("classpath:/static/")
+                .setCachePeriod(3600); // 1小时缓存
     }
 }
