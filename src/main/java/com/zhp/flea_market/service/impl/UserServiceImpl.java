@@ -175,10 +175,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     public User getLoginUserPermitNull(HttpServletRequest request) {
-        // 从统一认证拦截器设置的request属性中获取用户信息
+        // 先尝试从统一认证拦截器设置的request属性中获取用户信息
         User currentUser = (User) request.getAttribute("currentUser");
         if (currentUser == null || currentUser.getId() == null) {
-            return null;
+            // 如果request属性中没有用户信息，尝试从session中获取
+            Object userObj = request.getSession().getAttribute("USER_LOGIN_STATE");
+            currentUser = (User) userObj;
+            if (currentUser == null || currentUser.getId() == null) {
+                return null;
+            }
         }
         // 从数据库查询（追求性能的话可以注释，直接走缓存）
         long userId = currentUser.getId();

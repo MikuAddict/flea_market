@@ -117,6 +117,9 @@ public class UnifiedAuthInterceptor implements HandlerInterceptor {
             // 设置Spring Security认证信息
             setSecurityContextAuthentication(user, request);
             
+            // 将用户信息存储到session中，确保刷新后仍能获取
+            request.getSession().setAttribute("USER_LOGIN_STATE", user);
+            
             log.debug("JWT认证成功，用户: {}", user.getUserName());
             return user;
             

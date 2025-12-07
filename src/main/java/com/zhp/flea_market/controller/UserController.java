@@ -158,7 +158,7 @@ public class UserController extends BaseController {
     @LoginRequired
     public BaseResponse<LoginUserVO> getLoginUser(HttpServletRequest request) {
         validateNotNull(request, "HTTP请求");
-        User user = (User) request.getAttribute("currentUser");
+        User user = userService.getLoginUser(request);
         if (user == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
         }
