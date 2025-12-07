@@ -277,8 +277,8 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (TradeRecord record : records) {
-            if (record.getOrder() != null && record.getOrder().getAmount() != null) {
-                totalAmount = totalAmount.add(record.getOrder().getAmount());
+            if (record.getOrderId() != null && record.getOrderId().getAmount() != null) {
+                totalAmount = totalAmount.add(record.getOrderId().getAmount());
             }
         }
         
@@ -347,7 +347,7 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
      */
     @Override
     public boolean validateTradeRecordPermission(TradeRecord tradeRecord, Long userId) {
-        return (tradeRecord.getBuyer() != null && tradeRecord.getBuyer().getId() != null && tradeRecord.getBuyer().getId().equals(userId)) || 
-               (tradeRecord.getSeller() != null && tradeRecord.getSeller().getId() != null && tradeRecord.getSeller().getId().equals(userId));
+        return (tradeRecord.getBuyerId() != null && tradeRecord.getBuyerId().getId() != null && tradeRecord.getBuyerId().getId().equals(userId)) ||
+               (tradeRecord.getSellerId() != null && tradeRecord.getSellerId().getId() != null && tradeRecord.getSellerId().getId().equals(userId));
     }
 }

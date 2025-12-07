@@ -73,7 +73,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 检查不能购买自己的商品
-        if (product.getUser() != null && product.getUser().getId().equals(currentUser.getId())) {
+        if (product.getUserId() != null && product.getUserId().getId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "不能购买自己的商品");
         }
         
@@ -82,9 +82,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         
         // 创建订单
         Order order = new Order();
-        order.setProduct(product);
-        order.setBuyer(currentUser);
-        order.setSeller(product.getUser());
+        order.setProductId(product);
+        order.setBuyerId(currentUser);
+        order.setSellerId(product.getUserId());
         order.setAmount(amount);
         order.setPaymentMethod(paymentMethod);
         order.setStatus(0); // 待支付
@@ -133,7 +133,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 检查商品是否仍然有效
-        Product product = order.getProduct();
+        Product product = order.getProductId();
         if (product == null || product.getStatus() != 1) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品已下架或不存在，无法支付");
         }
@@ -218,7 +218,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 权限校验：只有买家可以确认收货
-        if (order.getBuyer() == null || !order.getBuyer().getId().equals(currentUser.getId())) {
+        if (order.getBuyerId() == null || !order.getBuyerId().getId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "只有买家可以确认收货");
         }
         
@@ -242,25 +242,25 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         boolean updated = this.updateById(updateOrder);
         
         // 订单完成后，给买家和卖家各加100积分，并创建交易记录
-        if (updated && order.getBuyer() != null && order.getSeller() != null) {
+        if (updated && order.getBuyerId() != null && order.getSellerId() != null) {
             try {
                 // 买家加100积分
-                userService.updateUserPoints(order.getBuyer().getId(), new BigDecimal("100"));
+                userService.updateUserPoints(order.getBuyerId().getId(), new BigDecimal("100"));
                 // 卖家加100积分
-                userService.updateUserPoints(order.getSeller().getId(), new BigDecimal("100"));
+                userService.updateUserPoints(order.getSellerId().getId(), new BigDecimal("100"));
                 
                 // 创建交易记录
-                Product product = order.getProduct();
+                Product product = order.getProductId();
                 String paymentMethodDesc = getPaymentMethodDesc(order.getPaymentMethod());
                 
                 tradeRecordService.createTradeRecord(
                         orderId,
                         product.getId(),
                         product.getProductName(),
-                        order.getBuyer().getId(),
-                        order.getBuyer().getUserName(),
-                        order.getSeller().getId(),
-                        order.getSeller().getUserName(),
+                        order.getBuyerId().getId(),
+                        order.getBuyerId().getUserName(),
+                        order.getSellerId().getId(),
+                        order.getSellerId().getUserName(),
                         order.getAmount(),
                         order.getPaymentMethod(),
                         paymentMethodDesc,
@@ -498,8 +498,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      */
     @Override
     public boolean validateOrderPermission(Order order, Long userId) {
-        return !order.getBuyer().getId().equals(userId) &&
-                !order.getSeller().getId().equals(userId);
+        return !order.getBuyerId().getId().equals(userId) &&
+                !order.getSellerId().getId().equals(userId);
     }
 
     /**
@@ -545,7 +545,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 权限校验：只有买家可以提交支付凭证
-        if (!order.getBuyer().getId().equals(currentUser.getId())) {
+        if (!order.getBuyerId().getId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限操作该订单");
         }
         
@@ -597,7 +597,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 权限校验：只有买家可以确认收货
-        if (order.getBuyer() == null || !order.getBuyer().getId().equals(currentUser.getId())) {
+        if (order.getBuyerId() == null || !order.getBuyerId().getId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "只有买家可以确认收货");
         }
         
@@ -620,7 +620,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             try {
                 // 计算买家获得的积分：商品价格除以10，保留小数点后一位
                 BigDecimal pointsToAdd = order.getAmount().divide(new BigDecimal("10"), 1, RoundingMode.HALF_UP);
-                userService.updateUserPoints(order.getBuyer().getId(), pointsToAdd);
+                userService.updateUserPoints(order.getBuyerId().getId(), pointsToAdd);
             } catch (Exception e) {
                 System.err.println("订单完成时积分发放失败: " + e.getMessage());
             }
@@ -655,7 +655,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 权限校验：只有买家可以支付
-        if (!order.getBuyer().getId().equals(currentUser.getId())) {
+        if (!order.getBuyerId().getId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限操作该订单");
         }
         
@@ -717,7 +717,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 权限校验：只有买家可以支付
-        if (!order.getBuyer().getId().equals(currentUser.getId())) {
+        if (!order.getBuyerId().getId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限操作该订单");
         }
         
@@ -732,7 +732,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 检查商品是否允许积分购买
-        Product product = order.getProduct();
+        Product product = order.getProductId();
         if (product == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "商品不存在");
         }
@@ -794,7 +794,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 权限校验：只有买家可以申请交换
-        if (!order.getBuyer().getId().equals(currentUser.getId())) {
+        if (!order.getBuyerId().getId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限操作该订单");
         }
         
@@ -843,7 +843,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 权限校验：只有卖家可以确认交换
-        if (!order.getSeller().getId().equals(currentUser.getId())) {
+        if (!order.getSellerId().getId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限操作该订单");
         }
         

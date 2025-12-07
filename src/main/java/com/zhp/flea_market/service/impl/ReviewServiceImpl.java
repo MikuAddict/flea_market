@@ -64,10 +64,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         
         // 约束条件1：评论功能仅限买家对订单进行评价
         // 必须提供订单ID，且订单必须存在
-        if (review.getOrder() == null || review.getOrder().getId() == null) {
+        if (review.getOrderId() == null || review.getOrderId().getId() == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "必须提供有效的订单ID进行评价");
         }
-        Order order = orderService.getById(review.getOrder().getId());
+        Order order = orderService.getById(review.getOrderId().getId());
         if (order == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "订单不存在");
         }
@@ -78,29 +78,29 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
         
         // 检查当前用户是否为订单的买家
-        if (order.getBuyer() == null || !order.getBuyer().getId().equals(currentUser.getId())) {
+        if (order.getBuyerId() == null || !order.getBuyerId().getId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "只有订单买家才能进行评价");
         }
         
         // 约束条件2：每个订单仅允许买家提交一条评论
-        Review existingReview = getReviewByOrderId(review.getOrder().getId());
+        Review existingReview = getReviewByOrderId(review.getOrderId().getId());
         if (existingReview != null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "该订单已经评价过，每个订单只能评价一次");
         }
         
         // 检查商品是否存在
-        Product product = productService.getById(review.getProduct().getId());
+        Product product = productService.getById(review.getProductId().getId());
         if (product == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "商品不存在");
         }
         
         // 验证商品ID与订单中的商品ID一致
-        if (!order.getProduct().getId().equals(review.getProduct().getId())) {
+        if (!order.getProductId().getId().equals(review.getProductId().getId())) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID与订单中的商品不一致");
         }
         
         // 设置评价信息
-        review.setUser(currentUser);
+        review.setUserId(currentUser);
         review.setCreateTime(new Date());
         
         boolean saved = this.save(review);
@@ -111,7 +111,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
                 // 获取订单对应的交易记录
                 List<TradeRecord> tradeRecords = tradeRecordService.list(
                     tradeRecordService.getQueryWrapper(null, null, null, null, null)
-                        .eq("order_id", review.getOrder().getId())
+                        .eq("order_id", review.getOrderId().getId())
                 );
                 
                 if (!tradeRecords.isEmpty()) {
@@ -156,7 +156,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
         
         // 权限校验：只能删除自己的评价
-        if (!review.getUser().getId().equals(currentUser.getId())) {
+        if (!review.getUserId().getId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限删除该评价");
         }
         
@@ -443,7 +443,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "评价信息不能为空");
         }
         
-        if (review.getProduct() == null || review.getProduct().getId() == null || review.getProduct().getId() <= 0) {
+        if (review.getProductId() == null || review.getProductId().getId() == null || review.getProductId().getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID无效");
         }
         

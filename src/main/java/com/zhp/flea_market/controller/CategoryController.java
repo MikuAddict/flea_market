@@ -146,7 +146,7 @@ public class CategoryController extends BaseController {
 
         // 检查分类下是否有商品，如果有则不能删除
         List<Product> productsInCategory = productService.lambdaQuery()
-                .eq(Product::getCategory, existCategory)
+                .eq(Product::getCategoryId, existCategory)
                 .list();
         if (!productsInCategory.isEmpty()) {
             throw new BusinessException(com.zhp.flea_market.common.ErrorCode.OPERATION_ERROR,

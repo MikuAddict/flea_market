@@ -25,36 +25,32 @@ public class TradeRecord {
     /**
      * 订单信息
      */
-    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "order_id", insertable = false, updatable = false)
-    private Order order;
+    private Order orderId;
 
     /**
      * 商品信息
      */
-    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "product_id", insertable = false, updatable = false)
-    private Product product;
+    private Product productId;
 
     /**
      * 买家信息
      */
-    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "buyer_id", insertable = false, updatable = false)
-    private User buyer;
+    private User buyerId;
 
 
 
     /**
      * 卖家信息
      */
-    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "seller_id", insertable = false, updatable = false)
-    private User seller;
+    private User sellerId;
 
 
     /**
@@ -84,10 +80,9 @@ public class TradeRecord {
     /**
      * 评价信息
      */
-    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "review_id", insertable = false, updatable = false)
-    private Review review;
+    private Review reviewId;
 
     /**
      * 在保存实体之前设置创建时间

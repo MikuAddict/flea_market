@@ -24,26 +24,23 @@ public class Order {
     /**
      * 关联商品
      */
-    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "product_id", insertable = false, updatable = false)
-    private Product product;
+    private Product productId;
 
     /**
      * 关联买家
      */
-    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "buyer_id", insertable = false, updatable = false)
-    private User buyer;
+    private User buyerId;
 
     /**
      * 关联卖家
      */
-    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "seller_id", insertable = false, updatable = false)
-    private User seller;
+    private User sellerId;
 
     /**
      * 订单金额

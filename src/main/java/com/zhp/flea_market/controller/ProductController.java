@@ -82,14 +82,14 @@ public class ProductController extends BaseController {
         // 创建商品对象
         Product product = new Product();
         BeanUtils.copyProperties(productAddRequest, product);
-        product.setCategory(category);
+        product.setCategoryId(category);
         
         // 设置支付方式，使用用户选择的支付方式
         product.setPaymentMethod(productAddRequest.getPaymentMethod());
         
         // 获取当前登录用户
         User currentUser = userService.getLoginUser(request);
-        product.setUser(currentUser);
+        product.setUserId(currentUser);
 
         // 添加商品
         boolean result = productService.addProduct(product, request);
@@ -131,7 +131,7 @@ public class ProductController extends BaseController {
         if (productUpdateRequest.getCategoryId() != null) {
             Category category = categoryService.getById(productUpdateRequest.getCategoryId());
             validateResourceExists(category, "分类");
-            product.setCategory(category);
+            product.setCategoryId(category);
         }
 
         // 更新商品

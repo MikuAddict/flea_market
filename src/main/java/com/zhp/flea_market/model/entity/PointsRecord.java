@@ -25,10 +25,9 @@ public class PointsRecord {
     /**
      * 关联用户
      */
-    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    private User user;
+    private User userId;
 
     /**
      * 积分变化值（正数为增加，负数为减少）

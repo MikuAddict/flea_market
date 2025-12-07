@@ -54,18 +54,16 @@ public class Product {
     /**
      * 商品分类ID
      */
-    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "category_id")
-    private Category category;
+    private Category categoryId;
 
     /**
      * 发布者ID
      */
-    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user;
+    private User userId;
 
     /**
      * 创建时间

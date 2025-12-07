@@ -24,26 +24,23 @@ public class Review {
     /**
      * 关联用户
      */
-    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    private User user;
+    private User userId;
 
     /**
      * 关联商品
      */
-    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "product_id", insertable = false, updatable = false)
-    private Product product;
+    private Product productId;
 
     /**
      * 关联订单
      */
-    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "order_id", insertable = false, updatable = false)
-    private Order order;
+    private Order orderId;
 
     /**
      * 评分 (1-5分)

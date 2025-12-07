@@ -23,18 +23,16 @@ public class ShoppingCart {
     /**
      * 关联用户
      */
-    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    private User user;
+    private User userId;
 
     /**
      * 关联商品
      */
-    @TableField(exist = false)
     @ManyToOne
     @JoinColumn(name = "product_id", insertable = false, updatable = false)
-    private Product product;
+    private Product productId;
 
     /**
      * 添加时间
