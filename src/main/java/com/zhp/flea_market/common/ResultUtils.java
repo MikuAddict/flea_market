@@ -4,18 +4,15 @@ import java.util.HashMap;
 
 /**
  * 返回工具类
- *
- * @author 程序员小白条
- * &#064;from  <a href="https://luoye6.github.io/"> 个人博客
  */
 public class ResultUtils {
 
     /**
      * 成功
      *
-     * @param data
-     * @param <T>
-     * @return
+     * @param data 返回数据
+     * @param <T> 数据类型
+     * @return 成功响应
      */
     public static <T> BaseResponse<T> success(T data) {
         return new BaseResponse<>(200, data, "ok");
@@ -24,52 +21,44 @@ public class ResultUtils {
     /**
      * 失败
      *
-     * @param errorCode
-     * @return
+     * @param errorCode 错误码
+     * @return 错误响应
      */
-    public static BaseResponse error(ErrorCode errorCode) {
+    public static BaseResponse<?> error(ErrorCode errorCode) {
         return new BaseResponse<>(errorCode);
     }
 
     /**
      * 失败
      *
-     * @param code
-     * @param message
-     * @return
+     * @param code 错误码
+     * @param message 错误消息
+     * @return 错误响应
      */
-    public static BaseResponse error(int code, String message) {
-        return new BaseResponse(code, null, message);
+    public static BaseResponse<?> error(int code, String message) {
+        return new BaseResponse<>(code, null, message);
     }
 
     /**
      * 失败
      *
-     * @param errorCode
-     * @return
+     * @param errorCode 错误码
+     * @param message 错误消息
+     * @return 错误响应
      */
-    public static BaseResponse error(ErrorCode errorCode, String message) {
-        return new BaseResponse(errorCode.getCode(), null, message);
+    public static BaseResponse<?> error(ErrorCode errorCode, String message) {
+        return new BaseResponse<>(errorCode.getCode(), null, message);
     }
 
-    /**
-     * 失败
-     *
-     * @param code
-     * @param message
-     * @param description
-     * @return
-     */
-    public static BaseResponse error(int code, String message, String description) {
-        return new BaseResponse(code, null, message, description);
-    }
     /**
      * 成功并添加动态参数
-     * @param data
-     * @return
-     * @param <T>
+     *
+     * @param data 返回数据
+     * @param hashMap 动态参数
+     * @param <T> 数据类型
+     * @return 成功响应
      */
     public static <T> BaseResponse<T> successDynamic(T data, HashMap<String,Object> hashMap) {
-        return new BaseResponse<>(200, data, "ok",hashMap);
+        return new BaseResponse<>(200, data, "ok", hashMap);
     }
 }

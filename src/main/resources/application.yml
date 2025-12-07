@@ -1,3 +1,6 @@
+server:
+  port: 7023
+
 spring:
   datasource:
     url: jdbc:mariadb://localhost:3307/flea_market_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai

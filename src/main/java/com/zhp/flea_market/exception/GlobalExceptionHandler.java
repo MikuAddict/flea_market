@@ -3,10 +3,8 @@ package com.zhp.flea_market.exception;
 import com.zhp.flea_market.common.BaseResponse;
 import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.common.ResultUtils;
-import com.zhp.flea_market.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
@@ -26,9 +24,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @Autowired
-    private UserService userService;
-
     /**
      * 业务异常处理
      *
@@ -40,7 +35,7 @@ public class GlobalExceptionHandler {
     public BaseResponse<?> handleBusinessException(BusinessException e, HttpServletRequest request) {
         log.error("业务异常: {}", e.getMessage(), e);
         
-        return ResultUtils.error(e.getCode(), e.getMessage(), e.getDescription());
+        return ResultUtils.error(e.getCode(), e.getMessage());
     }
 
     /**
