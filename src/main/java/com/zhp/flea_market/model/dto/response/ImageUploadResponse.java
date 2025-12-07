@@ -23,7 +23,7 @@ public class ImageUploadResponse {
     private String originalUrl;
     
     /**
-     * 缩略图URL集合
+     * 缩略图URL集合（已移除缩略图功能，该字段始终为空）
      */
     private Map<String, String> thumbnailUrls;
     

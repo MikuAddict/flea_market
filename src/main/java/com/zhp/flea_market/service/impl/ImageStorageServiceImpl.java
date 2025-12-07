@@ -42,6 +42,7 @@ public class ImageStorageServiceImpl implements ImageStorageService {
             
             // 生成存储路径
             String storagePath = generateStoragePath(file.getOriginalFilename(), imageType);
+            log.info("准备上传文件到路径: {}", storagePath);
             
             // 创建目录
             createDirectories(storagePath);
@@ -50,18 +51,18 @@ public class ImageStorageServiceImpl implements ImageStorageService {
             File targetFile = new File(storagePath);
             file.transferTo(targetFile);
             
-            // 生成缩略图
-            Map<String, String> thumbnails = generateThumbnails(targetFile, storagePath);
+            // 移除缩略图生成代码
             
             // 生成访问URL
             String originalUrl = generateImageUrl(storagePath);
-            Map<String, String> thumbnailUrls = generateThumbnailUrls(thumbnails);
+            // 修改这里，不再生成缩略图URL
+            Map<String, String> thumbnailUrls = new HashMap<>();
             
             log.info("图片上传成功: {}, 类型: {}", originalUrl, imageType);
             
             return ImageUploadResponse.builder()
                     .originalUrl(originalUrl)
-                    .thumbnailUrls(thumbnailUrls)
+                    .thumbnailUrls(thumbnailUrls) // 空的缩略图URL集合
                     .fileSize(file.getSize())
                     .format(getFileExtension(file.getOriginalFilename()))
                     .uploadTime(new Date())
@@ -69,7 +70,7 @@ public class ImageStorageServiceImpl implements ImageStorageService {
                     
         } catch (IOException e) {
             log.error("图片上传失败", e);
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "图片上传失败");
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "图片上传失败: " + e.getMessage());
         }
     }
 
@@ -86,8 +87,7 @@ public class ImageStorageServiceImpl implements ImageStorageService {
                 // 删除原始图片
                 boolean deleted = file.delete();
                 
-                // 删除缩略图
-                deleteThumbnails(filePath);
+                // 移除缩略图删除代码
                 
                 log.info("图片删除成功: {}", filePath);
                 return deleted;
@@ -130,16 +130,66 @@ public class ImageStorageServiceImpl implements ImageStorageService {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
         String datePath = dateFormat.format(new Date());
         
-        return String.format("%s/%s/%s/%s", 
+        String fullPath = String.format("%s/%s/%s/%s", 
             storageConfig.getBasePath(), 
             imageType.getFolderName(), 
             datePath, 
             filename);
+            
+        // 使用系统相关的路径分隔符，并确保使用绝对路径
+        return new File(fullPath).getAbsolutePath();
     }
 
     /**
-     * 生成缩略图
+     * 创建目录
      */
+    private void createDirectories(String filePath) throws IOException {
+        File file = new File(filePath);
+        File parentDir = file.getParentFile();
+        if (parentDir != null && !parentDir.exists()) {
+            if (!parentDir.mkdirs()) {
+                throw new IOException("无法创建目录: " + parentDir.getAbsolutePath());
+            }
+        }
+    }
+
+    /**
+     * 生成图片URL
+     */
+    private String generateImageUrl(String filePath) {
+        // 将绝对路径转换为相对于basePath的路径
+        File baseDir = new File(storageConfig.getBasePath());
+        File imageFile = new File(filePath);
+        String relativePath = baseDir.toURI().relativize(imageFile.toURI()).getPath();
+        return storageConfig.getBaseUrl() + "/" + relativePath.replace("\\", "/");
+    }
+
+    /**
+     * 从URL提取文件路径
+     */
+    private String extractFilePathFromUrl(String imageUrl) {
+        // 从URL中移除baseUrl部分，得到相对路径
+        String relativePath = imageUrl.replaceFirst("^" + storageConfig.getBaseUrl() + "/?", "");
+        // 构建完整文件路径
+        return new File(storageConfig.getBasePath(), relativePath).getAbsolutePath();
+    }
+
+    /**
+     * 获取文件扩展名
+     */
+    private String getFileExtension(String filename) {
+        return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
+    }
+
+    /**
+     * 检查是否支持的格式
+     */
+    private boolean isAllowedFormat(String extension) {
+        return Arrays.asList(storageConfig.getAllowedFormats()).contains(extension.toLowerCase());
+    }
+    
+    // 删除以下缩略图相关方法：
+    /*
     private Map<String, String> generateThumbnails(File originalFile, String originalPath) {
         if (!storageConfig.isGenerateThumbnails()) {
             return new HashMap<>();
@@ -166,9 +216,6 @@ public class ImageStorageServiceImpl implements ImageStorageService {
         return thumbnails;
     }
 
-    /**
-     * 调整图片尺寸
-     */
     private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
         int originalWidth = originalImage.getWidth();
         int originalHeight = originalImage.getHeight();
@@ -192,27 +239,6 @@ public class ImageStorageServiceImpl implements ImageStorageService {
         return resizedImage;
     }
 
-    /**
-     * 创建目录
-     */
-    private void createDirectories(String filePath) throws IOException {
-        Path path = Paths.get(filePath).getParent();
-        if (path != null) {
-            Files.createDirectories(path);
-        }
-    }
-
-    /**
-     * 生成图片URL
-     */
-    private String generateImageUrl(String filePath) {
-        String relativePath = filePath.replace(storageConfig.getBasePath() + "/", "");
-        return storageConfig.getBaseUrl() + "/" + relativePath;
-    }
-
-    /**
-     * 生成缩略图URL
-     */
     private Map<String, String> generateThumbnailUrls(Map<String, String> thumbnailPaths) {
         Map<String, String> thumbnailUrls = new HashMap<>();
         
@@ -224,9 +250,6 @@ public class ImageStorageServiceImpl implements ImageStorageService {
         return thumbnailUrls;
     }
 
-    /**
-     * 删除缩略图
-     */
     private void deleteThumbnails(String originalPath) {
         for (ImageStorageConfig.ThumbnailSize size : storageConfig.getThumbnailSizes()) {
             String thumbnailPath = generateThumbnailPath(originalPath, size.getName());
@@ -237,34 +260,11 @@ public class ImageStorageServiceImpl implements ImageStorageService {
         }
     }
 
-    /**
-     * 生成缩略图路径
-     */
     private String generateThumbnailPath(String originalPath, String sizeName) {
         String extension = getFileExtension(originalPath);
         String basePath = originalPath.substring(0, originalPath.lastIndexOf('.'));
+        // 确保使用统一的路径分隔符
         return basePath + "_" + sizeName + "." + extension;
     }
-
-    /**
-     * 从URL提取文件路径
-     */
-    private String extractFilePathFromUrl(String imageUrl) {
-        String relativePath = imageUrl.replace(storageConfig.getBaseUrl() + "/", "");
-        return storageConfig.getBasePath() + "/" + relativePath;
-    }
-
-    /**
-     * 获取文件扩展名
-     */
-    private String getFileExtension(String filename) {
-        return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
-    }
-
-    /**
-     * 检查是否支持的格式
-     */
-    private boolean isAllowedFormat(String extension) {
-        return Arrays.asList(storageConfig.getAllowedFormats()).contains(extension.toLowerCase());
-    }
+    */
 }

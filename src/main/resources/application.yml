@@ -31,23 +31,12 @@ spring:
 # 图片存储配置
 image:
   storage:
-    base-path: "uploads/images"
+    base-path: "./uploads/images"
     base-url: "/api/images"
     max-file-size: 10
     allowed-formats: ["jpg", "jpeg", "png", "webp", "gif"]
     enable-compression: true
     compression-quality: 0.8
-    generate-thumbnails: true
-    thumbnail-sizes:
-      - name: "small"
-        width: 100
-        height: 100
-      - name: "medium"
-        width: 300
-        height: 300
-      - name: "large"
-        width: 800
-        height: 800
 
 #jwt config
 jwt:

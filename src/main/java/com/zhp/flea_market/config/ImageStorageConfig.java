@@ -42,20 +42,9 @@ public class ImageStorageConfig {
      */
     private double compressionQuality = 0.8;
     
-    /**
-     * 是否生成缩略图
-     */
-    private boolean generateThumbnails = true;
+    // 删除缩略图相关配置
     
-    /**
-     * 缩略图尺寸配置
-     */
-    private ThumbnailSize[] thumbnailSizes = {
-        new ThumbnailSize("small", 100, 100),
-        new ThumbnailSize("medium", 300, 300),
-        new ThumbnailSize("large", 800, 800)
-    };
-    
+    /*
     @Data
     public static class ThumbnailSize {
         private String name;
@@ -68,4 +57,5 @@ public class ImageStorageConfig {
             this.height = height;
         }
     }
+    */
 }
