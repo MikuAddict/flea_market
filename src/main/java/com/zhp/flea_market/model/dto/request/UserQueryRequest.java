@@ -1,6 +1,7 @@
 package com.zhp.flea_market.model.dto.request;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,7 +25,7 @@ public class UserQueryRequest extends PageRequest implements Serializable {
     /**
      * 用户积分
      */
-    private Integer point;
+    private BigDecimal point;
 
     /**
      * 用户角色：user/admin/ban

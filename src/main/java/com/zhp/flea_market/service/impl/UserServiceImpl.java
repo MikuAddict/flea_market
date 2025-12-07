@@ -274,7 +274,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         Long id = userQueryRequest.getId();
         String userName = userQueryRequest.getUserName();
-        Integer userPoint = userQueryRequest.getPoint();
+        BigDecimal userPoint = userQueryRequest.getPoint();
         String userRole = userQueryRequest.getUserRole();
         String sortField = userQueryRequest.getSortField();
         String sortOrder = userQueryRequest.getSortOrder();

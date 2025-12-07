@@ -1,6 +1,7 @@
 package com.zhp.flea_market.model.vo;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 
 import lombok.Data;
@@ -46,7 +47,7 @@ public class LoginUserVO implements Serializable {
     /**
      * 用户积分
      */
-    private Integer point;
+    private BigDecimal point;
     /**
      * 创建时间
      */

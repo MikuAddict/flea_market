@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 
@@ -347,7 +348,7 @@ public class UserController extends BaseController {
             @Parameter(description = "用户ID") @RequestParam(required = false) Long id,
             @Parameter(description = "用户名") @RequestParam(required = false) String userName,
             @Parameter(description = "用户角色") @RequestParam(required = false) String userRole,
-            @Parameter(description = "用户积分") @RequestParam(required = false) Integer point,
+            @Parameter(description = "用户积分") @RequestParam(required = false) BigDecimal point,
             @Parameter(description = "排序字段") @RequestParam(required = false) String sortField,
             @Parameter(description = "排序顺序") @RequestParam(defaultValue = "desc") String sortOrder,
             HttpServletRequest request) {

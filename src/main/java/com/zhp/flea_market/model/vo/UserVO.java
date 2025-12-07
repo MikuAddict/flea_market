@@ -1,6 +1,7 @@
 package com.zhp.flea_market.model.vo;
 
 import lombok.Data;
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
@@ -28,7 +29,7 @@ public class UserVO {
     /**
      * 用户积分
      */
-    private Integer point;
+    private BigDecimal point;
 
     /**
      * 注册时间
