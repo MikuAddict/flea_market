@@ -12,10 +12,12 @@ import com.zhp.flea_market.model.enums.UserRoleEnum;
 import com.zhp.flea_market.model.vo.LoginUserVO;
 import com.zhp.flea_market.model.vo.UserVO;
 import com.zhp.flea_market.service.UserService;
+import com.zhp.flea_market.service.ImageStorageService;
 import com.zhp.flea_market.utils.SqlUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -36,6 +38,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * 盐值，混淆密码
      */
     public static final String SALT = "114514";
+
+    @Autowired
+    private ImageStorageService imageStorageService;
 
     /**
      * 用户注册
@@ -452,8 +457,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .map(User::getId)
                 .collect(Collectors.toList());
         
+        // 删除用户相关的图片
+        for (User user : rejectedUsers) {
+            if (user.getUserAvatar() != null) {
+                try {
+                    imageStorageService.deleteImage(user.getUserAvatar());
+                } catch (Exception e) {
+                    // 删除图片失败不应该影响删除操作
+                    System.err.println("删除用户头像失败: " + e.getMessage());
+                }
+            }
+        }
+        
         // 执行批量删除
-
         return this.baseMapper.deleteBatchIds(userIds);
     }
 

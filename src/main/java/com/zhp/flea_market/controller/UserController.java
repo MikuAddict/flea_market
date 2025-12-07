@@ -14,9 +14,11 @@ import com.zhp.flea_market.model.entity.User;
 import com.zhp.flea_market.service.UserService;
 import com.zhp.flea_market.model.vo.LoginUserVO;
 import com.zhp.flea_market.model.vo.UserVO;
+import com.zhp.flea_market.service.ImageStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -42,9 +44,12 @@ public class UserController extends BaseController {
     @Autowired
     private JwtKit jwtKit;
 
-    @Autowired
+    @Resource
     private UserService userService;
-
+    
+    @Autowired
+    private ImageStorageService imageStorageService;
+    
     /**
      * 用户注册
      *
@@ -211,10 +216,21 @@ public class UserController extends BaseController {
         validateId(deleteRequest.getId(), "用户ID");
 
         // 检查用户是否存在
-        validateResourceExists(userService.getById(deleteRequest.getId()), "用户");
+        User user = userService.getById(deleteRequest.getId());
+        validateResourceExists(user, "用户");
 
         // 删除用户
         boolean result = userService.removeById(deleteRequest.getId());
+        
+        // 如果删除成功且用户有头像，删除相关头像图片
+        if (result && user.getUserAvatar() != null) {
+            try {
+                imageStorageService.deleteImage(user.getUserAvatar());
+            } catch (Exception e) {
+                // 删除图片失败不应该影响删除操作
+                System.err.println("删除用户头像失败: " + e.getMessage());
+            }
+        }
         
         logOperation("删除用户", result, request, "用户ID", deleteRequest.getId());
         return handleOperationResult(result, "用户删除成功");

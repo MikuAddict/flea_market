@@ -74,21 +74,6 @@ public class ImageController {
     }
 
     /**
-     * 上传横幅图片
-     */
-    @Operation(summary = "上传横幅图片", description = "上传网站横幅或广告图片")
-    @PostMapping("/upload/banner")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<ImageUploadResponse> uploadBannerImage(
-            @Parameter(description = "横幅图片文件") @RequestParam("file") MultipartFile file,
-            HttpServletRequest request) {
-        
-        logOperation("上传横幅图片", request);
-        ImageUploadResponse response = imageStorageService.uploadImage(file, ImageStorageService.ImageType.BANNER);
-        return ResultUtils.success(response);
-    }
-
-    /**
      * 通用图片上传
      */
     @Operation(summary = "通用图片上传", description = "通用图片上传接口，可指定图片类型")

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zhp.flea_market.mapper.NewsMapper;
 import com.zhp.flea_market.model.entity.News;
 import com.zhp.flea_market.model.entity.User;
+import com.zhp.flea_market.service.ImageStorageService;
 import com.zhp.flea_market.service.NewsService;
 import com.zhp.flea_market.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +22,9 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
 
     @Autowired
     UserService userService;
+    
+    @Autowired
+    ImageStorageService imageStorageService;
 
     /**
      * 分页获取新闻列表
@@ -61,7 +65,23 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
     @Override
     public boolean updateNews(News news, HttpServletRequest request) {
         if (userService.isAdmin(userService.getLoginUserPermitNull(request))) {
-            return this.updateById(news);
+            // 获取旧的新闻信息，用于删除旧图片
+            News oldNews = this.getById(news.getId());
+            
+            boolean result = this.updateById(news);
+            
+            // 如果新闻图片URL发生变化，删除旧图片
+            if (result && oldNews != null && oldNews.getImageUrl() != null && 
+                !oldNews.getImageUrl().equals(news.getImageUrl())) {
+                try {
+                    imageStorageService.deleteImage(oldNews.getImageUrl());
+                } catch (Exception e) {
+                    // 删除旧图片失败不应该影响更新操作
+                    System.err.println("删除旧新闻图片失败: " + e.getMessage());
+                }
+            }
+            
+            return result;
         }
         return false;
     }
@@ -72,7 +92,22 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
     @Override
     public boolean deleteNews(Long id, HttpServletRequest request) {
         if (userService.isAdmin(userService.getLoginUserPermitNull(request))) {
-            return this.removeById(id);
+            // 获取新闻信息，用于删除相关图片
+            News news = this.getById(id);
+            
+            boolean result = this.removeById(id);
+            
+            // 如果删除成功且新闻有图片，删除相关图片
+            if (result && news != null && news.getImageUrl() != null) {
+                try {
+                    imageStorageService.deleteImage(news.getImageUrl());
+                } catch (Exception e) {
+                    // 删除图片失败不应该影响删除操作
+                    System.err.println("删除新闻图片失败: " + e.getMessage());
+                }
+            }
+            
+            return result;
         }
         return false;
     }

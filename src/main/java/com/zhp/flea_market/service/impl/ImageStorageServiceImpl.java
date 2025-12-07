@@ -127,13 +127,10 @@ public class ImageStorageServiceImpl implements ImageStorageService {
         String extension = getFileExtension(originalFilename);
         String filename = UUID.randomUUID() + "." + extension;
         
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
-        String datePath = dateFormat.format(new Date());
-        
-        String fullPath = String.format("%s/%s/%s/%s", 
+        // 移除时间分类，只按照图片类型分类
+        String fullPath = String.format("%s/%s/%s", 
             storageConfig.getBasePath(), 
             imageType.getFolderName(), 
-            datePath, 
             filename);
             
         // 使用系统相关的路径分隔符，并确保使用绝对路径
@@ -187,84 +184,5 @@ public class ImageStorageServiceImpl implements ImageStorageService {
     private boolean isAllowedFormat(String extension) {
         return Arrays.asList(storageConfig.getAllowedFormats()).contains(extension.toLowerCase());
     }
-    
-    // 删除以下缩略图相关方法：
-    /*
-    private Map<String, String> generateThumbnails(File originalFile, String originalPath) {
-        if (!storageConfig.isGenerateThumbnails()) {
-            return new HashMap<>();
-        }
-        
-        Map<String, String> thumbnails = new HashMap<>();
-        
-        try {
-            BufferedImage originalImage = ImageIO.read(originalFile);
-            
-            for (ImageStorageConfig.ThumbnailSize size : storageConfig.getThumbnailSizes()) {
-                String thumbnailPath = generateThumbnailPath(originalPath, size.getName());
-                
-                BufferedImage thumbnail = resizeImage(originalImage, size.getWidth(), size.getHeight());
-                ImageIO.write(thumbnail, getFileExtension(originalPath), new File(thumbnailPath));
-                
-                thumbnails.put(size.getName(), thumbnailPath);
-            }
-            
-        } catch (IOException e) {
-            log.warn("缩略图生成失败: {}", originalPath, e);
-        }
-        
-        return thumbnails;
-    }
 
-    private BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) {
-        int originalWidth = originalImage.getWidth();
-        int originalHeight = originalImage.getHeight();
-        
-        // 计算缩放比例
-        double scale = Math.min((double) targetWidth / originalWidth, (double) targetHeight / originalHeight);
-        int scaledWidth = (int) (originalWidth * scale);
-        int scaledHeight = (int) (originalHeight * scale);
-        
-        BufferedImage resizedImage = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_RGB);
-        Graphics2D graphics = resizedImage.createGraphics();
-        
-        // 设置渲染质量
-        graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        
-        graphics.drawImage(originalImage, 0, 0, scaledWidth, scaledHeight, null);
-        graphics.dispose();
-        
-        return resizedImage;
-    }
-
-    private Map<String, String> generateThumbnailUrls(Map<String, String> thumbnailPaths) {
-        Map<String, String> thumbnailUrls = new HashMap<>();
-        
-        for (Map.Entry<String, String> entry : thumbnailPaths.entrySet()) {
-            String url = generateImageUrl(entry.getValue());
-            thumbnailUrls.put(entry.getKey(), url);
-        }
-        
-        return thumbnailUrls;
-    }
-
-    private void deleteThumbnails(String originalPath) {
-        for (ImageStorageConfig.ThumbnailSize size : storageConfig.getThumbnailSizes()) {
-            String thumbnailPath = generateThumbnailPath(originalPath, size.getName());
-            File thumbnailFile = new File(thumbnailPath);
-            if (thumbnailFile.exists()) {
-                thumbnailFile.delete();
-            }
-        }
-    }
-
-    private String generateThumbnailPath(String originalPath, String sizeName) {
-        String extension = getFileExtension(originalPath);
-        String basePath = originalPath.substring(0, originalPath.lastIndexOf('.'));
-        // 确保使用统一的路径分隔符
-        return basePath + "_" + sizeName + "." + extension;
-    }
-    */
 }

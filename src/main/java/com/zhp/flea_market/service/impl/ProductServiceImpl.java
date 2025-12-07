@@ -8,6 +8,8 @@ import com.zhp.flea_market.exception.BusinessException;
 import com.zhp.flea_market.mapper.ProductMapper;
 import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.model.entity.User;
+import com.zhp.flea_market.service.CategoryService;
+import com.zhp.flea_market.service.ImageStorageService;
 import com.zhp.flea_market.service.ProductService;
 import com.zhp.flea_market.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +28,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private CategoryService categoryService;
+
+    @Autowired
+    private ImageStorageService imageStorageService;
 
     /**
      * 添加商品
@@ -139,7 +147,19 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限删除该商品");
         }
         
-        return this.removeById(id);
+        boolean result = this.removeById(id);
+        
+        // 如果删除成功且商品有图片，删除相关图片
+        if (result && product.getImageUrl() != null) {
+            try {
+                imageStorageService.deleteImage(product.getImageUrl());
+            } catch (Exception e) {
+                // 删除图片失败不应该影响删除操作
+                System.err.println("删除商品图片失败: " + e.getMessage());
+            }
+        }
+        
+        return result;
     }
 
     /**
