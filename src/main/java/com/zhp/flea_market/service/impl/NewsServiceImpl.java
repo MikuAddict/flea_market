@@ -52,7 +52,10 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
     @Override
     public boolean addNews(News news, HttpServletRequest request) {
         //判断用户是否为管理员
-        if (userService.isAdmin(userService.getLoginUser(request))) {
+        User currentUser = userService.getLoginUser(request);
+        if (userService.isAdmin(currentUser)) {
+            // 设置作者ID
+            news.setAuthorId(currentUser.getId());
             return this.save(news);
         }
         return false;
@@ -151,8 +154,9 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
      * 为单条新闻加载作者信息
      */
     private void loadAuthorInfo(News news) {
-        if (news != null && news.getUser() != null) {
-            User author = userService.getById(news.getUser().getId());
+        if (news != null && news.getAuthorId() != null) {
+            User author = userService.getById(news.getAuthorId());
+            news.setUser(author); // 设置user对象用于前端显示
         }
     }
 
@@ -167,7 +171,7 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
         
         // 获取所有作者ID
         List<Long> authorIds = newsList.stream()
-                .map(news -> news.getUser() != null ? news.getUser().getId() : null)
+                .map(News::getAuthorId)
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
@@ -179,9 +183,16 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
         // 批量查询作者信息
         List<User> authors = userService.listByIds(authorIds);
         
-        // 构建作者ID到作者名字的映射
-        java.util.Map<Long, String> authorNameMap = authors.stream()
-                .collect(Collectors.toMap(User::getId, User::getUserName));
+        // 构建作者ID到作者对象的映射
+        java.util.Map<Long, User> authorMap = authors.stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+        
+        // 为每个新闻设置作者对象
+        newsList.forEach(news -> {
+            if (news.getAuthorId() != null) {
+                news.setUser(authorMap.get(news.getAuthorId()));
+            }
+        });
 
         return newsList;
     }

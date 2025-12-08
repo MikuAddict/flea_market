@@ -2,6 +2,7 @@ package com.zhp.flea_market.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -13,6 +14,19 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Autowired
     private ImageStorageConfig storageConfig;
+
+    @Autowired
+    private UnifiedAuthInterceptor unifiedAuthInterceptor;
+
+    /**
+     * 配置拦截器
+     */
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(unifiedAuthInterceptor)
+                .addPathPatterns("/**")
+                .excludePathPatterns("/user/login", "/user/register", "/swagger-ui/**", "/v3/api-docs/**");
+    }
 
     /**
      * 配置静态资源映射

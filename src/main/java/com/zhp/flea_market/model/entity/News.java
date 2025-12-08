@@ -1,8 +1,7 @@
 package com.zhp.flea_market.model.entity;
 
-import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.Date;
@@ -10,15 +9,13 @@ import java.util.Date;
 /**
  * 平台公告实体
  */
-@Entity
-@Table(name = "news")
+@TableName("news")
 @Data
 public class News {
     /**
      * 平台公告ID
      */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
@@ -39,15 +36,24 @@ public class News {
     /**
      * 公告作者ID
      */
-    @TableField(exist = false)
-    @ManyToOne
-    @JoinColumn(name = "author_id")
-    private User user;
-
+    private Long authorId;
 
     /**
      * 创建时间
      */
+    @TableField(value = "create_time", fill = FieldFill.INSERT)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date createTime;
+    
+    /**
+     * 逻辑删除字段
+     */
+    @TableLogic
+    private Integer deleted = 0;
+    
+    /**
+     * 公告作者，非数据库字段
+     */
+    @TableField(exist = false)
+    private User user;
 }

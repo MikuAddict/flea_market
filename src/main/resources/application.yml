@@ -11,15 +11,21 @@ spring:
     username: root
     password: 440281
     driver-class-name: org.mariadb.jdbc.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    database-platform: org.hibernate.dialect.MariaDBDialect
-    properties:
-      hibernate:
-        jdbc:
-          time_zone: Asia/Shanghai
+# MyBatis Plus配置
+mybatis-plus:
+  # mapper-locations: classpath*:/mapper/**/*.xml # 默认会扫描classpath下的mapper目录下的所有xml文件
+  # type-aliases-package: com.zhp.flea_market.model.entity
+  configuration:
+    map-underscore-to-camel-case: true # 开启驼峰命名转换
+    cache-enabled: false # 禁用二级缓存
+    call-setters-on-nulls: true # 解决map返回时，值为null的字段不返回的问题
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印sql语句
+  global-config:
+    db-config:
+      id-type: auto # 主键自增
+      logic-delete-field: deleted # 逻辑删除字段名
+      logic-delete-value: 1 # 逻辑删除已删除值
+      logic-not-delete-value: 0 # 逻辑删除未删除值
   profiles:
     active: dev
   security:

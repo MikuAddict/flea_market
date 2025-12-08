@@ -1,7 +1,6 @@
 package com.zhp.flea_market.model.entity;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import jakarta.persistence.*;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.util.Date;
@@ -9,41 +8,30 @@ import java.util.Date;
 /**
  * 商品评价实体
  */
-@Entity
-@Table(name = "review")
+@TableName("review")
 @Data
 public class Review {
 
     /**
      * 评价ID
      */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 关联用户
+     * 用户ID
      */
-    @TableField(exist = false)
-    @ManyToOne
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    private User user;
+    private Long userId;
 
     /**
-     * 关联商品
+     * 商品ID
      */
-    @TableField(exist = false)
-    @ManyToOne
-    @JoinColumn(name = "product_id", insertable = false, updatable = false)
-    private Product product;
+    private Long productId;
 
     /**
-     * 关联订单
+     * 订单ID
      */
-    @TableField(exist = false)
-    @ManyToOne
-    @JoinColumn(name = "order_id", insertable = false, updatable = false)
-    private Order order;
+    private Long orderId;
 
     /**
      * 评分 (1-5分)
@@ -58,5 +46,30 @@ public class Review {
     /**
      * 创建时间
      */
+    @TableField(value = "create_time", fill = FieldFill.INSERT)
     private Date createTime;
+    
+    /**
+     * 逻辑删除字段
+     */
+    @TableLogic
+    private Integer deleted = 0;
+    
+    /**
+     * 关联用户，非数据库字段
+     */
+    @TableField(exist = false)
+    private User user;
+    
+    /**
+     * 关联商品，非数据库字段
+     */
+    @TableField(exist = false)
+    private Product product;
+    
+    /**
+     * 关联订单，非数据库字段
+     */
+    @TableField(exist = false)
+    private Order order;
 }

@@ -1,8 +1,7 @@
 package com.zhp.flea_market.model.entity;
 
-import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.Date;
@@ -10,70 +9,53 @@ import java.util.Date;
 /**
  * 交易记录实体
  */
-@Entity
-@Table(name = "trade_record")
+@TableName("trade_record")
 @Data
 public class TradeRecord {
 
     /**
      * 交易记录ID
      */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 订单信息
+     * 订单ID
      */
-    @TableField(exist = false)
-    @ManyToOne
-    @JoinColumn(name = "order_id", insertable = false, updatable = false)
-    private Order order;
+    private Long orderId;
 
     /**
-     * 商品信息
+     * 商品ID
      */
-    @TableField(exist = false)
-    @ManyToOne
-    @JoinColumn(name = "product_id", insertable = false, updatable = false)
-    private Product product;
+    private Long productId;
 
     /**
-     * 买家信息
+     * 买家ID
      */
-    @TableField(exist = false)
-    @ManyToOne
-    @JoinColumn(name = "buyer_id", insertable = false, updatable = false)
-    private User buyer;
-
-
+    private Long buyerId;
 
     /**
-     * 卖家信息
+     * 卖家ID
      */
-    @TableField(exist = false)
-    @ManyToOne
-    @JoinColumn(name = "seller_id", insertable = false, updatable = false)
-    private User seller;
-
+    private Long sellerId;
 
     /**
      * 支付方式描述
      */
-    @Column(name = "payment_method_desc")
+    @TableField("payment_method_desc")
     private String paymentMethodDesc;
 
     /**
      * 交易时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    @Column(name = "trade_time")
+    @TableField(value = "trade_time", fill = FieldFill.INSERT)
     private Date tradeTime;
 
     /**
      * 交易状态 (1-成功, 2-已完成评价, 3-已退款)
      */
-    @Column(name = "trade_status")
+    @TableField("trade_status")
     private Integer tradeStatus;
 
     /**
@@ -82,20 +64,43 @@ public class TradeRecord {
     private String remark;
 
     /**
-     * 评价信息
+     * 评价ID
+     */
+    private Long reviewId;
+    
+    /**
+     * 逻辑删除字段
+     */
+    @TableLogic
+    private Integer deleted = 0;
+    
+    /**
+     * 订单信息，非数据库字段
      */
     @TableField(exist = false)
-    @ManyToOne
-    @JoinColumn(name = "review_id", insertable = false, updatable = false)
-    private Review review;
+    private Order order;
 
     /**
-     * 在保存实体之前设置创建时间
+     * 商品信息，非数据库字段
      */
-    @PrePersist
-    protected void onCreate() {
-        if (tradeTime == null) {
-            tradeTime = new Date();
-        }
-    }
+    @TableField(exist = false)
+    private Product product;
+
+    /**
+     * 买家信息，非数据库字段
+     */
+    @TableField(exist = false)
+    private User buyer;
+
+    /**
+     * 卖家信息，非数据库字段
+     */
+    @TableField(exist = false)
+    private User seller;
+
+    /**
+     * 评价信息，非数据库字段
+     */
+    @TableField(exist = false)
+    private Review review;
 }

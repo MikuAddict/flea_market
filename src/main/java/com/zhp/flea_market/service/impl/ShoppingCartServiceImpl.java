@@ -72,8 +72,8 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
         } else {
             // 创建新的购物车项
             ShoppingCart cartItem = new ShoppingCart();
-            cartItem.setUser(currentUser);
-            cartItem.setProduct(product);
+            cartItem.setUserId(currentUser.getId());
+            cartItem.setProductId(productId);
             cartItem.setCreateTime(new Date());
             
             return this.save(cartItem);

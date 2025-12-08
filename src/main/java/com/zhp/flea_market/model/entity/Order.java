@@ -1,7 +1,6 @@
 package com.zhp.flea_market.model.entity;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import jakarta.persistence.*;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.util.Date;
@@ -9,41 +8,30 @@ import java.util.Date;
 /**
  * 订单实体
  */
-@Entity
-@Table(name = "market_order")
+@TableName("market_order")
 @Data
 public class Order {
 
     /**
      * 订单ID
      */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 关联商品
+     * 商品ID
      */
-    @TableField(exist = false)
-    @ManyToOne
-    @JoinColumn(name = "product_id", insertable = false, updatable = false)
-    private Product product;
+    private Long productId;
 
     /**
-     * 关联买家
+     * 买家ID
      */
-    @TableField(exist = false)
-    @ManyToOne
-    @JoinColumn(name = "buyer_id", insertable = false, updatable = false)
-    private User buyer;
+    private Long buyerId;
 
     /**
-     * 关联卖家
+     * 卖家ID
      */
-    @TableField(exist = false)
-    @ManyToOne
-    @JoinColumn(name = "seller_id", insertable = false, updatable = false)
-    private User seller;
+    private Long sellerId;
 
     /**
      * 订单金额
@@ -78,10 +66,35 @@ public class Order {
     /**
      * 创建时间
      */
+    @TableField(value = "create_time", fill = FieldFill.INSERT)
     private Date createTime;
 
     /**
      * 完成时间
      */
     private Date finishTime;
+    
+    /**
+     * 逻辑删除字段
+     */
+    @TableLogic
+    private Integer deleted = 0;
+    
+    /**
+     * 关联商品，非数据库字段
+     */
+    @TableField(exist = false)
+    private Product product;
+
+    /**
+     * 关联买家，非数据库字段
+     */
+    @TableField(exist = false)
+    private User buyer;
+
+    /**
+     * 关联卖家，非数据库字段
+     */
+    @TableField(exist = false)
+    private User seller;
 }

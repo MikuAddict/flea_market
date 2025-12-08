@@ -1,7 +1,6 @@
 package com.zhp.flea_market.model.entity;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import jakarta.persistence.*;
+import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -10,25 +9,20 @@ import java.util.Date;
 /**
  * 积分记录实体
  */
-@Entity
-@Table(name = "points_record")
+@TableName("points_record")
 @Data
 public class PointsRecord {
 
     /**
      * 记录ID
      */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 关联用户
+     * 用户ID
      */
-    @TableField(exist = false)
-    @ManyToOne
-    @JoinColumn(name = "user_id", insertable = false, updatable = false)
-    private User user;
+    private Long userId;
 
     /**
      * 积分变化值（正数为增加，负数为减少）
@@ -61,15 +55,18 @@ public class PointsRecord {
     /**
      * 创建时间
      */
+    @TableField(value = "create_time", fill = FieldFill.INSERT)
     private Date createTime;
-
+    
     /**
-     * 在保存实体之前设置创建时间
+     * 逻辑删除字段
      */
-    @PrePersist
-    protected void onCreate() {
-        if (createTime == null) {
-            createTime = new Date();
-        }
-    }
+    @TableLogic
+    private Integer deleted = 0;
+    
+    /**
+     * 关联用户，非数据库字段
+     */
+    @TableField(exist = false)
+    private User user;
 }

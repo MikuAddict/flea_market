@@ -57,18 +57,16 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品价格必须大于0");
         }
         
-        if (product.getCategory() == null || product.getCategory().getId() == null) {
+        if (product.getCategoryId() == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品分类不能为空");
         }
         
-        // 获取当前登录用户
-        User currentUser = userService.getLoginUserPermitNull(request);
-        if (currentUser == null) {
+        // 检查商品是否已设置用户ID
+        if (product.getUserId() == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
         }
         
         // 设置商品信息
-        product.setUser(currentUser);
         product.setStatus(0); // 默认状态为待审核
         product.setCreateTime(new Date());
         product.setUpdateTime(new Date());
@@ -104,7 +102,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
         
         // 权限校验：只有商品发布者或管理员可以修改
-        if (!existingProduct.getUser().getId().equals(currentUser.getId()) && 
+        if (!existingProduct.getUserId().equals(currentUser.getId()) && 
             !userService.isAdmin(currentUser)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限修改该商品");
         }
@@ -142,7 +140,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
         
         // 权限校验：只有商品发布者或管理员可以删除
-        if (!product.getUser().getId().equals(currentUser.getId()) && 
+        if (!product.getUserId().equals(currentUser.getId()) && 
             !userService.isAdmin(currentUser)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限删除该商品");
         }
