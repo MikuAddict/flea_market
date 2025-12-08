@@ -3,8 +3,10 @@ package com.zhp.flea_market.controller;
 import com.zhp.flea_market.annotation.AuthCheck;
 import com.zhp.flea_market.annotation.LoginRequired;
 import com.zhp.flea_market.common.BaseResponse;
+import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.common.ResultUtils;
 import com.zhp.flea_market.constant.UserConstant;
+import com.zhp.flea_market.exception.BusinessException;
 import com.zhp.flea_market.model.dto.response.ImageUploadResponse;
 import com.zhp.flea_market.service.ImageStorageService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,16 +48,32 @@ public class ImageController {
     /**
      * 上传二手物品图片
      */
-    @Operation(summary = "上传二手物品图片", description = "上传二手物品相关图片")
+    @Operation(summary = "上传二手物品图片", description = "上传二手物品相关图片，支持单张或多张图片上传")
     @PostMapping("/product")
     @LoginRequired
-    public BaseResponse<ImageUploadResponse> uploadProductImage(
-            @Parameter(description = "二手物品图片文件") @RequestParam("file") MultipartFile file,
+    public BaseResponse<Object> uploadProductImage(
+            @Parameter(description = "二手物品图片文件，支持单个文件或多个文件") @RequestParam("files") MultipartFile[] files,
             HttpServletRequest request) {
         
-        logOperation("上传二手物品图片", request);
-        ImageUploadResponse response = imageStorageService.uploadImage(file, ImageStorageService.ImageType.PRODUCT);
-        return ResultUtils.success(response);
+        if (files.length == 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "至少需要上传一个文件");
+        }
+        
+        if (files.length == 1) {
+            // 单文件上传，返回单个结果
+            logOperation("上传二手物品图片", request);
+            ImageUploadResponse response = imageStorageService.uploadImage(files[0], ImageStorageService.ImageType.PRODUCT);
+            return ResultUtils.success(response);
+        } else {
+            // 多文件上传，返回数组结果
+            ImageUploadResponse[] responses = new ImageUploadResponse[files.length];
+            for (int i = 0; i < files.length; i++) {
+                responses[i] = imageStorageService.uploadImage(files[i], ImageStorageService.ImageType.PRODUCT);
+            }
+            
+            logOperation("批量上传二手物品图片", request, "图片数量", files.length);
+            return ResultUtils.success(responses);
+        }
     }
 
     /**
