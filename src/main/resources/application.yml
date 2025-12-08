@@ -19,7 +19,6 @@ mybatis-plus:
     map-underscore-to-camel-case: true # 开启驼峰命名转换
     cache-enabled: false # 禁用二级缓存
     call-setters-on-nulls: true # 解决map返回时，值为null的字段不返回的问题
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印sql语句
   global-config:
     db-config:
       id-type: auto # 主键自增
@@ -59,3 +58,10 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
     tags-sorter: alpha
+
+logging:
+  level:
+    org.apache.ibatis: WARN
+    org.mybatis: WARN
+    java.sql: WARN
+    org.springframework.jdbc: WARN

@@ -59,11 +59,6 @@ public class Order {
     private Boolean buyerConfirmed;
 
     /**
-     * 卖家确认收款状态 (false-未确认, true-已确认)
-     */
-    private Boolean sellerConfirmed;
-
-    /**
      * 创建时间
      */
     @TableField(value = "create_time", fill = FieldFill.INSERT)
