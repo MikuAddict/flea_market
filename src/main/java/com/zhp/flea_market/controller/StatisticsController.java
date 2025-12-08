@@ -52,9 +52,12 @@ public class StatisticsController extends BaseController {
             throw new com.zhp.flea_market.exception.BusinessException(
                     com.zhp.flea_market.common.ErrorCode.PARAMS_ERROR, "月份必须在1-12之间");
         }
-        if (year < 2020 || year > 2030) {
+        int currentYear = Year.now().getValue();
+        int minYear = currentYear - 10;
+        if (year < minYear || year > currentYear) {
             throw new com.zhp.flea_market.exception.BusinessException(
-                    com.zhp.flea_market.common.ErrorCode.PARAMS_ERROR, "年份必须在2020-2030之间");
+                    com.zhp.flea_market.common.ErrorCode.PARAMS_ERROR,
+                    String.format("年份必须在 %d 到 %d 之间", minYear, currentYear));
         }
 
         // 获取月度交易二手物品分类排行

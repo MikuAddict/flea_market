@@ -75,6 +75,7 @@ public class CategoryController extends BaseController {
         // 创建分类实体
         Category category = Category.builder()
                 .name(categoryAddRequest.getName())
+                .deleted(0) // 添加这一行确保deleted字段不为null
                 .build();
 
         // 添加分类
