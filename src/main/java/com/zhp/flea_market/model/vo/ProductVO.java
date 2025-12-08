@@ -6,37 +6,37 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 二手物品视图对象
+ * 商品视图对象
  */
 @Data
 public class ProductVO {
     /**
-     * 二手物品ID
+     * 商品ID
      */
     private Long id;
 
     /**
-     * 二手物品名称
+     * 商品名称
      */
     private String productName;
 
     /**
-     * 二手物品描述
+     * 商品描述
      */
     private String description;
 
     /**
-     * 二手物品价格
+     * 商品价格
      */
     private BigDecimal price;
 
     /**
-     * 二手物品图片地址
+     * 商品图片地址
      */
     private String imageUrl;
 
     /**
-     * 二手物品状态 (0-待审核, 1-已上架, 2-已下架, 3-已售出)
+     * 商品状态 (0-待审核, 1-已上架, 2-已下架, 3-已售出)
      */
     private Integer status;
 
@@ -46,12 +46,12 @@ public class ProductVO {
     private Integer paymentMethod;
 
     /**
-     * 二手物品分类ID
+     * 商品分类ID
      */
     private Long categoryId;
 
     /**
-     * 二手物品分类名称
+     * 商品分类名称
      */
     private String categoryName;
 

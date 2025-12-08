@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
+import java.util.Date;
+
 /**
  * 购物车实体
  */
@@ -28,7 +30,11 @@ public class ShoppingCart {
      * 二手物品ID
      */
     private Long productId;
-    
+
+    /**
+     * 创建时间
+     */
+    private Date createTime;
     /**
      * 逻辑删除字段
      */
