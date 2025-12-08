@@ -25,8 +25,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 /**
  * 二手物品评价接口
  */
@@ -152,8 +150,6 @@ public class ReviewController extends BaseController {
         // 参数校验
         Page<Review> page = validatePageParams(current, size);
 
-        // 执行分页查询
-        List<Review> reviewList = reviewService.getReviewList(page);
         
         logOperation("分页获取评价列表", null, 
                 "当前页", current,
@@ -183,9 +179,6 @@ public class ReviewController extends BaseController {
         // 检查用户是否存在
         validateResourceExists(userService.getById(userId), "用户");
 
-        // 执行分页查询
-        List<Review> reviewList = reviewService.getReviewsByUserId(userId, page);
-        
         logOperation("根据用户ID获取评价列表", null, 
                 "用户ID", userId,
                 "当前页", current,
@@ -238,9 +231,6 @@ public class ReviewController extends BaseController {
         // 获取当前登录用户
         User currentUser = userService.getLoginUser(request);
 
-        // 执行分页查询
-        List<Review> reviewList = reviewService.getReviewsByUserId(currentUser.getId(), page);
-        
         logOperation("获取当前用户的评价列表", request, 
                 "当前页", current,
                 "每页大小", size

@@ -75,7 +75,7 @@ public class NewsController extends BaseController {
      * @param id 新闻ID
      * @return 新闻详情
      */
-    @GetMapping("/detail/{id}")
+    @GetMapping("/{id}")
     @Operation(summary = "获取新闻详情", description = "根据ID获取新闻的详细信息")
     public BaseResponse<NewsVO> getNewsDetail(
             @Parameter(description = "新闻ID") @PathVariable Long id) {
@@ -130,37 +130,40 @@ public class NewsController extends BaseController {
     /**
      * 更新新闻
      *
+     * @param id 新闻ID
      * @param newsUpdateRequest 新闻更新请求
      * @param request HTTP请求
      * @return 是否更新成功
      */
-    @PutMapping("/update")
+    @PutMapping("/{id}")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @Operation(summary = "更新新闻", description = "管理员更新新闻信息")
     public BaseResponse<Boolean> updateNews(
+            @Parameter(description = "新闻ID") @PathVariable Long id,
             @RequestBody NewsUpdateRequest newsUpdateRequest,
             HttpServletRequest request) {
         // 参数校验
+        validateId(id, "新闻ID");
         validateNotNull(newsUpdateRequest, "新闻更新请求");
-        validateId(newsUpdateRequest.getId(), "新闻ID");
         validateNotBlank(newsUpdateRequest.getTitle(), "新闻标题");
         validateNotBlank(newsUpdateRequest.getContent(), "新闻内容");
         
         // 检查新闻是否存在
-        NewsVO existNews = newsService.getNewsDetail(newsUpdateRequest.getId());
+        NewsVO existNews = newsService.getNewsDetail(id);
         validateResourceExists(existNews, "新闻");
 
         // 创建新闻对象并更新
         News news = new News();
         BeanUtils.copyProperties(newsUpdateRequest, news);
-        // 保留原有的作者ID和创建时间
+        // 设置新闻ID和保留原有的作者ID
+        news.setId(id);
         news.setAuthorId(existNews.getAuthorId());
 
         // 更新新闻
         boolean result = newsService.updateNews(news, request);
         
         logOperation("更新新闻", result, request, 
-                "新闻ID", newsUpdateRequest.getId(), 
+                "新闻ID", id, 
                 "新闻标题", newsUpdateRequest.getTitle()
         );
         return handleOperationResult(result, "新闻更新成功");
@@ -173,7 +176,7 @@ public class NewsController extends BaseController {
      * @param request HTTP请求
      * @return 是否删除成功
      */
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @Operation(summary = "删除新闻", description = "管理员根据ID删除新闻")
     public BaseResponse<Boolean> deleteNews(

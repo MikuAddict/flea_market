@@ -201,26 +201,25 @@ public class UserController extends BaseController {
     /**
      * 删除用户
      *
-     * @param deleteRequest 删除请求
+     * @param id 用户ID
      * @param request HTTP请求
      * @return 删除结果
      */
     @Operation(summary = "删除用户", description = "管理员删除用户")
-    @PostMapping("/delete")
+    @DeleteMapping("/{id}")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> deleteUser(
-            @Parameter(description = "删除请求") @RequestBody DeleteRequest deleteRequest,
+            @Parameter(description = "用户ID") @PathVariable Long id,
             HttpServletRequest request) {
         // 参数校验
-        validateNotNull(deleteRequest, "删除请求");
-        validateId(deleteRequest.getId(), "用户ID");
+        validateId(id, "用户ID");
 
         // 检查用户是否存在
-        User user = userService.getById(deleteRequest.getId());
+        User user = userService.getById(id);
         validateResourceExists(user, "用户");
 
         // 删除用户
-        boolean result = userService.removeById(deleteRequest.getId());
+        boolean result = userService.removeById(id);
         
         // 如果删除成功且用户有头像，删除相关头像图片
         if (result && user.getUserAvatar() != null) {
@@ -232,7 +231,7 @@ public class UserController extends BaseController {
             }
         }
         
-        logOperation("删除用户", result, request, "用户ID", deleteRequest.getId());
+        logOperation("删除用户", result, request, "用户ID", id);
         return handleOperationResult(result, "用户删除成功");
     }
 
@@ -244,7 +243,7 @@ public class UserController extends BaseController {
      * @return 更新结果
      */
     @Operation(summary = "更新用户", description = "管理员更新用户信息")
-    @PostMapping("/update")
+    @PutMapping("/{id}")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> updateUser(
             @Parameter(description = "用户更新信息") @RequestBody UserUpdateRequest userUpdateRequest,
@@ -377,7 +376,7 @@ public class UserController extends BaseController {
      * @return 更新结果
      */
     @Operation(summary = "更新个人信息", description = "用户更新自己的个人信息")
-    @PostMapping("/update/my")
+    @PutMapping("/profile")
     public BaseResponse<Boolean> updateMyUser(
             @Parameter(description = "个人信息更新请求") @RequestBody UserUpdateMyRequest userUpdateMyRequest,
             HttpServletRequest request) {
@@ -402,31 +401,28 @@ public class UserController extends BaseController {
     /**
      * 更新用户状态（通用方法，支持多种状态变更）
      *
-     * @param userAuditRequest 用户状态更新请求
+     * @param id 用户ID
+     * @param status 用户状态
      * @param request HTTP请求
      * @return 是否更新成功
      */
     @Operation(summary = "更新用户状态", description = "管理员更新用户状态，支持审核、禁用等操作")
-    @PostMapping("/admin/audit")
+    @PutMapping("/{id}/status")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Boolean> auditUser(
-            @Parameter(description = "用户状态更新请求") @RequestBody UserAuditRequest userAuditRequest,
+    public BaseResponse<Boolean> updateUserStatus(
+            @Parameter(description = "用户ID") @PathVariable Long id,
+            @Parameter(description = "用户状态") @RequestParam Integer status,
             HttpServletRequest request) {
         // 参数校验
-        validateNotNull(userAuditRequest, "用户状态更新请求");
-        validateId(userAuditRequest.getUserId(), "用户ID");
-        validateNotNull(userAuditRequest.getAuditStatus(), "用户状态");
+        validateId(id, "用户ID");
+        validateNotNull(status, "用户状态");
 
         // 更新用户状态
-        boolean result = userService.updateUserStatus(
-                userAuditRequest.getUserId(), 
-                userAuditRequest.getAuditStatus(), 
-                request
-        );
+        boolean result = userService.updateUserStatus(id, status, request);
         
         // 根据状态值生成描述信息
         String statusDesc;
-        switch (userAuditRequest.getAuditStatus()) {
+        switch (status) {
             case 0:
                 statusDesc = "待审核";
                 break;
@@ -444,7 +440,7 @@ public class UserController extends BaseController {
         }
         
         logOperation("更新用户状态", result, request, 
-                "用户ID", userAuditRequest.getUserId(),
+                "用户ID", id,
                 "目标状态", statusDesc
         );
         return handleOperationResult(result, "用户状态更新成功");

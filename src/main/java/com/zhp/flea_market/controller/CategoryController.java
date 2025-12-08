@@ -87,38 +87,41 @@ public class CategoryController extends BaseController {
     /**
      * 更新二手物品分类
      *
+     * @param id 分类ID
      * @param category 分类信息
      * @param request HTTP请求
      * @return 是否更新成功
      */
-    @PutMapping("/update")
+    @PutMapping("/{id}")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @Operation(summary = "更新二手物品分类", description = "管理员更新二手物品分类信息")
     public BaseResponse<Boolean> updateCategory(
+            @Parameter(description = "分类ID") @PathVariable Long id,
             @Parameter(description = "分类信息") @RequestBody Category category,
             HttpServletRequest request) {
         // 参数校验
+        validateId(id, "分类ID");
         validateNotNull(category, "分类信息");
-        validateId(category.getId(), "分类ID");
         validateNotBlank(category.getName(), "分类名称");
         
         // 检查分类是否存在
-        Category existCategory = categoryService.getById(category.getId());
+        Category existCategory = categoryService.getById(id);
         validateResourceExists(existCategory, "分类");
 
         // 检查分类名称是否与其他分类重复
         List<Category> categoryList = categoryService.getCategoryList();
         boolean isExist = categoryList.stream()
-                .anyMatch(c -> c.getName().equals(category.getName()) && !c.getId().equals(category.getId()));
+                .anyMatch(c -> c.getName().equals(category.getName()) && !c.getId().equals(id));
         if (isExist) {
             throw new BusinessException(com.zhp.flea_market.common.ErrorCode.PARAMS_ERROR, "分类名称已存在");
         }
 
-        // 更新分类
+        // 设置分类ID并更新
+        category.setId(id);
         boolean result = categoryService.updateCategory(category);
         
         logOperation("更新二手物品分类", result, request, 
-                "分类ID", category.getId(), 
+                "分类ID", id, 
                 "分类名称", category.getName()
         );
         return handleOperationResult(result, "二手物品分类更新成功");
@@ -131,7 +134,7 @@ public class CategoryController extends BaseController {
      * @param request HTTP请求
      * @return 是否删除成功
      */
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @Operation(summary = "删除二手物品分类", description = "管理员根据ID删除二手物品分类")
     public BaseResponse<Boolean> deleteCategory(
