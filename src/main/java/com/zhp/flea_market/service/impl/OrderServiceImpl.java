@@ -21,6 +21,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -47,6 +48,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * @return 创建的订单ID
      */
     @Override
+    @Transactional(rollbackFor = Exception.class, timeout = 30)
     public Long createOrder(Long productId, HttpServletRequest request) {
         // 参数校验
         if (productId == null || productId <= 0) {
@@ -107,6 +109,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * @return 是否支付成功
      */
     @Override
+    @Transactional(rollbackFor = Exception.class, timeout = 30)
     public boolean payOrder(Long orderId, HttpServletRequest request) {
         // 参数校验
         if (orderId == null || orderId <= 0) {
@@ -202,6 +205,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * @param orderId 订单ID
      */
     @Override
+    @Transactional(rollbackFor = Exception.class, timeout = 60)
     public boolean completeOrder(Long orderId, HttpServletRequest request) {
         // 参数校验
         if (orderId == null || orderId <= 0) {

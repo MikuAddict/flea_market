@@ -58,7 +58,7 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
      * @return 交易记录ID
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class, timeout = 30)
     public Long createTradeRecord(Long orderId, Long productId, String productName, 
                                 Long buyerId, String buyerName, Long sellerId, String sellerName,
                                 BigDecimal amount, Integer paymentMethod, String paymentMethodDesc, 
