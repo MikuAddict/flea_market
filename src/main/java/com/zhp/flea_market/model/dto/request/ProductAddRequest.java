@@ -2,6 +2,7 @@ package com.zhp.flea_market.model.dto.request;
 
 import lombok.Data;
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * 二手物品添加请求
@@ -25,9 +26,9 @@ public class ProductAddRequest {
     private BigDecimal price;
     
     /**
-     * 二手物品图片地址列表（JSON格式）
+     * 二手物品图片地址列表
      */
-    private String imageUrls;
+    private List<String> imageUrls;
     
     /**
      * 二手物品分类ID

@@ -34,8 +34,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // 映射图片访问路径到本地存储目录
+        // 使用绝对路径确保正确映射
+        String basePath = storageConfig.getBasePath();
+        if (basePath.startsWith("./")) {
+            basePath = basePath.substring(2); // 移除开头的"./"
+        }
+        
+        String absolutePath = System.getProperty("user.dir") + "/" + basePath;
+        
         registry.addResourceHandler(storageConfig.getBaseUrl() + "/**")
-                .addResourceLocations("file:" + storageConfig.getBasePath() + "/");
+                .addResourceLocations("file:" + absolutePath + "/");
         
         // 配置静态资源缓存
         registry.addResourceHandler("/**")

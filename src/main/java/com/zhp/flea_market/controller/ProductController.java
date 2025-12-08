@@ -2,6 +2,7 @@ package com.zhp.flea_market.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zhp.flea_market.annotation.AuthCheck;
 import com.zhp.flea_market.annotation.LoginRequired;
 import com.zhp.flea_market.common.BaseResponse;
@@ -70,10 +71,6 @@ public class ProductController extends BaseController {
         if (productAddRequest.getPaymentMethod() < 0 || productAddRequest.getPaymentMethod() > 3) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "支付方式无效，请选择：0-现金支付, 1-微信支付, 2-积分兑换, 3-二手物品交换");
         }
-        validateNotNull(productAddRequest.getPaymentMethod(), "支付方式");
-        if (productAddRequest.getPaymentMethod() < 0 || productAddRequest.getPaymentMethod() > 3) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "支付方式无效，请选择：0-现金支付, 1-微信支付, 2-积分兑换, 3-二手物品交换");
-        }
 
         // 检查分类是否存在
         Category category = categoryService.getById(productAddRequest.getCategoryId());
@@ -87,8 +84,18 @@ public class ProductController extends BaseController {
         // 设置支付方式，使用用户选择的支付方式
         product.setPaymentMethod(productAddRequest.getPaymentMethod());
         
-        // 设置图片信息
-        product.setImageUrls(productAddRequest.getImageUrls());
+        // 设置图片信息（转换为JSON字符串）
+        if (productAddRequest.getImageUrls() != null && !productAddRequest.getImageUrls().isEmpty()) {
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                String imageUrlsJson = objectMapper.writeValueAsString(productAddRequest.getImageUrls());
+                product.setImageUrls(imageUrlsJson);
+            } catch (Exception e) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "图片信息格式错误");
+            }
+        } else {
+            product.setImageUrls(null);
+        }
         
         // 获取当前登录用户
         User currentUser = userService.getLoginUser(request);
@@ -301,9 +308,18 @@ public class ProductController extends BaseController {
         // 参数校验
         Page<Product> page = validatePageParams(current, size);
 
+        // 获取当前登录用户
+        User currentUser = userService.getLoginUser(request);
+        
+        // 查询当前用户的二手物品列表
+        List<Product> productList = productService.getUserProducts(currentUser.getId(), page);
+        page.setRecords(productList);
+
         logOperation("获取当前用户发布的二手物品列表", request, 
                 "当前页", current,
-                "每页大小", size
+                "每页大小", size,
+                "用户ID", currentUser.getId(),
+                "物品数量", productList.size()
         );
         return ResultUtils.success(page);
     }
