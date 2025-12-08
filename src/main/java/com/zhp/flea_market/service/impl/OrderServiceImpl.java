@@ -43,7 +43,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 创建订单
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @param request HTTP请求
      * @return 创建的订单ID
      */
@@ -52,7 +52,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     public Long createOrder(Long productId, HttpServletRequest request) {
         // 参数校验
         if (productId == null || productId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID无效");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
         }
         
         // 获取当前登录用户
@@ -61,25 +61,25 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
         }
         
-        // 检查商品是否存在且已上架
+        // 检查二手物品是否存在且已上架
         Product product = productService.getById(productId);
         if (product == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "商品不存在");
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "二手物品不存在");
         }
         
         if (product.getStatus() != 1) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品未上架，无法购买");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品未上架，无法购买");
         }
         
-        // 自动使用商品设置的支付方式
+        // 自动使用二手物品设置的支付方式
         Integer paymentMethod = product.getPaymentMethod();
         if (paymentMethod == null || paymentMethod < 0 || paymentMethod > 3) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品支付方式设置无效");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品支付方式设置无效");
         }
         
-        // 检查不能购买自己的商品
+        // 检查不能购买自己的二手物品
         if (product.getUserId() != null && product.getUserId().equals(currentUser.getId())) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "不能购买自己的商品");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "不能购买自己的二手物品");
         }
         
         // 计算订单金额
@@ -138,10 +138,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单状态异常，无法支付");
         }
         
-        // 检查商品是否仍然有效
+        // 检查二手物品是否仍然有效
         Product product = productService.getById(order.getProductId());
         if (product == null || product.getStatus() != 1) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品已下架或不存在，无法支付");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品已下架或不存在，无法支付");
         }
         
         // 根据支付方式更新订单状态
@@ -515,14 +515,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     /**
      * 计算订单金额
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @return 订单金额
      */
     @Override
     public BigDecimal calculateOrderAmount(Long productId) {
         Product product = productService.getById(productId);
         if (product == null || product.getPrice() == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品价格信息错误");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品价格信息错误");
         }
         
         return product.getPrice();
@@ -629,7 +629,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // 订单完成后，给买家发放积分（积分支付订单除外）
         if (order.getPaymentMethod() != 2) { // 2表示积分兑换
             try {
-                // 计算买家获得的积分：商品价格除以10，保留小数点后一位
+                // 计算买家获得的积分：二手物品价格除以10，保留小数点后一位
                 BigDecimal pointsToAdd = order.getAmount().divide(new BigDecimal("10"), 1, RoundingMode.HALF_UP);
                 userService.updateUserPoints(order.getBuyerId(), pointsToAdd);
             } catch (Exception e) {
@@ -705,7 +705,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 使用积分兑换商品
+     * 使用积分兑换二手物品
      * @param orderId 订单ID
      */
     @Override
@@ -742,21 +742,21 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单状态异常，无法兑换");
         }
         
-        // 检查商品是否允许积分购买
+        // 检查二手物品是否允许积分购买
         Long productId = order.getProductId();
         if (productId == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "商品不存在");
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "二手物品不存在");
         }
         
-        // 获取商品信息
+        // 获取二手物品信息
         Product product = productService.getById(productId);
         if (product == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "商品不存在");
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "二手物品不存在");
         }
         
-        // 检查商品支付方式是否为积分兑换
+        // 检查二手物品支付方式是否为积分兑换
         if (product.getPaymentMethod() == null || product.getPaymentMethod() != 2) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "该商品不支持积分兑换");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "该二手物品不支持积分兑换");
         }
         
         // 检查用户积分是否足够
@@ -924,7 +924,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         orderVO.setCreateTime(order.getCreateTime());
         orderVO.setFinishTime(order.getFinishTime());
         
-        // 获取商品信息
+        // 获取二手物品信息
         Product product = productService.getById(order.getProductId());
         if (product != null) {
             orderVO.setProductName(product.getProductName());

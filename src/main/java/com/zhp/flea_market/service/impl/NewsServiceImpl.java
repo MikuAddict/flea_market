@@ -39,7 +39,7 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
         QueryWrapper<News> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("id", "title", "content", "image_url", "author_id", "create_time");
         
-        // 实现真正的分页查询
+        // 分页查询
         Page<News> resultPage = this.page(page, queryWrapper);
         List<News> newsList = resultPage.getRecords();
         

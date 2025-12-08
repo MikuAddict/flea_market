@@ -94,6 +94,7 @@ public interface UserService extends IService<User> {
      * @return
      */
     List<UserVO> getUserVO(List<User> userList);
+
     /**
      * 获取查询条件
      *
@@ -102,10 +103,10 @@ public interface UserService extends IService<User> {
      */
     QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
     /**
-     * 根据 ID 查询商品信息并加锁
+     * 根据 ID 查询二手物品信息并加锁
      *
-     * @param id 商品 ID
-     * @return 商品信息
+     * @param id 二手物品 ID
+     * @return 二手物品信息
      */
     User getByIdWithLock(Long id);
 
@@ -143,20 +144,5 @@ public interface UserService extends IService<User> {
      * @return 待审核用户列表
      */
     List<User> getPendingAuditUsers(com.baomidou.mybatisplus.extension.plugins.pagination.Page<User> page);
-
-    /**
-     * 批量删除所有已拒绝的用户
-     *
-     * @param request HTTP请求
-     * @return 删除的用户数量
-     */
-    int batchDeleteRejectedUsers(HttpServletRequest request);
-
-    /**
-     * 获取已拒绝用户数量
-     *
-     * @return 已拒绝用户数量
-     */
-    int getRejectedUserCount();
 
 }

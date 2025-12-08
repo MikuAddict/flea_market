@@ -21,12 +21,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 商品分类接口
+ * 二手物品分类接口
  */
 @RestController
 @RequestMapping("/category")
 @Slf4j
-@Tag(name = "商品分类管理", description = "商品分类的增删改查接口")
+@Tag(name = "二手物品分类管理", description = "二手物品分类的增删改查接口")
 public class CategoryController extends BaseController {
 
     @Resource
@@ -36,20 +36,20 @@ public class CategoryController extends BaseController {
     private ProductService productService;
 
     /**
-     * 获取所有商品分类
+     * 获取所有二手物品分类
      *
      * @return 分类列表
      */
     @GetMapping("/list")
-    @Operation(summary = "获取所有商品分类", description = "获取系统中所有的商品分类信息")
+    @Operation(summary = "获取所有二手物品分类", description = "获取系统中所有的二手物品分类信息")
     public BaseResponse<List<Category>> getCategoryList() {
         List<Category> categoryList = categoryService.getCategoryList();
-        logOperation("获取所有商品分类", null, "分类数量", categoryList.size());
+        logOperation("获取所有二手物品分类", null, "分类数量", categoryList.size());
         return ResultUtils.success(categoryList);
     }
 
     /**
-     * 添加商品分类
+     * 添加二手物品分类
      *
      * @param categoryAddRequest 分类信息
      * @param request HTTP请求
@@ -57,7 +57,7 @@ public class CategoryController extends BaseController {
      */
     @PostMapping("/add")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    @Operation(summary = "添加商品分类", description = "管理员添加新的商品分类")
+    @Operation(summary = "添加二手物品分类", description = "管理员添加新的二手物品分类")
     public BaseResponse<Long> addCategory(
             @RequestBody CategoryAddRequest categoryAddRequest,
             HttpServletRequest request) {
@@ -80,12 +80,12 @@ public class CategoryController extends BaseController {
         // 添加分类
         boolean result = categoryService.addCategory(category);
         
-        logOperation("添加商品分类", result, request, "分类名称", categoryAddRequest.getName());
-        return handleOperationResult(result, "商品分类添加成功", category.getId());
+        logOperation("添加二手物品分类", result, request, "分类名称", categoryAddRequest.getName());
+        return handleOperationResult(result, "二手物品分类添加成功", category.getId());
     }
 
     /**
-     * 更新商品分类
+     * 更新二手物品分类
      *
      * @param category 分类信息
      * @param request HTTP请求
@@ -93,7 +93,7 @@ public class CategoryController extends BaseController {
      */
     @PutMapping("/update")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    @Operation(summary = "更新商品分类", description = "管理员更新商品分类信息")
+    @Operation(summary = "更新二手物品分类", description = "管理员更新二手物品分类信息")
     public BaseResponse<Boolean> updateCategory(
             @Parameter(description = "分类信息") @RequestBody Category category,
             HttpServletRequest request) {
@@ -117,15 +117,15 @@ public class CategoryController extends BaseController {
         // 更新分类
         boolean result = categoryService.updateCategory(category);
         
-        logOperation("更新商品分类", result, request, 
+        logOperation("更新二手物品分类", result, request, 
                 "分类ID", category.getId(), 
                 "分类名称", category.getName()
         );
-        return handleOperationResult(result, "商品分类更新成功");
+        return handleOperationResult(result, "二手物品分类更新成功");
     }
 
     /**
-     * 删除商品分类
+     * 删除二手物品分类
      *
      * @param id 分类ID
      * @param request HTTP请求
@@ -133,7 +133,7 @@ public class CategoryController extends BaseController {
      */
     @DeleteMapping("/delete/{id}")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    @Operation(summary = "删除商品分类", description = "管理员根据ID删除商品分类")
+    @Operation(summary = "删除二手物品分类", description = "管理员根据ID删除二手物品分类")
     public BaseResponse<Boolean> deleteCategory(
             @Parameter(description = "分类ID") @PathVariable Long id,
             HttpServletRequest request) {
@@ -144,22 +144,22 @@ public class CategoryController extends BaseController {
         Category existCategory = categoryService.getById(id);
         validateResourceExists(existCategory, "分类");
 
-        // 检查分类下是否有商品，如果有则不能删除
+        // 检查分类下是否有二手物品，如果有则不能删除
         List<Product> productsInCategory = productService.lambdaQuery()
                 .eq(Product::getCategoryId, existCategory)
                 .list();
         if (!productsInCategory.isEmpty()) {
             throw new BusinessException(com.zhp.flea_market.common.ErrorCode.OPERATION_ERROR,
-                "该分类下存在商品，无法删除。请先移除或转移分类下的商品");
+                "该分类下存在二手物品，无法删除。请先移除或转移分类下的二手物品");
         }
         
         // 删除分类
         boolean result = categoryService.deleteCategory(id);
         
-        logOperation("删除商品分类", result, request, 
+        logOperation("删除二手物品分类", result, request, 
                 "分类ID", id, 
                 "分类名称", existCategory.getName()
         );
-        return handleOperationResult(result, "商品分类删除成功");
+        return handleOperationResult(result, "二手物品分类删除成功");
     }
 }

@@ -44,16 +44,16 @@ public class ImageController {
     }
 
     /**
-     * 上传商品图片
+     * 上传二手物品图片
      */
-    @Operation(summary = "上传商品图片", description = "上传商品相关图片")
+    @Operation(summary = "上传二手物品图片", description = "上传二手物品相关图片")
     @PostMapping("/upload/product")
     @LoginRequired
     public BaseResponse<ImageUploadResponse> uploadProductImage(
-            @Parameter(description = "商品图片文件") @RequestParam("file") MultipartFile file,
+            @Parameter(description = "二手物品图片文件") @RequestParam("file") MultipartFile file,
             HttpServletRequest request) {
         
-        logOperation("上传商品图片", request);
+        logOperation("上传二手物品图片", request);
         ImageUploadResponse response = imageStorageService.uploadImage(file, ImageStorageService.ImageType.PRODUCT);
         return ResultUtils.success(response);
     }

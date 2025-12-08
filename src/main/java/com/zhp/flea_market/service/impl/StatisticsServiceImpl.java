@@ -35,12 +35,12 @@ public class StatisticsServiceImpl implements StatisticsService {
     private ShoppingCartService shoppingCartService;
 
     /**
-     * 获取月度交易商品排行
+     * 获取月度交易二手物品排行
      *
      * @param month 月份
      * @param year 年份
      * @param limit 限制数量
-     * @return 商品排行列表
+     * @return 二手物品排行列表
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -64,12 +64,12 @@ public class StatisticsServiceImpl implements StatisticsService {
             return new ArrayList<>();
         }
 
-        // 按商品ID分组，统计每个商品的交易次数和金额
+        // 按二手物品ID分组，统计每个二手物品的交易次数和金额
         Map<Long, List<TradeRecord>> productGroups = tradeRecords.stream()
                 .filter(record -> record.getProductId() != null)
                 .collect(Collectors.groupingBy(TradeRecord::getProductId));
 
-        // 计算每个商品的统计信息
+        // 计算每个二手物品的统计信息
         List<StatisticsResponse.ProductRankingItem> result = new ArrayList<>();
         for (Map.Entry<Long, List<TradeRecord>> entry : productGroups.entrySet()) {
             Long productId = entry.getKey();
@@ -93,7 +93,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                     })
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            // 获取商品信息
+            // 获取二手物品信息
             Product product = productService.getById(productId);
             if (product == null) {
                 continue;
@@ -230,15 +230,15 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
 
     /**
-     * 获取需求量大商品排行
+     * 获取需求量大二手物品排行
      *
      * @param limit 限制数量
-     * @return 商品排行列表
+     * @return 二手物品排行列表
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public List<StatisticsResponse.ProductRankingItem> getHighDemandProducts(int limit) {
-        // 获取所有已上架商品
+        // 获取所有已上架二手物品
         QueryWrapper<Product> productQueryWrapper = new QueryWrapper<>();
         productQueryWrapper.eq("status", 1); // 1表示已上架
         List<Product> products = productService.list(productQueryWrapper);
@@ -247,15 +247,15 @@ public class StatisticsServiceImpl implements StatisticsService {
             return new ArrayList<>();
         }
 
-        // 统计每个商品在购物车中的数量
+        // 统计每个二手物品在购物车中的数量
         List<StatisticsResponse.ProductRankingItem> result = new ArrayList<>();
         for (Product product : products) {
-            // 获取商品在购物车中的数量
+            // 获取二手物品在购物车中的数量
             QueryWrapper<ShoppingCart> cartQueryWrapper = new QueryWrapper<>();
             cartQueryWrapper.eq("product_id", product.getId());
             long cartCount = shoppingCartService.count(cartQueryWrapper);
 
-            // 获取商品的订单数量
+            // 获取二手物品的订单数量
             QueryWrapper<Order> orderQueryWrapper = new QueryWrapper<>();
             orderQueryWrapper.eq("product_id", product.getId())
                     .in("status", 0, 1, 2); // 排除已取消的订单
@@ -283,25 +283,25 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
 
     /**
-     * 获取闲置量大商品排行
+     * 获取闲置量大二手物品排行
      *
      * @param limit 限制数量
-     * @return 商品排行列表
+     * @return 二手物品排行列表
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public List<StatisticsResponse.ProductRankingItem> getHighInventoryProducts(int limit) {
-        // 获取所有已上架商品
+        // 获取所有已上架二手物品
         QueryWrapper<Product> productQueryWrapper = new QueryWrapper<>();
         productQueryWrapper.eq("status", 1); // 1表示已上架
-        productQueryWrapper.orderByDesc("create_time"); // 按创建时间降序，优先显示上架时间长的商品
+        productQueryWrapper.orderByDesc("create_time"); // 按创建时间降序，优先显示上架时间长的二手物品
         List<Product> products = productService.list(productQueryWrapper);
 
         if (CollectionUtils.isEmpty(products)) {
             return new ArrayList<>();
         }
 
-        // 计算商品上架天数
+        // 计算二手物品上架天数
         List<StatisticsResponse.ProductRankingItem> result = new ArrayList<>();
         for (Product product : products) {
             long listingDays = 0;
@@ -310,12 +310,12 @@ public class StatisticsServiceImpl implements StatisticsService {
                 listingDays = diffInMillis / (1000 * 60 * 60 * 24);
             }
 
-            // 检查商品是否有交易记录
+            // 检查二手物品是否有交易记录
             QueryWrapper<TradeRecord> tradeQueryWrapper = new QueryWrapper<>();
             tradeQueryWrapper.eq("product_id", product.getId());
             long tradeCount = tradeRecordService.count(tradeQueryWrapper);
 
-            // 只有上架时间长且交易少的商品才被认为是闲置商品
+            // 只有上架时间长且交易少的二手物品才被认为是闲置二手物品
             if (listingDays >= 30 && tradeCount == 0) { // 上架超过30天且无交易记录
                 // 创建排行项
                 StatisticsResponse.ProductRankingItem item = new StatisticsResponse.ProductRankingItem();
@@ -357,7 +357,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         response.setTotalTradeAmount(totalTradeAmount);
         response.setTotalTradeCount(totalTradeCount);
 
-        // 获取月度交易商品排行（当前月份）
+        // 获取月度交易二手物品排行（当前月份）
         Calendar calendar = Calendar.getInstance();
         int currentMonth = calendar.get(Calendar.MONTH) + 1;
         int currentYear = calendar.get(Calendar.YEAR);
@@ -366,10 +366,10 @@ public class StatisticsServiceImpl implements StatisticsService {
         // 获取活跃用户排行
         response.setActiveUserRanking(getActiveUsersRanking(10, startDate, endDate));
 
-        // 获取需求量大商品排行
+        // 获取需求量大二手物品排行
         response.setHighDemandRanking(getHighDemandProducts(10));
 
-        // 获取闲置量大商品排行
+        // 获取闲置量大二手物品排行
         response.setHighInventoryRanking(getHighInventoryProducts(10));
 
         return response;
@@ -468,19 +468,19 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
 
     /**
-     * 获取商品交易统计
+     * 获取二手物品交易统计
      *
-     * @param productId 商品ID
-     * @return 商品交易统计
+     * @param productId 二手物品ID
+     * @return 二手物品交易统计
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public StatisticsResponse getProductTradeStatistics(Long productId) {
         StatisticsResponse response = new StatisticsResponse();
-        response.setStatisticsType("商品交易统计");
+        response.setStatisticsType("二手物品交易统计");
         response.setStatisticsTime(new Date());
 
-        // 获取商品的交易记录
+        // 获取二手物品的交易记录
         QueryWrapper<TradeRecord> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("product_id", productId);
         List<TradeRecord> records = tradeRecordService.list(queryWrapper);

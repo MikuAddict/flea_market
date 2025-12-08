@@ -21,7 +21,7 @@ public interface OrderService extends IService<Order> {
     /**
      * 创建订单
      *
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @param request HTTP请求
      * @return 创建的订单ID
      */
@@ -140,7 +140,7 @@ public interface OrderService extends IService<Order> {
     /**
      * 计算订单金额
      *
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @return 订单金额
      */
     BigDecimal calculateOrderAmount(Long productId);
@@ -173,7 +173,7 @@ public interface OrderService extends IService<Order> {
     boolean simulateWechatPay(Long orderId, HttpServletRequest request);
 
     /**
-     * 使用积分兑换商品
+     * 使用积分兑换二手物品
      *
      * @param orderId 订单ID
      * @param request HTTP请求

@@ -1,8 +1,10 @@
 package com.zhp.flea_market.model.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
-import java.util.Date;
 
 /**
  * 购物车实体
@@ -23,7 +25,7 @@ public class ShoppingCart {
     private Long userId;
 
     /**
-     * 商品ID
+     * 二手物品ID
      */
     private Long productId;
     

@@ -397,11 +397,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户不存在");
         }
         
-        // 不能审核管理员
-        if (UserRoleEnum.ADMIN.getValue().equals(user.getUserRole())) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "不能审核管理员账户");
-        }
-        
         // 更新用户审核信息
         User updateUser = new User();
         updateUser.setId(userId);
@@ -424,70 +419,5 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<User> resultPage = this.page(page, queryWrapper);
         return resultPage.getRecords();
-    }
-
-    /**
-     * 批量删除所有已拒绝的用户
-     *
-     * @param request HTTP请求
-     * @return 删除的用户数量
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public int batchDeleteRejectedUsers(HttpServletRequest request) {
-        // 获取当前登录用户
-        User currentUser = getLoginUser(request);
-        if (currentUser == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
-        }
-        
-        // 权限校验：只有管理员可以删除已拒绝用户
-        if (!isAdmin(currentUser)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限执行此操作");
-        }
-        
-        // 查询所有已拒绝用户
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_status", 2); // 2表示已拒绝
-        queryWrapper.ne("user_role", "admin"); // 不能删除管理员
-        
-        List<User> rejectedUsers = this.list(queryWrapper);
-        if (CollectionUtils.isEmpty(rejectedUsers)) {
-            return 0; // 没有已拒绝用户需要删除
-        }
-        
-        // 提取用户ID列表
-        List<Long> userIds = rejectedUsers.stream()
-                .map(User::getId)
-                .collect(Collectors.toList());
-        
-        // 删除用户相关的图片
-        for (User user : rejectedUsers) {
-            if (user.getUserAvatar() != null) {
-                try {
-                    imageStorageService.deleteImage(user.getUserAvatar());
-                } catch (Exception e) {
-                    // 删除图片失败不应该影响删除操作
-                    System.err.println("删除用户头像失败: " + e.getMessage());
-                }
-            }
-        }
-        
-        // 执行批量删除
-        return this.baseMapper.deleteBatchIds(userIds);
-    }
-
-    /**
-     * 获取已拒绝用户数量
-     *
-     * @return 已拒绝用户数量
-     */
-    @Override
-    public int getRejectedUserCount() {
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_status", 2); // 2表示已拒绝
-        queryWrapper.ne("user_role", "admin"); // 不包括管理员
-        
-        return (int) this.count(queryWrapper);
     }
 }

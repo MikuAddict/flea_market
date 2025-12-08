@@ -1,8 +1,8 @@
 package com.zhp.flea_market.service.impl;
 
+import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.config.ImageStorageConfig;
 import com.zhp.flea_market.exception.BusinessException;
-import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.model.dto.response.ImageUploadResponse;
 import com.zhp.flea_market.service.ImageStorageService;
 import lombok.extern.slf4j.Slf4j;
@@ -10,15 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -50,12 +43,8 @@ public class ImageStorageServiceImpl implements ImageStorageService {
             // 保存原始图片
             File targetFile = new File(storagePath);
             file.transferTo(targetFile);
-            
-            // 移除缩略图生成代码
-            
             // 生成访问URL
             String originalUrl = generateImageUrl(storagePath);
-            // 修改这里，不再生成缩略图URL
             Map<String, String> thumbnailUrls = new HashMap<>();
             
             log.info("图片上传成功: {}, 类型: {}", originalUrl, imageType);
@@ -84,11 +73,7 @@ public class ImageStorageServiceImpl implements ImageStorageService {
             File file = new File(filePath);
             
             if (file.exists()) {
-                // 删除原始图片
                 boolean deleted = file.delete();
-                
-                // 移除缩略图删除代码
-                
                 log.info("图片删除成功: {}", filePath);
                 return deleted;
             }
@@ -126,8 +111,7 @@ public class ImageStorageServiceImpl implements ImageStorageService {
     private String generateStoragePath(String originalFilename, ImageType imageType) {
         String extension = getFileExtension(originalFilename);
         String filename = UUID.randomUUID() + "." + extension;
-        
-        // 移除时间分类，只按照图片类型分类
+
         String fullPath = String.format("%s/%s/%s", 
             storageConfig.getBasePath(), 
             imageType.getFolderName(), 

@@ -28,7 +28,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 商品评价服务实现类
+ * 二手物品评价服务实现类
  */
 @Service
 public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> implements ReviewService {
@@ -89,15 +89,15 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "该订单已经评价过，每个订单只能评价一次");
         }
         
-        // 检查商品是否存在
+        // 检查二手物品是否存在
         Product product = productService.getById(review.getProductId());
         if (product == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "商品不存在");
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "二手物品不存在");
         }
         
-        // 验证商品ID与订单中的商品ID一致
+        // 验证二手物品ID与订单中的二手物品ID一致
         if (!order.getProductId().equals(review.getProductId())) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID与订单中的商品不一致");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID与订单中的二手物品不一致");
         }
         
         // 设置评价信息
@@ -204,9 +204,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 根据商品ID获取评价列表
+     * 根据二手物品ID获取评价列表
      *
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @param page 分页参数
      * @return 评价列表
      */
@@ -214,7 +214,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     public List<Review> getReviewsByProductId(Long productId, Page<Review> page) {
         // 参数校验
         if (productId == null || productId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID无效");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
         }
         
         QueryWrapper<Review> queryWrapper = new QueryWrapper<>();
@@ -270,10 +270,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 获取用户对商品的评价
+     * 获取用户对二手物品的评价
      *
      * @param userId 用户ID
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @return 评价信息
      */
     @Override
@@ -283,7 +283,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID无效");
         }
         if (productId == null || productId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID无效");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
         }
         
         QueryWrapper<Review> queryWrapper = new QueryWrapper<>();
@@ -302,16 +302,16 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 获取商品平均评分
+     * 获取二手物品平均评分
      *
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @return 平均评分
      */
     @Override
     public Double getAverageRatingByProductId(Long productId) {
         // 参数校验
         if (productId == null || productId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID无效");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
         }
         
         QueryWrapper<Review> queryWrapper = new QueryWrapper<>();
@@ -349,16 +349,16 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 获取商品评价统计信息
+     * 获取二手物品评价统计信息
      *
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @return 评价统计信息
      */
     @Override
     public ReviewRequest getReviewStatisticsByProductId(Long productId) {
         // 参数校验
         if (productId == null || productId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID无效");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
         }
         
         ReviewRequest statistics = new ReviewRequest();
@@ -409,7 +409,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     /**
      * 获取查询条件
      *
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @param userId 用户ID
      * @param orderId 订单ID
      * @param minRating 最低评分
@@ -456,7 +456,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
         
         if (review.getProductId() == null || review.getProductId() <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID无效");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
         }
         
         if (review.getRating() == null || review.getRating() < 1 || review.getRating() > 5) {
@@ -518,7 +518,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             reviewVO.setUserAvatar(user.getUserAvatar());
         }
         
-        // 获取商品信息
+        // 获取二手物品信息
         Product product = productService.getById(review.getProductId());
         if (product != null) {
             reviewVO.setProductName(product.getProductName());

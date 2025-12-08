@@ -6,40 +6,40 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 商品信息实体
+ * 二手物品信息实体
  */
 @TableName("product")
 @Data
 public class Product {
 
     /**
-     * 商品ID
+     * 二手物品ID
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
-     * 商品名称
+     * 二手物品名称
      */
     private String productName;
 
     /**
-     * 商品描述
+     * 二手物品描述
      */
     private String description;
 
     /**
-     * 商品价格
+     * 二手物品价格
      */
     private BigDecimal price;
 
     /**
-     * 商品图片地址
+     * 二手物品图片地址
      */
     private String imageUrl;
 
     /**
-     * 商品状态 (0-待审核, 1-已上架, 2-已下架, 3-已售出)
+     * 二手物品状态 (0-待审核, 1-已上架, 2-已下架, 3-已售出)
      */
     private Integer status;
 
@@ -49,7 +49,7 @@ public class Product {
     private Integer paymentMethod;
 
     /**
-     * 商品分类ID
+     * 二手物品分类ID
      */
     private Long categoryId;
 

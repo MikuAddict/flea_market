@@ -21,27 +21,27 @@ public class ShoppingCartVO {
     private Long userId;
 
     /**
-     * 商品ID
+     * 二手物品ID
      */
     private Long productId;
 
     /**
-     * 商品名称
+     * 二手物品名称
      */
     private String productName;
 
     /**
-     * 商品图片
+     * 二手物品图片
      */
     private String productImage;
 
     /**
-     * 商品价格
+     * 二手物品价格
      */
     private BigDecimal price;
 
     /**
-     * 商品描述
+     * 二手物品描述
      */
     private String description;
 

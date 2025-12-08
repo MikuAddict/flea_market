@@ -3,7 +3,7 @@ package com.zhp.flea_market.model.dto.request;
 import lombok.Data;
 
 /**
- * 商品评价统计请求
+ * 二手物品评价统计请求
  */
 @Data
 public class ReviewRequest {

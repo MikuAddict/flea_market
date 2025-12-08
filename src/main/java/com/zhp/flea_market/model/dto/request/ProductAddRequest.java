@@ -4,33 +4,33 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 /**
- * 商品添加请求
+ * 二手物品添加请求
  */
 @Data
 public class ProductAddRequest {
     
     /**
-     * 商品名称
+     * 二手物品名称
      */
     private String productName;
     
     /**
-     * 商品描述
+     * 二手物品描述
      */
     private String description;
     
     /**
-     * 商品价格
+     * 二手物品价格
      */
     private BigDecimal price;
     
     /**
-     * 商品图片地址
+     * 二手物品图片地址
      */
     private String imageUrl;
     
     /**
-     * 商品分类ID
+     * 二手物品分类ID
      */
     private Long categoryId;
     

@@ -19,8 +19,8 @@ public interface TradeRecordService extends IService<TradeRecord> {
      * 创建交易记录
      *
      * @param orderId 订单ID
-     * @param productId 商品ID
-     * @param productName 商品名称
+     * @param productId 二手物品ID
+     * @param productName 二手物品名称
      * @param buyerId 买家ID
      * @param buyerName 买家名称
      * @param sellerId 卖家ID

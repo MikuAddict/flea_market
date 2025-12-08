@@ -30,15 +30,15 @@ public class StatisticsController extends BaseController {
     private StatisticsService statisticsService;
 
     /**
-     * 获取月度交易商品排行
+     * 获取月度交易二手物品排行
      *
      * @param month 月份
      * @param year 年份
      * @param limit 限制数量
      * @param request HTTP请求
-     * @return 商品排行列表
+     * @return 二手物品排行列表
      */
-    @Operation(summary = "获取月度交易商品排行", description = "获取指定月份的交易商品排行榜")
+    @Operation(summary = "获取月度交易二手物品排行", description = "获取指定月份的交易二手物品排行榜")
     @GetMapping("/monthly-products")
     @LoginRequired
     public BaseResponse<List<StatisticsResponse.ProductRankingItem>> getMonthlyTopSellingProducts(
@@ -56,11 +56,11 @@ public class StatisticsController extends BaseController {
                     com.zhp.flea_market.common.ErrorCode.PARAMS_ERROR, "年份必须在2020-2030之间");
         }
 
-        // 获取月度交易商品排行
+        // 获取月度交易二手物品排行
         List<StatisticsResponse.ProductRankingItem> result = 
                 statisticsService.getMonthlyTopSellingProducts(month, year, limit);
         
-        logOperation("获取月度交易商品排行", request, 
+        logOperation("获取月度交易二手物品排行", request, 
                 "月份", month,
                 "年份", year,
                 "限制数量", limit
@@ -100,44 +100,44 @@ public class StatisticsController extends BaseController {
     }
 
     /**
-     * 获取需求量大商品排行
+     * 获取需求量大二手物品排行
      *
      * @param limit 限制数量
      * @param request HTTP请求
-     * @return 商品排行列表
+     * @return 二手物品排行列表
      */
-    @Operation(summary = "获取需求量大商品排行", description = "获取需求量大的商品排行榜")
+    @Operation(summary = "获取需求量大二手物品排行", description = "获取需求量大的二手物品排行榜")
     @GetMapping("/high-demand-products")
     @LoginRequired
     public BaseResponse<List<StatisticsResponse.ProductRankingItem>> getHighDemandProducts(
             @Parameter(description = "限制数量") @RequestParam(defaultValue = "10") int limit,
             HttpServletRequest request) {
-        // 获取需求量大商品排行
+        // 获取需求量大二手物品排行
         List<StatisticsResponse.ProductRankingItem> result = 
                 statisticsService.getHighDemandProducts(limit);
         
-        logOperation("获取需求量大商品排行", request, "限制数量", limit);
+        logOperation("获取需求量大二手物品排行", request, "限制数量", limit);
         return ResultUtils.success(result);
     }
 
     /**
-     * 获取闲置量大商品排行
+     * 获取闲置量大二手物品排行
      *
      * @param limit 限制数量
      * @param request HTTP请求
-     * @return 商品排行列表
+     * @return 二手物品排行列表
      */
-    @Operation(summary = "获取闲置量大商品排行", description = "获取闲置量大的商品排行榜")
+    @Operation(summary = "获取闲置量大二手物品排行", description = "获取闲置量大的二手物品排行榜")
     @GetMapping("/high-inventory-products")
     @LoginRequired
     public BaseResponse<List<StatisticsResponse.ProductRankingItem>> getHighInventoryProducts(
             @Parameter(description = "限制数量") @RequestParam(defaultValue = "10") int limit,
             HttpServletRequest request) {
-        // 获取闲置量大商品排行
+        // 获取闲置量大二手物品排行
         List<StatisticsResponse.ProductRankingItem> result = 
                 statisticsService.getHighInventoryProducts(limit);
         
-        logOperation("获取闲置量大商品排行", request, "限制数量", limit);
+        logOperation("获取闲置量大二手物品排行", request, "限制数量", limit);
         return ResultUtils.success(result);
     }
 
@@ -227,25 +227,25 @@ public class StatisticsController extends BaseController {
     }
 
     /**
-     * 获取商品交易统计
+     * 获取二手物品交易统计
      *
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @param request HTTP请求
-     * @return 商品交易统计
+     * @return 二手物品交易统计
      */
-    @Operation(summary = "获取商品交易统计", description = "获取指定商品的交易统计数据")
+    @Operation(summary = "获取二手物品交易统计", description = "获取指定二手物品的交易统计数据")
     @GetMapping("/product/{productId}")
     @LoginRequired
     public BaseResponse<StatisticsResponse> getProductTradeStatistics(
-            @Parameter(description = "商品ID") @PathVariable Long productId,
+            @Parameter(description = "二手物品ID") @PathVariable Long productId,
             HttpServletRequest request) {
         // 参数校验
-        validateId(productId, "商品ID");
+        validateId(productId, "二手物品ID");
 
-        // 获取商品交易统计
+        // 获取二手物品交易统计
         StatisticsResponse result = statisticsService.getProductTradeStatistics(productId);
         
-        logOperation("获取商品交易统计", request, "商品ID", productId);
+        logOperation("获取二手物品交易统计", request, "二手物品ID", productId);
         return ResultUtils.success(result);
     }
 }

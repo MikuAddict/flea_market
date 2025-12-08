@@ -19,7 +19,7 @@ public class Order {
     private Long id;
 
     /**
-     * 商品ID
+     * 二手物品ID
      */
     private Long productId;
 

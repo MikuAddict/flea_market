@@ -25,7 +25,7 @@ public class TradeRecord {
     private Long orderId;
 
     /**
-     * 商品ID
+     * 二手物品ID
      */
     private Long productId;
 

@@ -11,7 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
- * 商品评价服务接口
+ * 二手物品评价服务接口
  */
 public interface ReviewService extends IService<Review> {
 
@@ -50,9 +50,9 @@ public interface ReviewService extends IService<Review> {
     List<Review> getReviewList(Page<Review> page);
 
     /**
-     * 根据商品ID获取评价列表
+     * 根据二手物品ID获取评价列表
      *
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @param page 分页参数
      * @return 评价列表
      */
@@ -77,26 +77,26 @@ public interface ReviewService extends IService<Review> {
     List<Review> getReviewsByOrderId(Long orderId, Page<Review> page);
 
     /**
-     * 获取用户对商品的评价
+     * 获取用户对二手物品的评价
      *
      * @param userId 用户ID
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @return 评价信息
      */
     ReviewVO getUserReviewForProduct(Long userId, Long productId);
 
     /**
-     * 获取商品平均评分
+     * 获取二手物品平均评分
      *
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @return 平均评分
      */
     Double getAverageRatingByProductId(Long productId);
 
     /**
-     * 获取商品评价统计信息
+     * 获取二手物品评价统计信息
      *
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @return 评价统计信息
      */
     ReviewRequest getReviewStatisticsByProductId(Long productId);
@@ -104,7 +104,7 @@ public interface ReviewService extends IService<Review> {
     /**
      * 获取查询条件
      *
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @param userId 用户ID
      * @param orderId 订单ID
      * @param minRating 最低评分

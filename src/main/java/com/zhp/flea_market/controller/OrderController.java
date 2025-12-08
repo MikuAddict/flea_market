@@ -37,24 +37,24 @@ public class OrderController extends BaseController {
     /**
      * 创建订单
      *
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @param request HTTP请求
      * @return 订单ID
      */
-    @Operation(summary = "创建订单", description = "用户创建新的订单，自动使用商品设置的支付方式")
+    @Operation(summary = "创建订单", description = "用户创建新的订单，自动使用二手物品设置的支付方式")
     @PostMapping("/create")
     @LoginRequired
     public BaseResponse<Long> createOrder(
-            @Parameter(description = "商品ID") @RequestParam Long productId,
+            @Parameter(description = "二手物品ID") @RequestParam Long productId,
             HttpServletRequest request) {
         // 参数校验
-        validateId(productId, "商品ID");
+        validateId(productId, "二手物品ID");
 
-        // 创建订单（自动使用商品设置的支付方式）
+        // 创建订单（自动使用二手物品设置的支付方式）
         Long orderId = orderService.createOrder(productId, request);
         
         logOperation("创建订单", true, request, 
-                "商品ID", productId,
+                "二手物品ID", productId,
                 "订单ID", orderId
         );
         return handleOperationResult(true, "订单创建成功", orderId);
@@ -391,13 +391,13 @@ public class OrderController extends BaseController {
     }
 
     /**
-     * 使用积分兑换商品
+     * 使用积分兑换二手物品
      *
      * @param orderId 订单ID
      * @param request HTTP请求
      * @return 是否兑换成功
      */
-    @Operation(summary = "积分兑换商品", description = "使用积分兑换商品")
+    @Operation(summary = "积分兑换二手物品", description = "使用积分兑换二手物品")
     @PostMapping("/pay/points/{orderId}")
     @LoginRequired
     public BaseResponse<Boolean> exchangeWithPoints(

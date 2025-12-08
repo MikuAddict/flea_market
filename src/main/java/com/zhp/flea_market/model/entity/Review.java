@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.Date;
 
 /**
- * 商品评价实体
+ * 二手物品评价实体
  */
 @TableName("review")
 @Data
@@ -24,7 +24,7 @@ public class Review {
     private Long userId;
 
     /**
-     * 商品ID
+     * 二手物品ID
      */
     private Long productId;
 

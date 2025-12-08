@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.util.Date;
 import java.util.List;
 
 @Service
@@ -30,9 +29,9 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
     private ProductService productService;
 
     /**
-     * 添加商品到购物车
+     * 添加二手物品到购物车
      *
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @param request HTTP请求
      * @return 是否添加成功
      */
@@ -41,7 +40,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
     public boolean addToCart(Long productId, HttpServletRequest request) {
         // 参数校验
         if (productId == null || productId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID无效");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
         }
         
         // 获取当前登录用户
@@ -50,24 +49,24 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
         }
         
-        // 检查商品是否存在且已上架
+        // 检查二手物品是否存在且已上架
         Product product = productService.getById(productId);
         if (product == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "商品不存在");
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "二手物品不存在");
         }
         
         if (product.getStatus() != 1) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品未上架，无法加入购物车");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品未上架，无法加入购物车");
         }
         
-        // 检查商品是否已在购物车中
+        // 检查二手物品是否已在购物车中
         QueryWrapper<ShoppingCart> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", currentUser.getId());
         queryWrapper.eq("product_id", productId);
         ShoppingCart existingCartItem = this.getOne(queryWrapper);
         
         if (existingCartItem != null) {
-            // 如果商品已在购物车中，直接返回成功（单件模式）
+            // 如果二手物品已在购物车中，直接返回成功（单件模式）
             return true;
         } else {
             // 创建新的购物车项
@@ -80,7 +79,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
     }
 
     /**
-     * 从购物车删除商品
+     * 从购物车删除二手物品
      *
      * @param cartId 购物车项ID
      * @param request HTTP请求
@@ -157,10 +156,10 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
     }
 
     /**
-     * 获取购物车商品总数
+     * 获取购物车二手物品总数
      *
      * @param request HTTP请求
-     * @return 商品总数
+     * @return 二手物品总数
      */
     @Override
     public int getCartItemCount(HttpServletRequest request) {
@@ -215,7 +214,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
     }
 
     /**
-     * 批量删除购物车商品
+     * 批量删除购物车二手物品
      *
      * @param cartIds 购物车项ID列表
      * @param request HTTP请求
@@ -249,9 +248,9 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
     }
 
     /**
-     * 检查商品是否已在购物车中
+     * 检查二手物品是否已在购物车中
      *
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @param request HTTP请求
      * @return 是否在购物车中
      */
@@ -259,7 +258,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
     public boolean isProductInCart(Long productId, HttpServletRequest request) {
         // 参数校验
         if (productId == null || productId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID无效");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
         }
         
         // 获取当前登录用户
@@ -276,9 +275,9 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
     }
 
     /**
-     * 根据商品ID获取购物车项
+     * 根据二手物品ID获取购物车项
      *
-     * @param productId 商品ID
+     * @param productId 二手物品ID
      * @param request HTTP请求
      * @return 购物车项
      */
@@ -286,7 +285,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
     public ShoppingCart getCartItemByProductId(Long productId, HttpServletRequest request) {
         // 参数校验
         if (productId == null || productId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID无效");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
         }
         
         // 获取当前登录用户

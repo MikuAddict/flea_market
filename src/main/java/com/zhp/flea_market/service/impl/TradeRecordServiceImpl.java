@@ -45,8 +45,8 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
      * 创建交易记录
      *
      * @param orderId 订单ID
-     * @param productId 商品ID
-     * @param productName 商品名称
+     * @param productId 二手物品ID
+     * @param productName 二手物品名称
      * @param buyerId 买家ID
      * @param buyerName 买家名称
      * @param sellerId 卖家ID
@@ -68,7 +68,7 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单ID无效");
         }
         if (productId == null || productId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID无效");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
         }
         if (buyerId == null || buyerId <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "买家ID无效");
@@ -425,7 +425,7 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
             }
         }
         
-        // 获取商品信息
+        // 获取二手物品信息
         if (tradeRecord.getProductId() != null) {
             try {
                 Product product = productService.getById(tradeRecord.getProductId());
@@ -433,7 +433,7 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
                     tradeRecordVO.setProductName(product.getProductName());
                 }
             } catch (Exception e) {
-                // 如果获取商品失败，商品名称设为null
+                // 如果获取二手物品失败，二手物品名称设为null
                 tradeRecordVO.setProductName(null);
             }
         }

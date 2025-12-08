@@ -8,7 +8,7 @@ import java.util.List;
 public interface CategoryService extends IService<Category> {
 
     /**
-     * 查询所有商品类别
+     * 查询所有二手物品类别
      */
     List<Category> getCategoryList();
     /**

@@ -28,7 +28,7 @@ public interface ImageStorageService {
      */
     enum ImageType {
         AVATAR("avatar", "用户头像"),
-        PRODUCT("product", "商品图片"),
+        PRODUCT("product", "二手物品图片"),
         NEWS("news", "新闻配图"),
         BANNER("banner", "横幅图片"),
         OTHER("other", "其他图片");

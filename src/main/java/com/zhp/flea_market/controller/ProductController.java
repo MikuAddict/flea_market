@@ -32,12 +32,12 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * 商品接口
+ * 二手物品接口
  */
 @RestController
 @RequestMapping("/product")
 @Slf4j
-@Tag(name = "商品管理", description = "商品的增删改查、搜索等接口")
+@Tag(name = "二手物品管理", description = "二手物品的增删改查、搜索等接口")
 public class ProductController extends BaseController {
 
     @Resource
@@ -50,22 +50,22 @@ public class ProductController extends BaseController {
     private UserService userService;
 
     /**
-     * 添加商品
+     * 添加二手物品
      *
-     * @param productAddRequest 商品添加信息
+     * @param productAddRequest 二手物品添加信息
      * @param request HTTP请求
-     * @return 新增商品的ID
+     * @return 新增二手物品的ID
      */
-    @Operation(summary = "添加商品", description = "用户添加新的商品")
+    @Operation(summary = "添加二手物品", description = "用户添加新的二手物品")
     @PostMapping("/add")
     @LoginRequired
     public BaseResponse<Long> addProduct(
-            @Parameter(description = "商品添加信息") @RequestBody ProductAddRequest productAddRequest,
+            @Parameter(description = "二手物品添加信息") @RequestBody ProductAddRequest productAddRequest,
             HttpServletRequest request) {
         // 参数校验
-        validateNotNull(productAddRequest, "商品信息");
-        validateNotBlank(productAddRequest.getProductName(), "商品名称");
-        validateNotNull(productAddRequest.getPrice(), "商品价格");
+        validateNotNull(productAddRequest, "二手物品信息");
+        validateNotBlank(productAddRequest.getProductName(), "二手物品名称");
+        validateNotNull(productAddRequest.getPrice(), "二手物品价格");
         validateId(productAddRequest.getCategoryId(), "分类ID");
         validateNotNull(productAddRequest.getPaymentMethod(), "支付方式");
         if (productAddRequest.getPaymentMethod() < 0 || productAddRequest.getPaymentMethod() > 3) {
@@ -80,7 +80,7 @@ public class ProductController extends BaseController {
         Category category = categoryService.getById(productAddRequest.getCategoryId());
         validateResourceExists(category, "分类");
 
-        // 创建商品对象
+        // 创建二手物品对象
         Product product = new Product();
         BeanUtils.copyProperties(productAddRequest, product);
         product.setCategoryId(productAddRequest.getCategoryId());
@@ -92,37 +92,37 @@ public class ProductController extends BaseController {
         User currentUser = userService.getLoginUser(request);
         product.setUserId(currentUser.getId());
 
-        // 添加商品
+        // 添加二手物品
         boolean result = productService.addProduct(product, request);
         
-        logOperation("添加商品", result, request, 
-                "商品名称", productAddRequest.getProductName(),
+        logOperation("添加二手物品", result, request, 
+                "二手物品名称", productAddRequest.getProductName(),
                 "分类", category.getName(),
                 "支付方式", product.getPaymentMethod()
         );
-        return handleOperationResult(result, "商品添加成功", product.getId());
+        return handleOperationResult(result, "二手物品添加成功", product.getId());
     }
 
     /**
-     * 更新商品信息
+     * 更新二手物品信息
      *
-     * @param productUpdateRequest 商品更新信息
+     * @param productUpdateRequest 二手物品更新信息
      * @param request HTTP请求
      * @return 是否更新成功
      */
-    @Operation(summary = "更新商品信息", description = "用户更新自己的商品信息")
+    @Operation(summary = "更新二手物品信息", description = "用户更新自己的二手物品信息")
     @PutMapping("/update")
     @LoginRequired
     public BaseResponse<Boolean> updateProduct(
-            @Parameter(description = "商品更新信息") @RequestBody ProductUpdateRequest productUpdateRequest,
+            @Parameter(description = "二手物品更新信息") @RequestBody ProductUpdateRequest productUpdateRequest,
             HttpServletRequest request) {
         // 参数校验
-        validateNotNull(productUpdateRequest, "商品更新信息");
-        validateId(productUpdateRequest.getId(), "商品ID");
+        validateNotNull(productUpdateRequest, "二手物品更新信息");
+        validateId(productUpdateRequest.getId(), "二手物品ID");
 
-        // 检查商品是否存在
+        // 检查二手物品是否存在
         Product existingProduct = productService.getById(productUpdateRequest.getId());
-        validateResourceExists(existingProduct, "商品");
+        validateResourceExists(existingProduct, "二手物品");
 
         // 创建更新对象
         Product product = new Product();
@@ -135,24 +135,24 @@ public class ProductController extends BaseController {
             product.setCategoryId(productUpdateRequest.getCategoryId());
         }
 
-        // 更新商品
+        // 更新二手物品
         boolean result = productService.updateProduct(product, request);
         
-        logOperation("更新商品", result, request, 
-                "商品ID", productUpdateRequest.getId(),
+        logOperation("更新二手物品", result, request, 
+                "二手物品ID", productUpdateRequest.getId(),
                 "支付方式", product.getPaymentMethod()
         );
-        return handleOperationResult(result, "商品更新成功");
+        return handleOperationResult(result, "二手物品更新成功");
     }
 
     /**
-     * 删除商品
+     * 删除二手物品
      *
      * @param deleteRequest 删除请求
      * @param request HTTP请求
      * @return 是否删除成功
      */
-    @Operation(summary = "删除商品", description = "用户删除自己的商品")
+    @Operation(summary = "删除二手物品", description = "用户删除自己的二手物品")
     @PostMapping("/delete")
     @LoginRequired
     public BaseResponse<Boolean> deleteProduct(
@@ -160,47 +160,47 @@ public class ProductController extends BaseController {
             HttpServletRequest request) {
         // 参数校验
         validateNotNull(deleteRequest, "删除请求");
-        validateId(deleteRequest.getId(), "商品ID");
+        validateId(deleteRequest.getId(), "二手物品ID");
 
-        // 检查商品是否存在
-        validateResourceExists(productService.getById(deleteRequest.getId()), "商品");
+        // 检查二手物品是否存在
+        validateResourceExists(productService.getById(deleteRequest.getId()), "二手物品");
 
-        // 删除商品
+        // 删除二手物品
         boolean result = productService.deleteProduct(deleteRequest.getId(), request);
         
-        logOperation("删除商品", result, request, "商品ID", deleteRequest.getId());
-        return handleOperationResult(result, "商品删除成功");
+        logOperation("删除二手物品", result, request, "二手物品ID", deleteRequest.getId());
+        return handleOperationResult(result, "二手物品删除成功");
     }
 
     /**
-     * 根据ID获取商品详情
+     * 根据ID获取二手物品详情
      *
-     * @param id 商品ID
-     * @return 商品详情
+     * @param id 二手物品ID
+     * @return 二手物品详情
      */
-    @Operation(summary = "获取商品详情", description = "根据商品ID获取商品详细信息")
+    @Operation(summary = "获取二手物品详情", description = "根据二手物品ID获取二手物品详细信息")
     @GetMapping("/get/{id}")
     public BaseResponse<ProductVO> getProductById(
-            @Parameter(description = "商品ID") @PathVariable Long id) {
+            @Parameter(description = "二手物品ID") @PathVariable Long id) {
         // 参数校验
-        validateId(id, "商品ID");
+        validateId(id, "二手物品ID");
 
-        // 获取商品信息
+        // 获取二手物品信息
         ProductVO productVO = productService.getProductDetailVO(id);
-        validateResourceExists(productVO, "商品");
+        validateResourceExists(productVO, "二手物品");
 
-        logOperation("获取商品详情", null, "商品ID", id);
+        logOperation("获取二手物品详情", null, "二手物品ID", id);
         return ResultUtils.success(productVO);
     }
 
     /**
-     * 分页获取商品列表
+     * 分页获取二手物品列表
      *
      * @param current 当前页码
      * @param size 每页大小
-     * @return 分页商品列表
+     * @return 分页二手物品列表
      */
-    @Operation(summary = "分页获取商品列表", description = "分页获取已上架的商品列表")
+    @Operation(summary = "分页获取二手物品列表", description = "分页获取已上架的二手物品列表")
     @GetMapping("/list/page")
     public BaseResponse<Page<Product>> listProductByPage(
             @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
@@ -211,7 +211,7 @@ public class ProductController extends BaseController {
         // 执行分页查询
         List<Product> productList = productService.getProductList(page);
         
-        logOperation("分页获取商品列表", null, 
+        logOperation("分页获取二手物品列表", null, 
                 "当前页", current,
                 "每页大小", size
         );
@@ -219,14 +219,14 @@ public class ProductController extends BaseController {
     }
 
     /**
-     * 根据分类获取商品列表
+     * 根据分类获取二手物品列表
      *
      * @param categoryId 分类ID
      * @param current 当前页码
      * @param size 每页大小
-     * @return 分页商品列表
+     * @return 分页二手物品列表
      */
-    @Operation(summary = "根据分类获取商品列表", description = "根据分类ID分页获取商品列表")
+    @Operation(summary = "根据分类获取二手物品列表", description = "根据分类ID分页获取二手物品列表")
     @GetMapping("/list/category/{categoryId}")
     public BaseResponse<Page<Product>> listProductsByCategory(
             @Parameter(description = "分类ID") @PathVariable Long categoryId,
@@ -242,7 +242,7 @@ public class ProductController extends BaseController {
         // 执行分页查询
         List<Product> productList = productService.getProductsByCategory(categoryId, page);
         
-        logOperation("根据分类获取商品列表", null, 
+        logOperation("根据分类获取二手物品列表", null, 
                 "分类ID", categoryId,
                 "当前页", current,
                 "每页大小", size
@@ -251,14 +251,14 @@ public class ProductController extends BaseController {
     }
 
     /**
-     * 根据关键词搜索商品
+     * 根据关键词搜索二手物品
      *
      * @param keyword 关键词
      * @param current 当前页码
      * @param size 每页大小
-     * @return 分页商品列表
+     * @return 分页二手物品列表
      */
-    @Operation(summary = "搜索商品", description = "根据关键词搜索商品")
+    @Operation(summary = "搜索二手物品", description = "根据关键词搜索二手物品")
     @GetMapping("/search")
     public BaseResponse<Page<Product>> searchProducts(
             @Parameter(description = "搜索关键词") @RequestParam String keyword,
@@ -271,7 +271,7 @@ public class ProductController extends BaseController {
         // 执行搜索
         List<Product> productList = productService.searchProducts(keyword, page);
         
-        logOperation("搜索商品", null, 
+        logOperation("搜索二手物品", null, 
                 "关键词", keyword,
                 "当前页", current,
                 "每页大小", size
@@ -280,7 +280,7 @@ public class ProductController extends BaseController {
     }
 
     /**
-     * 高级搜索商品
+     * 高级搜索二手物品
      *
      * @param keyword 关键词
      * @param categoryId 分类ID
@@ -292,9 +292,9 @@ public class ProductController extends BaseController {
      * @param current 当前页码
      * @param size 每页大小
      * @param request HTTP请求
-     * @return 分页商品列表
+     * @return 分页二手物品列表
      */
-    @Operation(summary = "高级搜索商品", description = "多条件组合搜索商品，支持分类、价格、支付方式筛选和排序")
+    @Operation(summary = "高级搜索二手物品", description = "多条件组合搜索二手物品，支持分类、价格、支付方式筛选和排序")
     @GetMapping("/advanced-search")
     public BaseResponse<Page<Product>> advancedSearchProducts(
             @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword,
@@ -325,7 +325,7 @@ public class ProductController extends BaseController {
                 keyword, categoryId, minPrice, maxPrice, paymentMethod, sortField, sortOrder, page);
 
         
-        logOperation("高级搜索商品", request, 
+        logOperation("高级搜索二手物品", request, 
                 "关键词", keyword,
                 "分类ID", categoryId,
                 "价格区间", minPrice + "-" + maxPrice,
@@ -338,15 +338,15 @@ public class ProductController extends BaseController {
     }
 
     /**
-     * 获取用户发布的商品列表
+     * 获取用户发布的二手物品列表
      *
      * @param userId 用户ID
      * @param current 当前页码
      * @param size 每页大小
      * @param request HTTP请求
-     * @return 分页商品列表
+     * @return 分页二手物品列表
      */
-    @Operation(summary = "获取用户发布的商品列表", description = "根据用户ID获取该用户发布的商品列表")
+    @Operation(summary = "获取用户发布的二手物品列表", description = "根据用户ID获取该用户发布的二手物品列表")
     @GetMapping("/list/user/{userId}")
     public BaseResponse<Page<Product>> listUserProducts(
             @Parameter(description = "用户ID") @PathVariable Long userId,
@@ -363,7 +363,7 @@ public class ProductController extends BaseController {
         // 执行分页查询
         List<Product> productList = productService.getUserProducts(userId, page);
         
-        logOperation("获取用户发布的商品列表", request, 
+        logOperation("获取用户发布的二手物品列表", request, 
                 "用户ID", userId,
                 "当前页", current,
                 "每页大小", size
@@ -372,14 +372,14 @@ public class ProductController extends BaseController {
     }
 
     /**
-     * 获取当前用户发布的商品列表
+     * 获取当前用户发布的二手物品列表
      *
      * @param current 当前页码
      * @param size 每页大小
      * @param request HTTP请求
-     * @return 分页商品列表
+     * @return 分页二手物品列表
      */
-    @Operation(summary = "获取当前用户发布的商品列表", description = "获取当前登录用户发布的商品列表")
+    @Operation(summary = "获取当前用户发布的二手物品列表", description = "获取当前登录用户发布的二手物品列表")
     @GetMapping("/list/my")
     @LoginRequired
     public BaseResponse<Page<Product>> listMyProducts(
@@ -395,7 +395,7 @@ public class ProductController extends BaseController {
         // 执行分页查询
         List<Product> productList = productService.getUserProducts(currentUser.getId(), page);
         
-        logOperation("获取当前用户发布的商品列表", request, 
+        logOperation("获取当前用户发布的二手物品列表", request, 
                 "当前页", current,
                 "每页大小", size
         );
@@ -403,44 +403,44 @@ public class ProductController extends BaseController {
     }
 
     /**
-     * 更新商品状态
+     * 更新二手物品状态
      *
-     * @param id 商品ID
-     * @param status 商品状态
+     * @param id 二手物品ID
+     * @param status 二手物品状态
      * @param request HTTP请求
      * @return 是否更新成功
      */
-    @Operation(summary = "更新商品状态", description = "更新商品状态（上架/下架/售出等）")
+    @Operation(summary = "更新二手物品状态", description = "更新二手物品状态（上架/下架/售出等）")
     @PutMapping("/status/{id}")
     @LoginRequired
     public BaseResponse<Boolean> updateProductStatus(
-            @Parameter(description = "商品ID") @PathVariable Long id,
-            @Parameter(description = "商品状态") @RequestParam Integer status,
+            @Parameter(description = "二手物品ID") @PathVariable Long id,
+            @Parameter(description = "二手物品状态") @RequestParam Integer status,
             HttpServletRequest request) {
         // 参数校验
-        validateId(id, "商品ID");
-        validateNotNull(status, "商品状态");
+        validateId(id, "二手物品ID");
+        validateNotNull(status, "二手物品状态");
 
-        // 检查商品是否存在
-        validateResourceExists(productService.getById(id), "商品");
+        // 检查二手物品是否存在
+        validateResourceExists(productService.getById(id), "二手物品");
 
-        // 更新商品状态
+        // 更新二手物品状态
         boolean result = productService.updateProductStatus(id, status, request);
         
-        logOperation("更新商品状态", result, request, 
-                "商品ID", id,
+        logOperation("更新二手物品状态", result, request, 
+                "二手物品ID", id,
                 "状态", status
         );
-        return handleOperationResult(result, "商品状态更新成功");
+        return handleOperationResult(result, "二手物品状态更新成功");
     }
 
     /**
-     * 获取最新商品列表
+     * 获取最新二手物品列表
      *
      * @param limit 限制数量
-     * @return 最新商品列表
+     * @return 最新二手物品列表
      */
-    @Operation(summary = "获取最新商品列表", description = "获取最新发布的商品列表")
+    @Operation(summary = "获取最新二手物品列表", description = "获取最新发布的二手物品列表")
     @GetMapping("/latest")
     public BaseResponse<List<Product>> getLatestProducts(
             @Parameter(description = "限制数量") @RequestParam(defaultValue = "10") int limit) {
@@ -449,57 +449,57 @@ public class ProductController extends BaseController {
             throw new BusinessException(com.zhp.flea_market.common.ErrorCode.PARAMS_ERROR, "限制数量必须在1-50之间");
         }
 
-        // 获取最新商品
+        // 获取最新二手物品
         List<Product> productList = productService.getLatestProducts(limit);
         
-        logOperation("获取最新商品列表", null, "限制数量", limit);
+        logOperation("获取最新二手物品列表", null, "限制数量", limit);
         return ResultUtils.success(productList);
     }
 
     /**
-     * 管理员审核商品
+     * 管理员审核二手物品
      *
-     * @param id 商品ID
+     * @param id 二手物品ID
      * @param status 审核状态
      * @param request HTTP请求
      * @return 是否审核成功
      */
-    @Operation(summary = "审核商品", description = "管理员审核商品（上架/拒绝）")
+    @Operation(summary = "审核二手物品", description = "管理员审核二手物品（上架/拒绝）")
     @PutMapping("/review/{id}")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> reviewProduct(
-            @Parameter(description = "商品ID") @PathVariable Long id,
+            @Parameter(description = "二手物品ID") @PathVariable Long id,
             @Parameter(description = "审核状态") @RequestParam Integer status,
             HttpServletRequest request) {
         // 参数校验
-        validateId(id, "商品ID");
+        validateId(id, "二手物品ID");
         validateNotNull(status, "审核状态");
 
-        // 检查商品是否存在
-        validateResourceExists(productService.getById(id), "商品");
+        // 检查二手物品是否存在
+        validateResourceExists(productService.getById(id), "二手物品");
 
-        // 审核商品
+        // 审核二手物品
         boolean result = productService.updateProductStatus(id, status, request);
         
-        logOperation("审核商品", result, request, 
-                "商品ID", id,
+        logOperation("审核二手物品", result, request, 
+                "二手物品ID", id,
                 "审核状态", status
         );
-        return handleOperationResult(result, "商品审核成功");
+        return handleOperationResult(result, "二手物品审核成功");
     }
 
     /**
-     * 管理员获取所有商品列表（包括未审核的）
+     * 管理员获取所有二手物品列表（包括未审核的）
      *
      * @param current 当前页码
      * @param size 每页大小
      * @param keyword 关键词
      * @param categoryId 分类ID
-     * @param status 商品状态
+     * @param status 二手物品状态
      * @param request HTTP请求
-     * @return 分页商品列表
+     * @return 分页二手物品列表
      */
-    @Operation(summary = "管理员获取所有商品列表", description = "管理员获取所有商品列表（包括未审核的）")
+    @Operation(summary = "管理员获取所有二手物品列表", description = "管理员获取所有二手物品列表（包括未审核的）")
     @GetMapping("/admin/list")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Page<Product>> adminListProducts(
@@ -507,7 +507,7 @@ public class ProductController extends BaseController {
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "分类ID") @RequestParam(required = false) Long categoryId,
-            @Parameter(description = "商品状态") @RequestParam(required = false) Integer status,
+            @Parameter(description = "二手物品状态") @RequestParam(required = false) Integer status,
             HttpServletRequest request) {
         // 参数校验
         Page<Product> page = validatePageParams(current, size);
@@ -520,7 +520,7 @@ public class ProductController extends BaseController {
         // 执行分页查询
         Page<Product> productPage = productService.page(page, queryWrapper);
         
-        logOperation("管理员获取所有商品列表", request, 
+        logOperation("管理员获取所有二手物品列表", request, 
                 "当前页", current,
                 "每页大小", size,
                 "关键词", keyword,

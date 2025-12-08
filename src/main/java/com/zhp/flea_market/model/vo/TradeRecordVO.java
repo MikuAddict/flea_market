@@ -21,12 +21,12 @@ public class TradeRecordVO {
     private Long orderId;
 
     /**
-     * 商品ID
+     * 二手物品ID
      */
     private Long productId;
 
     /**
-     * 商品名称
+     * 二手物品名称
      */
     private String productName;
 
