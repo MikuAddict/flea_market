@@ -877,7 +877,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         Product product = productService.getById(order.getProductId());
         if (product != null) {
             orderVO.setProductName(product.getProductName());
-            orderVO.setProductImage(product.getImageUrl());
+            orderVO.setProductImage(product.getMainImageUrl());
         }
         
         // 获取买家信息

@@ -121,4 +121,19 @@ public interface ProductService extends IService<Product> {
      * @return 查询条件
      */
     QueryWrapper<Product> getQueryWrapper(String keyword, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, Integer status);
+
+    /**
+     * 处理商品图片信息
+     *
+     * @param product 商品信息
+     */
+    void processProductImages(Product product);
+
+    /**
+     * 解析JSON格式的图片URL列表
+     *
+     * @param imageUrlsJson JSON格式的图片URL列表
+     * @return 图片URL列表
+     */
+    List<String> parseImageUrls(String imageUrlsJson);
 }

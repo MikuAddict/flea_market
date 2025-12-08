@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 商品视图对象
@@ -31,9 +32,14 @@ public class ProductVO {
     private BigDecimal price;
 
     /**
-     * 商品图片地址
+     * 主图URL（第一张图片）
      */
-    private String imageUrl;
+    private String mainImageUrl;
+
+    /**
+     * 所有图片URL列表
+     */
+    private List<String> imageUrls;
 
     /**
      * 商品状态 (0-待审核, 1-已上架, 2-已下架, 3-已售出)

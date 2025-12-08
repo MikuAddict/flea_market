@@ -195,7 +195,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
             Product product = productService.getById(cartItem.getProductId());
             if (product != null) {
                 cartVO.setProductName(product.getProductName());
-                cartVO.setProductImage(product.getImageUrl());
+                cartVO.setProductImage(product.getMainImageUrl());
                 cartVO.setPrice(product.getPrice());
                 cartVO.setDescription(product.getDescription());
             }
