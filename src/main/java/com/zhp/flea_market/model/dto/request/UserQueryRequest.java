@@ -32,5 +32,10 @@ public class UserQueryRequest extends PageRequest implements Serializable {
      */
     private String userRole;
 
+    /**
+     * 用户状态：0-待审核, 1-已通过, 2-已拒绝, 3-已禁用
+     */
+    private Integer userStatus;
+
     private static final long serialVersionUID = 1L;
 }

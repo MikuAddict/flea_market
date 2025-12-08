@@ -248,13 +248,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         
         boolean updated = this.updateById(updateOrder);
         
-        // 订单完成后，给买家和卖家各加100积分，并创建交易记录
+        // 订单完成后，给买家和卖家各加100积分，并创建交易记录，同时将二手物品标记为已售出
         if (updated) {
             try {
                 // 买家加100积分
                 userService.updateUserPoints(order.getBuyerId(), new BigDecimal("100"));
                 // 卖家加100积分
                 userService.updateUserPoints(order.getSellerId(), new BigDecimal("100"));
+                
+                // 自动将二手物品标记为已售出
+                productService.markProductAsSold(order.getProductId());
                 
                 // 创建交易记录
                 Product product = productService.getById(order.getProductId());
@@ -276,8 +279,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                         "订单完成自动创建交易记录"
                 );
             } catch (Exception e) {
-                // 积分更新和交易记录创建失败不影响订单完成状态，但记录日志
-                System.err.println("订单完成时积分更新或交易记录创建失败: " + e.getMessage());
+                // 积分更新、交易记录创建和二手物品状态更新失败不影响订单完成状态，但记录日志
+                System.err.println("订单完成时积分更新、交易记录创建或二手物品状态更新失败: " + e.getMessage());
             }
         }
         

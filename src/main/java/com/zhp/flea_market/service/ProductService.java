@@ -59,32 +59,6 @@ public interface ProductService extends IService<Product> {
     ProductVO getProductDetailVO(Long id);
 
     /**
-     * 分页获取二手物品列表
-     *
-     * @param page 分页参数
-     * @return 二手物品列表
-     */
-    List<Product> getProductList(Page<Product> page);
-
-    /**
-     * 根据分类获取二手物品列表
-     *
-     * @param categoryId 分类ID
-     * @param page 分页参数
-     * @return 二手物品列表
-     */
-    List<Product> getProductsByCategory(Long categoryId, Page<Product> page);
-
-    /**
-     * 根据关键词搜索二手物品
-     *
-     * @param keyword 关键词
-     * @param page 分页参数
-     * @return 二手物品列表
-     */
-    List<Product> searchProducts(String keyword, Page<Product> page);
-
-    /**
      * 高级搜索二手物品
      *
      * @param keyword 关键词
@@ -119,6 +93,14 @@ public interface ProductService extends IService<Product> {
      * @return 是否更新成功
      */
     boolean updateProductStatus(Long id, Integer status, HttpServletRequest request);
+
+    /**
+     * 标记二手物品为已售出（仅限订单完成时调用）
+     *
+     * @param id 二手物品ID
+     * @return 是否更新成功
+     */
+    boolean markProductAsSold(Long id);
 
     /**
      * 获取最新二手物品列表

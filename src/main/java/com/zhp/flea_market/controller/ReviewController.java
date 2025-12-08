@@ -8,7 +8,6 @@ import com.zhp.flea_market.common.BaseResponse;
 import com.zhp.flea_market.common.ResultUtils;
 import com.zhp.flea_market.constant.UserConstant;
 import com.zhp.flea_market.model.dto.request.DeleteRequest;
-import com.zhp.flea_market.model.dto.request.ReviewRequest;
 import com.zhp.flea_market.model.entity.Order;
 import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.model.entity.Review;
@@ -164,38 +163,6 @@ public class ReviewController extends BaseController {
     }
 
     /**
-     * 根据二手物品ID获取评价列表
-     *
-     * @param productId 二手物品ID
-     * @param current 当前页码
-     * @param size 每页大小
-     * @return 分页评价列表
-     */
-    @Operation(summary = "根据二手物品ID获取评价列表", description = "根据二手物品ID分页获取评价列表")
-    @GetMapping("/list/product/{productId}")
-    public BaseResponse<Page<Review>> listReviewsByProductId(
-            @Parameter(description = "二手物品ID") @PathVariable Long productId,
-            @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size) {
-        // 参数校验
-        validateId(productId, "二手物品ID");
-        Page<Review> page = validatePageParams(current, size);
-
-        // 检查二手物品是否存在
-        validateResourceExists(productService.getById(productId), "二手物品");
-
-        // 执行分页查询
-        List<Review> reviewList = reviewService.getReviewsByProductId(productId, page);
-        
-        logOperation("根据二手物品ID获取评价列表", null, 
-                "二手物品ID", productId,
-                "当前页", current,
-                "每页大小", size
-        );
-        return ResultUtils.success(page);
-    }
-
-    /**
      * 根据用户ID获取评价列表
      *
      * @param userId 用户ID
@@ -228,142 +195,26 @@ public class ReviewController extends BaseController {
     }
 
     /**
-     * 根据订单ID获取评价列表
+     * 根据订单ID获取评价
      *
      * @param orderId 订单ID
-     * @param current 当前页码
-     * @param size 每页大小
-     * @return 分页评价列表
+     * @return 评价信息
      */
-    @Operation(summary = "根据订单ID获取评价列表", description = "根据订单ID分页获取评价列表")
-    @GetMapping("/list/order/{orderId}")
-    public BaseResponse<Page<Review>> listReviewsByOrderId(
-            @Parameter(description = "订单ID") @PathVariable Long orderId,
-            @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size) {
+    @Operation(summary = "根据订单ID获取评价", description = "根据订单ID获取评价信息（一个订单只能有一条评价）")
+    @GetMapping("/get/order/{orderId}")
+    public BaseResponse<Review> getReviewByOrderId(
+            @Parameter(description = "订单ID") @PathVariable Long orderId) {
         // 参数校验
         validateId(orderId, "订单ID");
-        Page<Review> page = validatePageParams(current, size);
 
         // 检查订单是否存在
         validateResourceExists(orderService.getById(orderId), "订单");
 
-        // 执行分页查询
-        List<Review> reviewList = reviewService.getReviewsByOrderId(orderId, page);
+        // 获取评价信息
+        Review review = reviewService.getReviewByOrderId(orderId);
         
-        logOperation("根据订单ID获取评价列表", null, 
-                "订单ID", orderId,
-                "当前页", current,
-                "每页大小", size
-        );
-        return ResultUtils.success(page);
-    }
-
-    /**
-     * 获取用户对二手物品的评价
-     *
-     * @param userId 用户ID
-     * @param productId 二手物品ID
-     * @return 评价信息
-     */
-    @Operation(summary = "获取用户对二手物品的评价", description = "获取指定用户对指定二手物品的评价")
-    @GetMapping("/get/user/{userId}/product/{productId}")
-    public BaseResponse<ReviewVO> getUserReviewForProduct(
-            @Parameter(description = "用户ID") @PathVariable Long userId,
-            @Parameter(description = "二手物品ID") @PathVariable Long productId) {
-        // 参数校验
-        validateId(userId, "用户ID");
-        validateId(productId, "二手物品ID");
-
-        // 检查用户和二手物品是否存在
-        validateResourceExists(userService.getById(userId), "用户");
-        validateResourceExists(productService.getById(productId), "二手物品");
-
-        // 获取用户对二手物品的评价
-        ReviewVO review = reviewService.getUserReviewForProduct(userId, productId);
-        
-        logOperation("获取用户对二手物品的评价", null, 
-                "用户ID", userId,
-                "二手物品ID", productId
-        );
+        logOperation("根据订单ID获取评价", null, "订单ID", orderId);
         return ResultUtils.success(review);
-    }
-
-    /**
-     * 获取当前用户对二手物品的评价
-     *
-     * @param productId 二手物品ID
-     * @param request HTTP请求
-     * @return 评价信息
-     */
-    @Operation(summary = "获取当前用户对二手物品的评价", description = "获取当前登录用户对指定二手物品的评价")
-    @GetMapping("/get/my/product/{productId}")
-    @LoginRequired
-    public BaseResponse<ReviewVO> getMyReviewForProduct(
-            @Parameter(description = "二手物品ID") @PathVariable Long productId,
-            HttpServletRequest request) {
-        // 参数校验
-        validateId(productId, "二手物品ID");
-
-        // 检查二手物品是否存在
-        validateResourceExists(productService.getById(productId), "二手物品");
-
-        // 获取当前登录用户
-        User currentUser = userService.getLoginUser(request);
-
-        // 获取当前用户对二手物品的评价
-        ReviewVO review = reviewService.getUserReviewForProduct(currentUser.getId(), productId);
-        
-        logOperation("获取当前用户对二手物品的评价", request, 
-                "二手物品ID", productId
-        );
-        return ResultUtils.success(review);
-    }
-
-    /**
-     * 获取二手物品平均评分
-     *
-     * @param productId 二手物品ID
-     * @return 平均评分
-     */
-    @Operation(summary = "获取二手物品平均评分", description = "获取指定二手物品的平均评分")
-    @GetMapping("/average/{productId}")
-    public BaseResponse<Double> getAverageRating(
-            @Parameter(description = "二手物品ID") @PathVariable Long productId) {
-        // 参数校验
-        validateId(productId, "二手物品ID");
-
-        // 检查二手物品是否存在
-        validateResourceExists(productService.getById(productId), "二手物品");
-
-        // 获取平均评分
-        Double averageRating = reviewService.getAverageRatingByProductId(productId);
-        
-        logOperation("获取二手物品平均评分", null, "二手物品ID", productId);
-        return ResultUtils.success(averageRating);
-    }
-
-    /**
-     * 获取二手物品评价统计信息
-     *
-     * @param productId 二手物品ID
-     * @return 评价统计信息
-     */
-    @Operation(summary = "获取二手物品评价统计信息", description = "获取指定二手物品的评价统计信息")
-    @GetMapping("/statistics/{productId}")
-    public BaseResponse<ReviewRequest> getReviewStatistics(
-            @Parameter(description = "二手物品ID") @PathVariable Long productId) {
-        // 参数校验
-        validateId(productId, "二手物品ID");
-
-        // 检查二手物品是否存在
-        validateResourceExists(productService.getById(productId), "二手物品");
-
-        // 获取评价统计信息
-        ReviewRequest statistics = reviewService.getReviewStatisticsByProductId(productId);
-        
-        logOperation("获取二手物品评价统计信息", null, "二手物品ID", productId);
-        return ResultUtils.success(statistics);
     }
 
     /**

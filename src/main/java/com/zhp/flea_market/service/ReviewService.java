@@ -50,15 +50,6 @@ public interface ReviewService extends IService<Review> {
     List<Review> getReviewList(Page<Review> page);
 
     /**
-     * 根据二手物品ID获取评价列表
-     *
-     * @param productId 二手物品ID
-     * @param page 分页参数
-     * @return 评价列表
-     */
-    List<Review> getReviewsByProductId(Long productId, Page<Review> page);
-
-    /**
      * 根据用户ID获取评价列表
      *
      * @param userId 用户ID
@@ -68,30 +59,12 @@ public interface ReviewService extends IService<Review> {
     List<Review> getReviewsByUserId(Long userId, Page<Review> page);
 
     /**
-     * 根据订单ID获取评价列表
+     * 根据订单ID获取评价
      *
      * @param orderId 订单ID
-     * @param page 分页参数
-     * @return 评价列表
-     */
-    List<Review> getReviewsByOrderId(Long orderId, Page<Review> page);
-
-    /**
-     * 获取用户对二手物品的评价
-     *
-     * @param userId 用户ID
-     * @param productId 二手物品ID
      * @return 评价信息
      */
-    ReviewVO getUserReviewForProduct(Long userId, Long productId);
-
-    /**
-     * 获取二手物品平均评分
-     *
-     * @param productId 二手物品ID
-     * @return 平均评分
-     */
-    Double getAverageRatingByProductId(Long productId);
+    Review getReviewByOrderId(Long orderId);
 
     /**
      * 获取二手物品评价统计信息

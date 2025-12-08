@@ -203,7 +203,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return isAdmin(user);
     }
 
-
     @Override
     public boolean isAdmin(User user) {
         return user != null && UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
@@ -286,12 +285,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String userName = userQueryRequest.getUserName();
         BigDecimal userPoint = userQueryRequest.getPoint();
         String userRole = userQueryRequest.getUserRole();
+        Integer userStatus = userQueryRequest.getUserStatus();
         String sortField = userQueryRequest.getSortField();
         String sortOrder = userQueryRequest.getSortOrder();
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq(id != null, "id", id);
         queryWrapper.eq(StringUtils.isNotBlank(userRole), "user_role", userRole);
         queryWrapper.eq(userPoint != null, "point", userPoint);
+        queryWrapper.eq(userStatus != null, "user_status", userStatus);
         queryWrapper.like(StringUtils.isNotBlank(userName), "user_name", userName);
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);
@@ -361,23 +362,23 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
-     * 审核用户
+     * 更新用户状态（管理员）
      *
      * @param userId 用户ID
-     * @param auditStatus 审核状态 (0-待审核, 1-已通过, 2-已拒绝)
+     * @param userStatus 用户状态 (0-待审核, 1-已通过, 2-已拒绝, 3-已禁用)
      * @param request HTTP请求
-     * @return 是否审核成功
+     * @return 是否更新成功
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean auditUser(Long userId, Integer auditStatus, HttpServletRequest request) {
+    public boolean updateUserStatus(Long userId, Integer userStatus, HttpServletRequest request) {
         // 参数校验
         if (userId == null || userId <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID无效");
         }
         
-        if (auditStatus == null || auditStatus < 0 || auditStatus > 2) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "审核状态无效");
+        if (userStatus == null || userStatus < 0 || userStatus > 3) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户状态无效");
         }
         
         // 获取当前登录用户
@@ -386,9 +387,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
         }
         
-        // 权限校验：只有管理员可以审核用户
+        // 权限校验：只有管理员可以更新用户状态
         if (!isAdmin(currentUser)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限审核用户");
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限更新用户状态");
         }
         
         // 检查用户是否存在
@@ -397,27 +398,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户不存在");
         }
         
-        // 更新用户审核信息
+        // 特殊处理：如果设置为已禁用状态(3)，需要额外检查是否允许禁用
+        if (userStatus == 3) {
+            // 检查是否尝试禁用自己
+            if (userId.equals(currentUser.getId())) {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "不能禁用当前登录用户");
+            }
+            
+            // 检查是否尝试禁用其他管理员
+            if ("admin".equals(user.getUserRole())) {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "不能禁用管理员用户");
+            }
+        }
+        
+        // 更新用户状态
         User updateUser = new User();
         updateUser.setId(userId);
-        updateUser.setUserStatus(auditStatus);
+        updateUser.setUserStatus(userStatus);
 
         return this.updateById(updateUser);
-    }
-
-    /**
-     * 获取待审核用户列表
-     *
-     * @param page 分页参数
-     * @return 待审核用户列表
-     */
-    @Override
-    public List<User> getPendingAuditUsers(com.baomidou.mybatisplus.extension.plugins.pagination.Page<User> page) {
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_status", 0); // 0表示待审核
-        queryWrapper.orderByDesc("create_time");
-        
-        com.baomidou.mybatisplus.extension.plugins.pagination.Page<User> resultPage = this.page(page, queryWrapper);
-        return resultPage.getRecords();
     }
 }

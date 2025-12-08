@@ -34,13 +34,16 @@ public class StatisticsServiceImpl implements StatisticsService {
     @Autowired
     private ShoppingCartService shoppingCartService;
 
+    @Autowired
+    private CategoryService categoryService;
+
     /**
-     * 获取月度交易二手物品排行
+     * 获取月度交易二手物品排行（按分类统计）
      *
      * @param month 月份
      * @param year 年份
      * @param limit 限制数量
-     * @return 二手物品排行列表
+     * @return 二手物品分类排行列表
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -64,22 +67,33 @@ public class StatisticsServiceImpl implements StatisticsService {
             return new ArrayList<>();
         }
 
-        // 按二手物品ID分组，统计每个二手物品的交易次数和金额
-        Map<Long, List<TradeRecord>> productGroups = tradeRecords.stream()
-                .filter(record -> record.getProductId() != null)
-                .collect(Collectors.groupingBy(TradeRecord::getProductId));
+        // 获取所有分类
+        List<Category> categories = categoryService.getCategoryList();
+        if (CollectionUtils.isEmpty(categories)) {
+            return new ArrayList<>();
+        }
 
-        // 计算每个二手物品的统计信息
+        // 按分类统计交易物品数量
         List<StatisticsResponse.ProductRankingItem> result = new ArrayList<>();
-        for (Map.Entry<Long, List<TradeRecord>> entry : productGroups.entrySet()) {
-            Long productId = entry.getKey();
-            List<TradeRecord> records = entry.getValue();
-
-            // 计算交易次数和总金额
-            Long tradeCount = (long) records.size();
-            BigDecimal tradeAmount = records.stream()
+        for (Category category : categories) {
+            // 统计该分类下的交易物品数量
+            long categoryTradeCount = tradeRecords.stream()
+                    .filter(record -> record.getProductId() != null)
                     .map(record -> {
-                        if (record.getOrderId() != null) {
+                        Product product = productService.getById(record.getProductId());
+                        return product != null && product.getCategoryId() != null && 
+                               product.getCategoryId().equals(category.getId()) ? 1 : 0;
+                    })
+                    .reduce(0, Integer::sum);
+
+            // 计算该分类下的交易总金额
+            BigDecimal categoryTradeAmount = tradeRecords.stream()
+                    .filter(record -> record.getProductId() != null)
+                    .map(record -> {
+                        Product product = productService.getById(record.getProductId());
+                        if (product != null && product.getCategoryId() != null && 
+                            product.getCategoryId().equals(category.getId()) && 
+                            record.getOrderId() != null) {
                             try {
                                 Order order = orderService.getById(record.getOrderId());
                                 if (order != null && order.getAmount() != null) {
@@ -93,24 +107,18 @@ public class StatisticsServiceImpl implements StatisticsService {
                     })
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            // 获取二手物品信息
-            Product product = productService.getById(productId);
-            if (product == null) {
-                continue;
-            }
-
-            // 创建排行项
+            // 创建分类排行项
             StatisticsResponse.ProductRankingItem item = new StatisticsResponse.ProductRankingItem();
-            item.setProductId(productId);
-            item.setProductName(product.getProductName());
-            item.setTradeCount(tradeCount);
-            item.setTradeAmount(tradeAmount);
-            item.setImageUrl(product.getImageUrl());
+            item.setProductId(category.getId()); // 使用分类ID作为产品ID
+            item.setProductName(category.getName()); // 使用分类名称作为产品名称
+            item.setTradeCount(categoryTradeCount); // 分类下的物品交易数量
+            item.setTradeAmount(categoryTradeAmount); // 分类下的交易总金额
+            item.setImageUrl(""); // 分类没有图片，留空
 
             result.add(item);
         }
 
-        // 按交易次数降序排序，如果次数相同则按金额排序
+        // 按分类下物品交易数量降序排序，如果数量相同则按金额排序
         result.sort((a, b) -> {
             int countCompare = b.getTradeCount().compareTo(a.getTradeCount());
             if (countCompare != 0) {
@@ -230,10 +238,10 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
 
     /**
-     * 获取需求量大二手物品排行
+     * 获取需求量大二手物品排行（按分类统计）
      *
      * @param limit 限制数量
-     * @return 二手物品排行列表
+     * @return 二手物品分类排行列表
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -247,35 +255,53 @@ public class StatisticsServiceImpl implements StatisticsService {
             return new ArrayList<>();
         }
 
-        // 统计每个二手物品在购物车中的数量
+        // 获取所有分类
+        List<Category> categories = categoryService.getCategoryList();
+        if (CollectionUtils.isEmpty(categories)) {
+            return new ArrayList<>();
+        }
+
+        // 按分类统计需求指数
         List<StatisticsResponse.ProductRankingItem> result = new ArrayList<>();
-        for (Product product : products) {
-            // 获取二手物品在购物车中的数量
-            QueryWrapper<ShoppingCart> cartQueryWrapper = new QueryWrapper<>();
-            cartQueryWrapper.eq("product_id", product.getId());
-            long cartCount = shoppingCartService.count(cartQueryWrapper);
+        for (Category category : categories) {
+            // 统计该分类下的物品在购物车中的总数量
+            long categoryCartCount = products.stream()
+                    .filter(product -> product.getCategoryId() != null && 
+                                      product.getCategoryId().equals(category.getId()))
+                    .mapToLong(product -> {
+                        QueryWrapper<ShoppingCart> cartQueryWrapper = new QueryWrapper<>();
+                        cartQueryWrapper.eq("product_id", product.getId());
+                        return shoppingCartService.count(cartQueryWrapper);
+                    })
+                    .sum();
 
-            // 获取二手物品的订单数量
-            QueryWrapper<Order> orderQueryWrapper = new QueryWrapper<>();
-            orderQueryWrapper.eq("product_id", product.getId())
-                    .in("status", 0, 1, 2); // 排除已取消的订单
-            long orderCount = orderService.count(orderQueryWrapper);
+            // 统计该分类下的物品订单总数量
+            long categoryOrderCount = products.stream()
+                    .filter(product -> product.getCategoryId() != null && 
+                                      product.getCategoryId().equals(category.getId()))
+                    .mapToLong(product -> {
+                        QueryWrapper<Order> orderQueryWrapper = new QueryWrapper<>();
+                        orderQueryWrapper.eq("product_id", product.getId())
+                                .in("status", 0, 1, 2); // 排除已取消的订单
+                        return orderService.count(orderQueryWrapper);
+                    })
+                    .sum();
 
-            // 计算需求指数（购物车数量 + 订单数量）
-            long demandIndex = cartCount + orderCount;
+            // 计算分类需求指数
+            long categoryDemandIndex = categoryCartCount + categoryOrderCount;
 
-            // 创建排行项
+            // 创建分类排行项
             StatisticsResponse.ProductRankingItem item = new StatisticsResponse.ProductRankingItem();
-            item.setProductId(product.getId());
-            item.setProductName(product.getProductName());
-            item.setTradeCount(demandIndex); // 使用需求指数作为交易次数
-            item.setTradeAmount(product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO);
-            item.setImageUrl(product.getImageUrl());
+            item.setProductId(category.getId()); // 使用分类ID作为产品ID
+            item.setProductName(category.getName()); // 使用分类名称作为产品名称
+            item.setTradeCount(categoryDemandIndex); // 分类需求指数
+            item.setTradeAmount(BigDecimal.ZERO); // 需求排行不涉及金额
+            item.setImageUrl(""); // 分类没有图片，留空
 
             result.add(item);
         }
 
-        // 按需求指数降序排序
+        // 按分类需求指数降序排序
         result.sort((a, b) -> b.getTradeCount().compareTo(a.getTradeCount()));
 
         // 返回前N项
@@ -283,10 +309,10 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
 
     /**
-     * 获取闲置量大二手物品排行
+     * 获取闲置量大二手物品排行（按分类统计）
      *
      * @param limit 限制数量
-     * @return 二手物品排行列表
+     * @return 二手物品分类排行列表
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -294,42 +320,55 @@ public class StatisticsServiceImpl implements StatisticsService {
         // 获取所有已上架二手物品
         QueryWrapper<Product> productQueryWrapper = new QueryWrapper<>();
         productQueryWrapper.eq("status", 1); // 1表示已上架
-        productQueryWrapper.orderByDesc("create_time"); // 按创建时间降序，优先显示上架时间长的二手物品
         List<Product> products = productService.list(productQueryWrapper);
 
         if (CollectionUtils.isEmpty(products)) {
             return new ArrayList<>();
         }
 
-        // 计算二手物品上架天数
-        List<StatisticsResponse.ProductRankingItem> result = new ArrayList<>();
-        for (Product product : products) {
-            long listingDays = 0;
-            if (product.getCreateTime() != null) {
-                long diffInMillis = System.currentTimeMillis() - product.getCreateTime().getTime();
-                listingDays = diffInMillis / (1000 * 60 * 60 * 24);
-            }
-
-            // 检查二手物品是否有交易记录
-            QueryWrapper<TradeRecord> tradeQueryWrapper = new QueryWrapper<>();
-            tradeQueryWrapper.eq("product_id", product.getId());
-            long tradeCount = tradeRecordService.count(tradeQueryWrapper);
-
-            // 只有上架时间长且交易少的二手物品才被认为是闲置二手物品
-            if (listingDays >= 30 && tradeCount == 0) { // 上架超过30天且无交易记录
-                // 创建排行项
-                StatisticsResponse.ProductRankingItem item = new StatisticsResponse.ProductRankingItem();
-                item.setProductId(product.getId());
-                item.setProductName(product.getProductName());
-                item.setTradeCount(listingDays); // 使用上架天数作为"交易次数"的替代指标
-                item.setTradeAmount(product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO);
-                item.setImageUrl(product.getImageUrl());
-
-                result.add(item);
-            }
+        // 获取所有分类
+        List<Category> categories = categoryService.getCategoryList();
+        if (CollectionUtils.isEmpty(categories)) {
+            return new ArrayList<>();
         }
 
-        // 按上架天数降序排序
+        // 按分类统计闲置物品数量
+        List<StatisticsResponse.ProductRankingItem> result = new ArrayList<>();
+        for (Category category : categories) {
+            // 统计该分类下的闲置物品数量（上架超过30天且无交易记录）
+            long categoryInventoryCount = products.stream()
+                    .filter(product -> product.getCategoryId() != null && 
+                                      product.getCategoryId().equals(category.getId()))
+                    .filter(product -> {
+                        // 计算上架天数
+                        long listingDays = 0;
+                        if (product.getCreateTime() != null) {
+                            long diffInMillis = System.currentTimeMillis() - product.getCreateTime().getTime();
+                            listingDays = diffInMillis / (1000 * 60 * 60 * 24);
+                        }
+
+                        // 检查是否有交易记录
+                        QueryWrapper<TradeRecord> tradeQueryWrapper = new QueryWrapper<>();
+                        tradeQueryWrapper.eq("product_id", product.getId());
+                        long tradeCount = tradeRecordService.count(tradeQueryWrapper);
+
+                        // 上架超过30天且无交易记录
+                        return listingDays >= 30 && tradeCount == 0;
+                    })
+                    .count();
+
+            // 创建分类排行项
+            StatisticsResponse.ProductRankingItem item = new StatisticsResponse.ProductRankingItem();
+            item.setProductId(category.getId()); // 使用分类ID作为产品ID
+            item.setProductName(category.getName()); // 使用分类名称作为产品名称
+            item.setTradeCount(categoryInventoryCount); // 分类下的闲置物品数量
+            item.setTradeAmount(BigDecimal.ZERO); // 闲置排行不涉及金额
+            item.setImageUrl(""); // 分类没有图片，留空
+
+            result.add(item);
+        }
+
+        // 按分类下闲置物品数量降序排序
         result.sort((a, b) -> b.getTradeCount().compareTo(a.getTradeCount()));
 
         // 返回前N项

@@ -39,7 +39,7 @@ public class Product {
     private String imageUrl;
 
     /**
-     * 二手物品状态 (0-待审核, 1-已上架, 2-已下架, 3-已售出)
+     * 二手物品状态 (0-待审核, 1-已通过, 2-已拒绝, 3-已售出)
      */
     private Integer status;
 

@@ -83,12 +83,14 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "只有订单买家才能进行评价");
         }
         
-        // 约束条件2：每个订单仅允许买家提交一条评论
-        Review existingReview = getReviewByOrderId(review.getOrderId());
-        if (existingReview != null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "该订单已经评价过，每个订单只能评价一次");
+        // 约束条件2：如果订单有评论,则拒绝再次评论
+        List<Review> reviews = this.list(
+            this.getQueryWrapper(null, null, null, null, null)
+                .eq("order_id", review.getOrderId())
+        );
+        if (!CollectionUtils.isEmpty(reviews)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单已有评价，无法再次评价");
         }
-        
         // 检查二手物品是否存在
         Product product = productService.getById(review.getProductId());
         if (product == null) {
@@ -127,8 +129,6 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         
         return saved;
     }
-
-
 
     /**
      * 删除评价
@@ -204,28 +204,6 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 根据二手物品ID获取评价列表
-     *
-     * @param productId 二手物品ID
-     * @param page 分页参数
-     * @return 评价列表
-     */
-    @Override
-    public List<Review> getReviewsByProductId(Long productId, Page<Review> page) {
-        // 参数校验
-        if (productId == null || productId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
-        }
-        
-        QueryWrapper<Review> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("product_id", productId);
-        queryWrapper.orderByDesc("create_time");
-        
-        Page<Review> resultPage = this.page(page, queryWrapper);
-        return resultPage.getRecords();
-    }
-
-    /**
      * 根据用户ID获取评价列表
      *
      * @param userId 用户ID
@@ -248,101 +226,12 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 根据订单ID获取评价列表
-     *
-     * @param orderId 订单ID
-     * @param page 分页参数
-     * @return 评价列表
-     */
-    @Override
-    public List<Review> getReviewsByOrderId(Long orderId, Page<Review> page) {
-        // 参数校验
-        if (orderId == null || orderId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单ID无效");
-        }
-        
-        QueryWrapper<Review> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("order_id", orderId);
-        queryWrapper.orderByDesc("create_time");
-        
-        Page<Review> resultPage = this.page(page, queryWrapper);
-        return resultPage.getRecords();
-    }
-
-    /**
-     * 获取用户对二手物品的评价
-     *
-     * @param userId 用户ID
-     * @param productId 二手物品ID
-     * @return 评价信息
-     */
-    @Override
-    public ReviewVO getUserReviewForProduct(Long userId, Long productId) {
-        // 参数校验
-        if (userId == null || userId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID无效");
-        }
-        if (productId == null || productId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
-        }
-        
-        QueryWrapper<Review> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", userId);
-        queryWrapper.eq("product_id", productId);
-        
-        Review review = this.getOne(queryWrapper);
-        if (review == null) {
-            return null;
-        }
-        
-        // 转换为VO对象
-        ReviewVO reviewVO = convertToReviewVO(review);
-        
-        return reviewVO;
-    }
-
-    /**
-     * 获取二手物品平均评分
-     *
-     * @param productId 二手物品ID
-     * @return 平均评分
-     */
-    @Override
-    public Double getAverageRatingByProductId(Long productId) {
-        // 参数校验
-        if (productId == null || productId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
-        }
-        
-        QueryWrapper<Review> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("product_id", productId);
-        queryWrapper.select("AVG(rating) as avg_rating");
-        
-        List<Review> reviews = this.list(queryWrapper);
-        if (CollectionUtils.isEmpty(reviews)) {
-            return 0.0;
-        }
-        
-        // 计算平均分
-        double totalRating = 0.0;
-        int count = 0;
-        for (Review review : reviews) {
-            if (review.getRating() != null) {
-                totalRating += review.getRating();
-                count++;
-            }
-        }
-        
-        return count > 0 ? totalRating / count : 0.0;
-    }
-
-    /**
      * 根据订单ID获取评价
      *
      * @param orderId 订单ID
      * @return 评价信息
      */
-    private Review getReviewByOrderId(Long orderId) {
+    public Review getReviewByOrderId(Long orderId) {
         QueryWrapper<Review> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("order_id", orderId);
         return this.getOne(queryWrapper);

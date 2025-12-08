@@ -113,7 +113,19 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         // 设置更新时间
         product.setUpdateTime(new Date());
         
-        return this.updateById(product);
+        // 创建更新对象，禁止通过此方法修改status字段
+        Product updateProduct = new Product();
+        updateProduct.setId(product.getId());
+        updateProduct.setProductName(product.getProductName());
+        updateProduct.setDescription(product.getDescription());
+        updateProduct.setPrice(product.getPrice());
+        updateProduct.setImageUrl(product.getImageUrl());
+        updateProduct.setPaymentMethod(product.getPaymentMethod());
+        updateProduct.setCategoryId(product.getCategoryId());
+        updateProduct.setUpdateTime(product.getUpdateTime());
+        // 注意：不设置status字段，防止通过普通更新方法修改状态
+        
+        return this.updateById(updateProduct);
     }
 
     /**
@@ -185,69 +197,6 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     /**
-     * 分页获取二手物品列表
-     *
-     * @param page 分页参数
-     * @return 二手物品列表
-     */
-    @Override
-    public List<Product> getProductList(Page<Product> page) {
-        QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
-        // 只查询已上架的二手物品
-        queryWrapper.eq("status", 1);
-        queryWrapper.orderByDesc("create_time");
-        
-        Page<Product> resultPage = this.page(page, queryWrapper);
-        return resultPage.getRecords();
-    }
-
-    /**
-     * 根据分类获取二手物品列表
-     *
-     * @param categoryId 分类ID
-     * @param page 分页参数
-     * @return 二手物品列表
-     */
-    @Override
-    public List<Product> getProductsByCategory(Long categoryId, Page<Product> page) {
-        if (categoryId == null || categoryId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "分类ID无效");
-        }
-        
-        QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("category_id", categoryId);
-        queryWrapper.eq("status", 1); // 只查询已上架的二手物品
-        queryWrapper.orderByDesc("create_time");
-        
-        Page<Product> resultPage = this.page(page, queryWrapper);
-        return resultPage.getRecords();
-    }
-
-    /**
-     * 根据关键词搜索二手物品
-     *
-     * @param keyword 关键词
-     * @param page 分页参数
-     * @return 二手物品列表
-     */
-    @Override
-    public List<Product> searchProducts(String keyword, Page<Product> page) {
-        if (StringUtils.isBlank(keyword)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "搜索关键词不能为空");
-        }
-        
-        QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
-        queryWrapper.like("product_name", keyword)
-                   .or()
-                   .like("description", keyword);
-        queryWrapper.eq("status", 1); // 只查询已上架的二手物品
-        queryWrapper.orderByDesc("create_time");
-        
-        Page<Product> resultPage = this.page(page, queryWrapper);
-        return resultPage.getRecords();
-    }
-
-    /**
      * 高级搜索二手物品
      *
      * @param keyword 关键词
@@ -294,7 +243,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             queryWrapper.eq("payment_method", paymentMethod);
         }
         
-        // 只查询已上架的二手物品
+        // 只查询已通过的二手物品
         queryWrapper.eq("status", 1);
         
         // 排序处理
@@ -358,8 +307,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
         }
         
-        if (status == null || status < 0 || status > 3) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品状态无效");
+        if (status == null || (status != 1 && status != 2)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品状态只能设置为1(已通过)或2(已拒绝)");
         }
         
         // 检查二手物品是否存在
@@ -390,6 +339,39 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     /**
+     * 标记二手物品为已售出（仅限订单完成时调用）
+     *
+     * @param id 二手物品ID
+     * @return 是否更新成功
+     */
+    @Override
+    public boolean markProductAsSold(Long id) {
+        // 参数校验
+        if (id == null || id <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
+        }
+        
+        // 检查二手物品是否存在
+        Product product = this.getById(id);
+        if (product == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "二手物品不存在");
+        }
+        
+        // 业务校验：只有已通过的二手物品才能标记为已售出
+        if (product.getStatus() != 1) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "只有已通过的二手物品才能标记为已售出");
+        }
+        
+        // 更新二手物品状态为已售出
+        Product updateProduct = new Product();
+        updateProduct.setId(id);
+        updateProduct.setStatus(3); // 已售出
+        updateProduct.setUpdateTime(new Date());
+        
+        return this.updateById(updateProduct);
+    }
+
+    /**
      * 获取最新二手物品列表
      *
      * @param limit 限制数量
@@ -397,12 +379,14 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      */
     @Override
     public List<Product> getLatestProducts(int limit) {
-        if (limit <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "限制数量必须大于0");
+        // 参数校验
+        if (limit <= 0 || limit > 50) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "限制数量必须在1-50之间");
         }
         
         QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("status", 1); // 只查询已上架的二手物品
+        // 只查询已通过审核的二手物品
+        queryWrapper.eq("status", 1);
         queryWrapper.orderByDesc("create_time");
         queryWrapper.last("LIMIT " + limit);
         

@@ -311,59 +311,31 @@ public class UserController extends BaseController {
         logOperation("获取用户视图", request, "用户ID", id);
         return ResultUtils.success(userService.getUserVO(user));
     }
-
     /**
-     * 分页获取用户列表（仅管理员）
-     *
-     * @param userQueryRequest 用户查询条件
-     * @param request HTTP请求
-     * @return 分页用户列表
-     */
-    @Operation(summary = "分页获取用户列表", description = "管理员分页获取用户列表")
-    @PostMapping("/list/page")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Page<User>> listUserByPage(
-            @Parameter(description = "用户查询条件") @RequestBody UserQueryRequest userQueryRequest,
-            HttpServletRequest request) {
-        // 参数校验
-        validateNotNull(userQueryRequest, "用户查询条件");
-        Page<User> page = validatePageParams(
-                userQueryRequest.getCurrent(),
-                userQueryRequest.getPageSize()
-        );
-
-        // 执行分页查询
-        Page<User> userPage = userService.page(page, userService.getQueryWrapper(userQueryRequest));
-
-        logOperation("分页获取用户列表", request, 
-                "当前页", userQueryRequest.getCurrent(),
-                "每页大小", userQueryRequest.getPageSize()
-        );
-        return ResultUtils.success(userPage);
-    }
-
-    /**
-     * 分页获取用户封装列表
+     * 分页获取用户封装列表(管理员)
      *
      * @param current 当前页码
      * @param size 每页大小
      * @param id 用户ID
      * @param userName 用户名
      * @param userRole 用户角色
+     * @param userStatus 用户状态
      * @param point 用户积分
      * @param sortField 排序字段
      * @param sortOrder 排序顺序
      * @param request HTTP请求
      * @return 分页用户视图列表
      */
-    @Operation(summary = "分页获取用户视图列表", description = "分页获取用户视图信息列表")
+    @Operation(summary = "分页获取用户视图列表", description = "分页获取用户视图信息列表，支持状态筛选")
     @GetMapping("/list/page/vo")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Page<UserVO>> listUserVOByPage(
             @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "用户ID") @RequestParam(required = false) Long id,
             @Parameter(description = "用户名") @RequestParam(required = false) String userName,
             @Parameter(description = "用户角色") @RequestParam(required = false) String userRole,
+            @Parameter(description = "用户状态: 0-待审核, 1-已通过, 2-已拒绝, 3-已禁用") @RequestParam(required = false) Integer userStatus,
             @Parameter(description = "用户积分") @RequestParam(required = false) BigDecimal point,
             @Parameter(description = "排序字段") @RequestParam(required = false) String sortField,
             @Parameter(description = "排序顺序") @RequestParam(defaultValue = "desc") String sortOrder,
@@ -378,6 +350,7 @@ public class UserController extends BaseController {
         userQueryRequest.setId(id);
         userQueryRequest.setUserName(userName);
         userQueryRequest.setUserRole(userRole);
+        userQueryRequest.setUserStatus(userStatus);
         userQueryRequest.setPoint(point);
         userQueryRequest.setSortField(sortField);
         userQueryRequest.setSortOrder(sortOrder);
@@ -427,63 +400,53 @@ public class UserController extends BaseController {
     }
 
     /**
-     * 审核用户
+     * 更新用户状态（通用方法，支持多种状态变更）
      *
-     * @param userAuditRequest 用户审核请求
+     * @param userAuditRequest 用户状态更新请求
      * @param request HTTP请求
-     * @return 是否审核成功
+     * @return 是否更新成功
      */
-    @Operation(summary = "审核用户", description = "管理员审核用户申请")
+    @Operation(summary = "更新用户状态", description = "管理员更新用户状态，支持审核、禁用等操作")
     @PostMapping("/admin/audit")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> auditUser(
-            @Parameter(description = "用户审核请求") @RequestBody UserAuditRequest userAuditRequest,
+            @Parameter(description = "用户状态更新请求") @RequestBody UserAuditRequest userAuditRequest,
             HttpServletRequest request) {
         // 参数校验
-        validateNotNull(userAuditRequest, "用户审核请求");
+        validateNotNull(userAuditRequest, "用户状态更新请求");
         validateId(userAuditRequest.getUserId(), "用户ID");
-        validateNotNull(userAuditRequest.getAuditStatus(), "审核状态");
+        validateNotNull(userAuditRequest.getAuditStatus(), "用户状态");
 
-        // 审核用户
-        boolean result = userService.auditUser(
+        // 更新用户状态
+        boolean result = userService.updateUserStatus(
                 userAuditRequest.getUserId(), 
                 userAuditRequest.getAuditStatus(), 
                 request
         );
         
-        String statusDesc = userAuditRequest.getAuditStatus() == 1 ? "通过" : "拒绝";
-        logOperation("审核用户", result, request, 
-                "用户ID", userAuditRequest.getUserId(),
-                "审核状态", statusDesc
-        );
-        return handleOperationResult(result, "用户审核成功");
-    }
-
-    /**
-     * 获取待审核用户列表
-     *
-     * @param current 当前页码
-     * @param size 每页大小
-     * @param request HTTP请求
-     * @return 待审核用户列表
-     */
-    @Operation(summary = "获取待审核用户列表", description = "管理员获取待审核用户列表")
-    @GetMapping("/admin/pending")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Page<User>> getPendingAuditUsers(
-            @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
-            HttpServletRequest request) {
-        // 参数校验
-        Page<User> page = validatePageParams(current, size);
-
-        // 获取待审核用户列表
-        List<User> users = userService.getPendingAuditUsers(page);
+        // 根据状态值生成描述信息
+        String statusDesc;
+        switch (userAuditRequest.getAuditStatus()) {
+            case 0:
+                statusDesc = "待审核";
+                break;
+            case 1:
+                statusDesc = "已通过";
+                break;
+            case 2:
+                statusDesc = "已拒绝";
+                break;
+            case 3:
+                statusDesc = "已禁用";
+                break;
+            default:
+                statusDesc = "未知状态";
+        }
         
-        logOperation("获取待审核用户列表", request, 
-                "当前页", current,
-                "每页大小", size
+        logOperation("更新用户状态", result, request, 
+                "用户ID", userAuditRequest.getUserId(),
+                "目标状态", statusDesc
         );
-        return ResultUtils.success(page);
+        return handleOperationResult(result, "用户状态更新成功");
     }
 }

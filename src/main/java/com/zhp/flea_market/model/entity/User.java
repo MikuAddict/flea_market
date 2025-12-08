@@ -2,11 +2,11 @@ package com.zhp.flea_market.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
-
-import lombok.Data;
 
 /**
  * 用户表
@@ -45,7 +45,7 @@ public class User implements Serializable {
      */
     private String userRole = "user";
     /**
-     * 用户状态 (0-待审核, 1-已通过, 2-已拒绝)
+     * 用户状态 (0-待审核, 1-已通过, 2-已拒绝, 3-已封禁)
      */
     private Integer userStatus = 0;
     /**
