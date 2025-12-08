@@ -11,14 +11,14 @@ import java.util.List;
 public interface StatisticsService {
 
     /**
-     * 获取月度交易二手物品排行
+     * 获取月度交易二手物品分类排行
      *
      * @param month 月份
      * @param year 年份
      * @param limit 限制数量
-     * @return 二手物品排行列表
+     * @return 二手物品分类排行列表
      */
-    List<StatisticsResponse.ProductRankingItem> getMonthlyTopSellingProducts(int month, int year, int limit);
+    List<StatisticsResponse.ProductRankingItem> getMonthlyTopSellingCategories(int month, int year, int limit);
 
     /**
      * 获取活跃用户排行
@@ -31,20 +31,20 @@ public interface StatisticsService {
     List<StatisticsResponse.UserRankingItem> getActiveUsersRanking(int limit, Date startDate, Date endDate);
 
     /**
-     * 获取需求量大二手物品排行
+     * 获取需求量大二手物品分类排行
      *
      * @param limit 限制数量
-     * @return 二手物品排行列表
+     * @return 二手物品分类排行列表
      */
-    List<StatisticsResponse.ProductRankingItem> getHighDemandProducts(int limit);
+    List<StatisticsResponse.ProductRankingItem> getHighDemandCategories(int limit);
 
     /**
-     * 获取闲置量大二手物品排行
+     * 获取闲置量大二手物品分类排行（闲置量 = 在售物品数量 / 已售物品数量）
      *
      * @param limit 限制数量
-     * @return 二手物品排行列表
+     * @return 二手物品分类排行列表
      */
-    List<StatisticsResponse.ProductRankingItem> getHighInventoryProducts(int limit);
+    List<StatisticsResponse.ProductRankingItem> getHighInventoryCategories(int limit);
 
     /**
      * 获取综合统计信息
@@ -73,10 +73,10 @@ public interface StatisticsService {
     StatisticsResponse getUserTradeStatistics(Long userId);
 
     /**
-     * 获取二手物品交易统计
+     * 获取二手物品分类交易统计
      *
-     * @param productId 二手物品ID
-     * @return 二手物品交易统计
+     * @param categoryId 分类ID
+     * @return 二手物品分类交易统计
      */
-    StatisticsResponse getProductTradeStatistics(Long productId);
+    StatisticsResponse getCategoryTradeStatistics(Long categoryId);
 }

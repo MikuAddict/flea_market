@@ -295,7 +295,7 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
     }
 
     /**
-     * 获取指定时间范围内的交易总额
+     * 获取指定时间范围内的交易总额（积分兑换交易不计入金额）
      *
      * @param startDate 开始日期
      * @param endDate 结束日期
@@ -315,7 +315,8 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
             if (record.getOrderId() != null) {
                 try {
                     Order order = orderService.getById(record.getOrderId());
-                    if (order != null && order.getAmount() != null) {
+                    // 排除积分兑换交易（支付方式为2）
+                    if (order != null && order.getAmount() != null && order.getPaymentMethod() != 2) {
                         totalAmount = totalAmount.add(order.getAmount());
                     }
                 } catch (Exception e) {
