@@ -50,10 +50,4 @@ public class News {
      */
     @TableLogic
     private Integer deleted = 0;
-    
-    /**
-     * 公告作者，非数据库字段
-     */
-    @TableField(exist = false)
-    private User user;
 }

@@ -8,10 +8,13 @@ import com.zhp.flea_market.exception.BusinessException;
 import com.zhp.flea_market.mapper.ProductMapper;
 import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.model.entity.User;
+import com.zhp.flea_market.model.entity.Category;
+import com.zhp.flea_market.model.vo.ProductVO;
 import com.zhp.flea_market.service.CategoryService;
 import com.zhp.flea_market.service.ImageStorageService;
 import com.zhp.flea_market.service.ProductService;
 import com.zhp.flea_market.service.UserService;
+import org.springframework.beans.BeanUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -372,7 +375,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
         
         // 权限校验：只有商品发布者或管理员可以修改状态
-        if (!product.getUser().getId().equals(currentUser.getId()) && 
+        if (!product.getUserId().equals(currentUser.getId()) && 
             !userService.isAdmin(currentUser)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限修改商品状态");
         }
@@ -449,5 +452,53 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         queryWrapper.orderByDesc("create_time");
         
         return queryWrapper;
+    }
+
+    /**
+     * 获取商品详情（用于前端展示）
+     *
+     * @param id 商品ID
+     * @return 商品详情
+     */
+    @Override
+    public ProductVO getProductDetailVO(Long id) {
+        // 获取商品实体
+        Product product = getProductDetail(id);
+        if (product == null) {
+            return null;
+        }
+        
+        return convertToProductVO(product);
+    }
+
+    /**
+     * 将Product实体转换为ProductVO
+     */
+    private ProductVO convertToProductVO(Product product) {
+        if (product == null) {
+            return null;
+        }
+        
+        ProductVO productVO = new ProductVO();
+        BeanUtils.copyProperties(product, productVO);
+        
+        // 设置分类名称
+        if (product.getCategoryId() != null) {
+            Category category = categoryService.getById(product.getCategoryId());
+            if (category != null) {
+                productVO.setCategoryName(category.getName());
+            }
+        }
+        
+        // 设置用户信息
+        if (product.getUserId() != null) {
+            User user = userService.getById(product.getUserId());
+            if (user != null) {
+                productVO.setUserName(user.getUserName());
+                productVO.setUserAvatar(user.getUserAvatar());
+            }
+        }
+        
+        return productVO;
     }
 }

@@ -15,6 +15,7 @@ import com.zhp.flea_market.model.dto.request.ProductUpdateRequest;
 import com.zhp.flea_market.model.entity.Category;
 import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.model.entity.User;
+import com.zhp.flea_market.model.vo.ProductVO;
 import com.zhp.flea_market.service.CategoryService;
 import com.zhp.flea_market.service.ProductService;
 import com.zhp.flea_market.service.UserService;
@@ -179,17 +180,17 @@ public class ProductController extends BaseController {
      */
     @Operation(summary = "获取商品详情", description = "根据商品ID获取商品详细信息")
     @GetMapping("/get/{id}")
-    public BaseResponse<Product> getProductById(
+    public BaseResponse<ProductVO> getProductById(
             @Parameter(description = "商品ID") @PathVariable Long id) {
         // 参数校验
         validateId(id, "商品ID");
 
         // 获取商品信息
-        Product product = productService.getProductDetail(id);
-        validateResourceExists(product, "商品");
+        ProductVO productVO = productService.getProductDetailVO(id);
+        validateResourceExists(productVO, "商品");
 
         logOperation("获取商品详情", null, "商品ID", id);
-        return ResultUtils.success(product);
+        return ResultUtils.success(productVO);
     }
 
     /**

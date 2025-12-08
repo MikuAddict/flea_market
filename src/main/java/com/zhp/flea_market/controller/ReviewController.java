@@ -13,6 +13,7 @@ import com.zhp.flea_market.model.entity.Order;
 import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.model.entity.Review;
 import com.zhp.flea_market.model.entity.User;
+import com.zhp.flea_market.model.vo.ReviewVO;
 import com.zhp.flea_market.service.OrderService;
 import com.zhp.flea_market.service.ProductService;
 import com.zhp.flea_market.service.ReviewService;
@@ -64,17 +65,17 @@ public class ReviewController extends BaseController {
         // 参数校验
         validateNotNull(review, "评价信息");
         validateNotNull(review.getProductId(), "商品信息");
-        validateId(review.getProductId().getId(), "商品ID");
+        validateId(review.getProductId(), "商品ID");
         validateNotNull(review.getRating(), "评分");
         validateNotBlank(review.getContent(), "评价内容");
 
         // 检查商品是否存在
-        Product product = productService.getById(review.getProductId().getId());
+        Product product = productService.getById(review.getProductId());
         validateResourceExists(product, "商品");
 
         // 检查订单是否存在（如果提供了订单ID）
-        if (review.getOrderId() != null && review.getOrderId().getId() != null) {
-            Order order = orderService.getById(review.getOrderId().getId());
+        if (review.getOrderId() != null) {
+            Order order = orderService.getById(review.getOrderId());
             validateResourceExists(order, "订单");
         }
 
@@ -124,13 +125,13 @@ public class ReviewController extends BaseController {
      */
     @Operation(summary = "获取评价详情", description = "根据评价ID获取评价详细信息")
     @GetMapping("/get/{id}")
-    public BaseResponse<Review> getReviewById(
+    public BaseResponse<ReviewVO> getReviewById(
             @Parameter(description = "评价ID") @PathVariable Long id) {
         // 参数校验
         validateId(id, "评价ID");
 
         // 获取评价信息
-        Review review = reviewService.getReviewDetail(id);
+        ReviewVO review = reviewService.getReviewDetail(id);
         validateResourceExists(review, "评价");
 
         logOperation("获取评价详情", null, "评价ID", id);
@@ -267,7 +268,7 @@ public class ReviewController extends BaseController {
      */
     @Operation(summary = "获取用户对商品的评价", description = "获取指定用户对指定商品的评价")
     @GetMapping("/get/user/{userId}/product/{productId}")
-    public BaseResponse<Review> getUserReviewForProduct(
+    public BaseResponse<ReviewVO> getUserReviewForProduct(
             @Parameter(description = "用户ID") @PathVariable Long userId,
             @Parameter(description = "商品ID") @PathVariable Long productId) {
         // 参数校验
@@ -279,7 +280,7 @@ public class ReviewController extends BaseController {
         validateResourceExists(productService.getById(productId), "商品");
 
         // 获取用户对商品的评价
-        Review review = reviewService.getUserReviewForProduct(userId, productId);
+        ReviewVO review = reviewService.getUserReviewForProduct(userId, productId);
         
         logOperation("获取用户对商品的评价", null, 
                 "用户ID", userId,
@@ -298,7 +299,7 @@ public class ReviewController extends BaseController {
     @Operation(summary = "获取当前用户对商品的评价", description = "获取当前登录用户对指定商品的评价")
     @GetMapping("/get/my/product/{productId}")
     @LoginRequired
-    public BaseResponse<Review> getMyReviewForProduct(
+    public BaseResponse<ReviewVO> getMyReviewForProduct(
             @Parameter(description = "商品ID") @PathVariable Long productId,
             HttpServletRequest request) {
         // 参数校验
@@ -311,7 +312,7 @@ public class ReviewController extends BaseController {
         User currentUser = userService.getLoginUser(request);
 
         // 获取当前用户对商品的评价
-        Review review = reviewService.getUserReviewForProduct(currentUser.getId(), productId);
+        ReviewVO review = reviewService.getUserReviewForProduct(currentUser.getId(), productId);
         
         logOperation("获取当前用户对商品的评价", request, 
                 "商品ID", productId

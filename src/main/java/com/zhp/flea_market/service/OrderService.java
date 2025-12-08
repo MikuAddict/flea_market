@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zhp.flea_market.model.entity.Order;
+import com.zhp.flea_market.model.vo.OrderVO;
 import com.zhp.flea_market.model.dto.request.OrderRequest;
 import com.zhp.flea_market.model.dto.request.PaymentProofRequest;
 import com.zhp.flea_market.model.dto.request.OrderConfirmRequest;
@@ -60,7 +61,7 @@ public interface OrderService extends IService<Order> {
      * @param request HTTP请求
      * @return 订单详情
      */
-    Order getOrderDetail(Long orderId, HttpServletRequest request);
+    OrderVO getOrderDetail(Long orderId, HttpServletRequest request);
 
     /**
      * 获取买家订单列表

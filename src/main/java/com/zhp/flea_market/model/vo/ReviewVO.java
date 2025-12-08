@@ -1,21 +1,17 @@
-package com.zhp.flea_market.model.entity;
+package com.zhp.flea_market.model.vo;
 
-import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
 import java.util.Date;
 
 /**
- * 商品评价实体
+ * 评价视图对象
  */
-@TableName("review")
 @Data
-public class Review {
-
+public class ReviewVO {
     /**
      * 评价ID
      */
-    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
@@ -24,9 +20,24 @@ public class Review {
     private Long userId;
 
     /**
+     * 用户名称
+     */
+    private String userName;
+
+    /**
+     * 用户头像
+     */
+    private String userAvatar;
+
+    /**
      * 商品ID
      */
     private Long productId;
+
+    /**
+     * 商品名称
+     */
+    private String productName;
 
     /**
      * 订单ID
@@ -46,12 +57,5 @@ public class Review {
     /**
      * 创建时间
      */
-    @TableField(value = "create_time", fill = FieldFill.INSERT)
     private Date createTime;
-    
-    /**
-     * 逻辑删除字段
-     */
-    @TableLogic
-    private Integer deleted = 0;
 }

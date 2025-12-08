@@ -73,34 +73,4 @@ public class TradeRecord {
      */
     @TableLogic
     private Integer deleted = 0;
-    
-    /**
-     * 订单信息，非数据库字段
-     */
-    @TableField(exist = false)
-    private Order order;
-
-    /**
-     * 商品信息，非数据库字段
-     */
-    @TableField(exist = false)
-    private Product product;
-
-    /**
-     * 买家信息，非数据库字段
-     */
-    @TableField(exist = false)
-    private User buyer;
-
-    /**
-     * 卖家信息，非数据库字段
-     */
-    @TableField(exist = false)
-    private User seller;
-
-    /**
-     * 评价信息，非数据库字段
-     */
-    @TableField(exist = false)
-    private Review review;
 }

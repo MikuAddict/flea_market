@@ -108,7 +108,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
         }
         
         // 权限校验：只能删除自己的购物车项
-        if (cartItem.getUser() == null || !cartItem.getUser().getId().equals(currentUser.getId())) {
+        if (!cartItem.getUserId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限删除该购物车项");
         }
         
@@ -203,9 +203,12 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
         
         double totalAmount = 0.0;
         for (ShoppingCart cartItem : cartItems) {
-            Product product = cartItem.getProduct();
-            if (product != null && product.getStatus() == 1) {
-                totalAmount += product.getPrice().doubleValue();
+            Long productId = cartItem.getProductId();
+            if (productId != null) {
+                Product product = productService.getById(productId);
+                if (product != null && product.getStatus() == 1 && product.getPrice() != null) {
+                    totalAmount += product.getPrice().doubleValue();
+                }
             }
         }
         

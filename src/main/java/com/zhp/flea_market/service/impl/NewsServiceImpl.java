@@ -5,9 +5,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zhp.flea_market.mapper.NewsMapper;
 import com.zhp.flea_market.model.entity.News;
 import com.zhp.flea_market.model.entity.User;
+import com.zhp.flea_market.model.vo.NewsVO;
 import com.zhp.flea_market.service.ImageStorageService;
 import com.zhp.flea_market.service.NewsService;
 import com.zhp.flea_market.service.UserService;
+import org.springframework.beans.BeanUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,7 +34,7 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
      * @return 新闻列表
      */
     @Override
-    public List<News> getNewsList(Page<News> page) {
+    public List<NewsVO> getNewsList(Page<News> page) {
         // 使用QueryWrapper明确指定查询字段，避免查询不存在的author字段
         QueryWrapper<News> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("id", "title", "content", "image_url", "author_id", "create_time");
@@ -41,8 +43,8 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
         Page<News> resultPage = this.page(page, queryWrapper);
         List<News> newsList = resultPage.getRecords();
         
-        // 加载作者信息
-        return loadAuthorInfo(newsList);
+        // 转换为VO并加载作者信息
+        return convertToNewsVOList(newsList);
     }
 
     /**
@@ -119,7 +121,7 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
      * 获取新闻详情
      */
     @Override
-    public News getNewsDetail(Long id) {
+    public NewsVO getNewsDetail(Long id) {
         // 使用QueryWrapper明确指定查询字段，避免查询不存在的author字段
         QueryWrapper<News> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("id", "title", "content", "image_url", "author_id", "create_time");
@@ -127,16 +129,16 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
         
         News news = this.getOne(queryWrapper);
         if (news != null) {
-            loadAuthorInfo(news);
+            return convertToNewsVO(news);
         }
-        return news;
+        return null;
     }
 
     /**
      * 获取最新的新闻
      */
     @Override
-    public News getLatestNews() {
+    public NewsVO getLatestNews() {
         // 按创建时间倒序排列，只获取最新的一条新闻
         QueryWrapper<News> queryWrapper = new QueryWrapper<>();
         queryWrapper.select("id", "title", "content", "image_url", "author_id", "create_time");
@@ -145,28 +147,39 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
         
         News news = this.getOne(queryWrapper);
         if (news != null) {
-            loadAuthorInfo(news);
+            return convertToNewsVO(news);
         }
-        return news;
+        return null;
     }
 
     /**
-     * 为单条新闻加载作者信息
+     * 将News实体转换为NewsVO
      */
-    private void loadAuthorInfo(News news) {
-        if (news != null && news.getAuthorId() != null) {
+    private NewsVO convertToNewsVO(News news) {
+        if (news == null) {
+            return null;
+        }
+        
+        NewsVO newsVO = new NewsVO();
+        BeanUtils.copyProperties(news, newsVO);
+        
+        // 查询作者信息并设置作者姓名
+        if (news.getAuthorId() != null) {
             User author = userService.getById(news.getAuthorId());
-            news.setUser(author); // 设置user对象用于前端显示
+            if (author != null) {
+                newsVO.setAuthorName(author.getUserName());
+            }
         }
+        
+        return newsVO;
     }
 
     /**
-     * 为新闻列表加载作者信息
-     * @param newsList 新闻列表
+     * 将News实体列表转换为NewsVO列表
      */
-    private List<News> loadAuthorInfo(List<News> newsList) {
+    private List<NewsVO> convertToNewsVOList(List<News> newsList) {
         if (newsList == null || newsList.isEmpty()) {
-            return newsList;
+            return java.util.Collections.emptyList();
         }
         
         // 获取所有作者ID
@@ -176,24 +189,28 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
                 .distinct()
                 .collect(Collectors.toList());
         
-        if (authorIds.isEmpty()) {
-            return newsList;
+        // 构建作者ID到作者姓名的映射
+        java.util.Map<Long, String> authorNameMap = new java.util.HashMap<>();
+        if (!authorIds.isEmpty()) {
+            List<User> authors = userService.listByIds(authorIds);
+            authors.forEach(author -> {
+                if (author != null && author.getId() != null && author.getUserName() != null) {
+                    authorNameMap.put(author.getId(), author.getUserName());
+                }
+            });
         }
         
-        // 批量查询作者信息
-        List<User> authors = userService.listByIds(authorIds);
-        
-        // 构建作者ID到作者对象的映射
-        java.util.Map<Long, User> authorMap = authors.stream()
-                .collect(Collectors.toMap(User::getId, user -> user));
-        
-        // 为每个新闻设置作者对象
-        newsList.forEach(news -> {
-            if (news.getAuthorId() != null) {
-                news.setUser(authorMap.get(news.getAuthorId()));
-            }
-        });
-
-        return newsList;
+        // 转换为VO列表
+        return newsList.stream()
+                .map(news -> {
+                    NewsVO newsVO = new NewsVO();
+                    BeanUtils.copyProperties(news, newsVO);
+                    // 设置作者姓名
+                    if (news.getAuthorId() != null) {
+                        newsVO.setAuthorName(authorNameMap.get(news.getAuthorId()));
+                    }
+                    return newsVO;
+                })
+                .collect(Collectors.toList());
     }
 }

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zhp.flea_market.model.entity.Product;
+import com.zhp.flea_market.model.vo.ProductVO;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.math.BigDecimal;
@@ -48,6 +49,14 @@ public interface ProductService extends IService<Product> {
      * @return 商品详情
      */
     Product getProductDetail(Long id);
+
+    /**
+     * 获取商品详情（用于前端展示）
+     *
+     * @param id 商品ID
+     * @return 商品详情
+     */
+    ProductVO getProductDetailVO(Long id);
 
     /**
      * 分页获取商品列表

@@ -38,16 +38,4 @@ public class ShoppingCart {
      */
     @TableLogic
     private Integer deleted = 0;
-    
-    /**
-     * 关联用户，非数据库字段
-     */
-    @TableField(exist = false)
-    private User user;
-    
-    /**
-     * 关联商品，非数据库字段
-     */
-    @TableField(exist = false)
-    private Product product;
 }

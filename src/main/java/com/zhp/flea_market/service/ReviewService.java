@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zhp.flea_market.model.entity.Review;
+import com.zhp.flea_market.model.vo.ReviewVO;
 import com.zhp.flea_market.model.dto.request.ReviewRequest;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -38,7 +39,7 @@ public interface ReviewService extends IService<Review> {
      * @param id 评价ID
      * @return 评价详情
      */
-    Review getReviewDetail(Long id);
+    ReviewVO getReviewDetail(Long id);
 
     /**
      * 分页获取评价列表
@@ -82,7 +83,7 @@ public interface ReviewService extends IService<Review> {
      * @param productId 商品ID
      * @return 评价信息
      */
-    Review getUserReviewForProduct(Long userId, Long productId);
+    ReviewVO getUserReviewForProduct(Long userId, Long productId);
 
     /**
      * 获取商品平均评分

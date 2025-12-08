@@ -9,6 +9,7 @@ import com.zhp.flea_market.model.dto.request.NewsAddRequest;
 import com.zhp.flea_market.model.dto.request.NewsUpdateRequest;
 import com.zhp.flea_market.model.entity.News;
 import com.zhp.flea_market.model.entity.User;
+import com.zhp.flea_market.model.vo.NewsVO;
 import com.zhp.flea_market.service.NewsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -19,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -43,14 +43,14 @@ public class NewsController extends BaseController {
      */
     @GetMapping("/list")
     @Operation(summary = "分页获取新闻列表", description = "分页获取系统中的新闻信息")
-    public BaseResponse<List<News>> getNewsList(
+    public BaseResponse<List<NewsVO>> getNewsList(
             @Parameter(description = "当前页码", example = "1") @RequestParam(defaultValue = "1") long current,
             @Parameter(description = "每页大小", example = "10") @RequestParam(defaultValue = "10") long size) {
         // 参数校验
         Page<News> page = validatePageParams(current, size, 20);
         
         // 获取新闻列表
-        List<News> newsList = newsService.getNewsList(page);
+        List<NewsVO> newsList = newsService.getNewsList(page);
         
         logOperation("分页获取新闻列表", null, "当前页", current, "每页大小", size);
         return ResultUtils.success(newsList);
@@ -63,8 +63,8 @@ public class NewsController extends BaseController {
      */
     @GetMapping("/latest")
     @Operation(summary = "获取最新新闻", description = "获取系统中最新的一条新闻信息")
-    public BaseResponse<News> getLatestNews() {
-        News latestNews = newsService.getLatestNews();
+    public BaseResponse<NewsVO> getLatestNews() {
+        NewsVO latestNews = newsService.getLatestNews();
         logOperation("获取最新新闻", null, "新闻ID", latestNews != null ? latestNews.getId() : null);
         return ResultUtils.success(latestNews);
     }
@@ -77,13 +77,13 @@ public class NewsController extends BaseController {
      */
     @GetMapping("/detail/{id}")
     @Operation(summary = "获取新闻详情", description = "根据ID获取新闻的详细信息")
-    public BaseResponse<News> getNewsDetail(
+    public BaseResponse<NewsVO> getNewsDetail(
             @Parameter(description = "新闻ID") @PathVariable Long id) {
         // 参数校验
         validateId(id, "新闻ID");
         
         // 获取新闻详情
-        News news = newsService.getNewsDetail(id);
+        NewsVO news = newsService.getNewsDetail(id);
         validateResourceExists(news, "新闻");
         
         logOperation("获取新闻详情", null, "新闻ID", id);
@@ -114,8 +114,8 @@ public class NewsController extends BaseController {
         // 创建新闻对象
         News news = new News();
         BeanUtils.copyProperties(newsAddRequest, news);
-        news.setUser(currentUser);
-        news.setCreateTime(new Date());
+        // 设置作者ID
+        news.setAuthorId(currentUser.getId());
 
         // 添加新闻
         boolean result = newsService.addNews(news, request);
@@ -147,15 +147,14 @@ public class NewsController extends BaseController {
         validateNotBlank(newsUpdateRequest.getContent(), "新闻内容");
         
         // 检查新闻是否存在
-        News existNews = newsService.getNewsDetail(newsUpdateRequest.getId());
+        NewsVO existNews = newsService.getNewsDetail(newsUpdateRequest.getId());
         validateResourceExists(existNews, "新闻");
 
         // 创建新闻对象并更新
         News news = new News();
         BeanUtils.copyProperties(newsUpdateRequest, news);
         // 保留原有的作者ID和创建时间
-        news.setUser(existNews.getUser());
-        news.setCreateTime(existNews.getCreateTime());
+        news.setAuthorId(existNews.getAuthorId());
 
         // 更新新闻
         boolean result = newsService.updateNews(news, request);
@@ -184,7 +183,7 @@ public class NewsController extends BaseController {
         validateId(id, "新闻ID");
         
         // 检查新闻是否存在
-        News existNews = newsService.getNewsDetail(id);
+        NewsVO existNews = newsService.getNewsDetail(id);
         validateResourceExists(existNews, "新闻");
 
         // 删除新闻

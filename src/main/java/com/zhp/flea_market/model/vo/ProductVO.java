@@ -1,21 +1,18 @@
-package com.zhp.flea_market.model.entity;
+package com.zhp.flea_market.model.vo;
 
-import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
+
 import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 商品信息实体
+ * 商品视图对象
  */
-@TableName("product")
 @Data
-public class Product {
-
+public class ProductVO {
     /**
      * 商品ID
      */
-    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
@@ -54,25 +51,32 @@ public class Product {
     private Long categoryId;
 
     /**
+     * 商品分类名称
+     */
+    private String categoryName;
+
+    /**
      * 发布者ID
      */
     private Long userId;
 
     /**
+     * 发布者名称
+     */
+    private String userName;
+
+    /**
+     * 发布者头像
+     */
+    private String userAvatar;
+
+    /**
      * 创建时间
      */
-    @TableField(value = "create_time", fill = FieldFill.INSERT)
     private Date createTime;
 
     /**
      * 更新时间
      */
-    @TableField(value = "update_time", fill = FieldFill.INSERT_UPDATE)
     private Date updateTime;
-    
-    /**
-     * 逻辑删除字段
-     */
-    @TableLogic
-    private Integer deleted = 0;
 }

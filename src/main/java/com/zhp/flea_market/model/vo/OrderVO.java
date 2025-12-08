@@ -1,21 +1,18 @@
-package com.zhp.flea_market.model.entity;
+package com.zhp.flea_market.model.vo;
 
-import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
+
 import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 订单实体
+ * 订单视图对象
  */
-@TableName("market_order")
 @Data
-public class Order {
-
+public class OrderVO {
     /**
      * 订单ID
      */
-    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
@@ -24,14 +21,34 @@ public class Order {
     private Long productId;
 
     /**
+     * 商品名称
+     */
+    private String productName;
+
+    /**
+     * 商品图片
+     */
+    private String productImage;
+
+    /**
      * 买家ID
      */
     private Long buyerId;
 
     /**
+     * 买家名称
+     */
+    private String buyerName;
+
+    /**
      * 卖家ID
      */
     private Long sellerId;
+
+    /**
+     * 卖家名称
+     */
+    private String sellerName;
 
     /**
      * 订单金额
@@ -44,39 +61,42 @@ public class Order {
     private Integer paymentMethod;
 
     /**
+     * 支付方式描述
+     */
+    private String paymentMethodDesc;
+
+    /**
      * 订单状态 (0-待支付, 1-已支付, 2-已完成, 3-已取消)
      */
     private Integer status;
 
     /**
-     * 支付凭证URL (现金支付时买家上传的支付凭证)
+     * 状态描述
+     */
+    private String statusDesc;
+
+    /**
+     * 支付凭证URL
      */
     private String paymentProof;
 
     /**
-     * 买家确认收货状态 (false-未确认, true-已确认)
+     * 买家确认收货状态
      */
     private Boolean buyerConfirmed;
 
     /**
-     * 卖家确认收款状态 (false-未确认, true-已确认)
+     * 卖家确认收款状态
      */
     private Boolean sellerConfirmed;
 
     /**
      * 创建时间
      */
-    @TableField(value = "create_time", fill = FieldFill.INSERT)
     private Date createTime;
 
     /**
      * 完成时间
      */
     private Date finishTime;
-    
-    /**
-     * 逻辑删除字段
-     */
-    @TableLogic
-    private Integer deleted = 0;
 }

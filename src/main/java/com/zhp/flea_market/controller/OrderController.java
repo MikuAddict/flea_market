@@ -10,6 +10,7 @@ import com.zhp.flea_market.model.dto.request.OrderRequest;
 import com.zhp.flea_market.model.dto.request.PaymentProofRequest;
 import com.zhp.flea_market.model.dto.request.OrderConfirmRequest;
 import com.zhp.flea_market.model.entity.Order;
+import com.zhp.flea_market.model.vo.OrderVO;
 import com.zhp.flea_market.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -138,14 +139,14 @@ public class OrderController extends BaseController {
     @Operation(summary = "获取订单详情", description = "根据订单ID获取订单详细信息")
     @GetMapping("/get/{orderId}")
     @LoginRequired
-    public BaseResponse<Order> getOrderById(
+    public BaseResponse<OrderVO> getOrderById(
             @Parameter(description = "订单ID") @PathVariable Long orderId,
             HttpServletRequest request) {
         // 参数校验
         validateId(orderId, "订单ID");
 
         // 获取订单信息
-        Order order = orderService.getOrderDetail(orderId, request);
+        OrderVO order = orderService.getOrderDetail(orderId, request);
         validateResourceExists(order, "订单");
 
         logOperation("获取订单详情", request, "订单ID", orderId);

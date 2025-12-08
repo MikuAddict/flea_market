@@ -2,6 +2,7 @@ package com.zhp.flea_market.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zhp.flea_market.model.entity.News;
+import com.zhp.flea_market.model.vo.NewsVO;
 import jakarta.servlet.http.HttpServletRequest;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
@@ -12,7 +13,7 @@ public interface NewsService extends IService<News> {
      * 分页获取新闻列表
      * @return
      */
-    List<News> getNewsList(Page<News> page);
+    List<NewsVO> getNewsList(Page<News> page);
     /**
      * 添加新闻
      * @param news
@@ -36,9 +37,9 @@ public interface NewsService extends IService<News> {
      * @param id
      * @return
      */
-    News getNewsDetail(Long id);
+    NewsVO getNewsDetail(Long id);
     /**
      * 获取最新的新闻
      */
-    News getLatestNews();
+    NewsVO getLatestNews();
 }

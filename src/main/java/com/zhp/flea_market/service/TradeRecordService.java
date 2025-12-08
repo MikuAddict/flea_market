@@ -4,11 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zhp.flea_market.model.entity.TradeRecord;
+import com.zhp.flea_market.model.vo.TradeRecordVO;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.List;
 
 /**
  * 交易记录服务接口
@@ -31,9 +31,9 @@ public interface TradeRecordService extends IService<TradeRecord> {
      * @param remark 交易备注
      * @return 交易记录ID
      */
-    Long createTradeRecord(Long orderId, Long productId, String productName, 
+    Long createTradeRecord(Long orderId, Long productId, String productName,
                          Long buyerId, String buyerName, Long sellerId, String sellerName,
-                         BigDecimal amount, Integer paymentMethod, String paymentMethodDesc, 
+                         BigDecimal amount, Integer paymentMethod, String paymentMethodDesc,
                          String remark);
 
     /**
@@ -61,25 +61,25 @@ public interface TradeRecordService extends IService<TradeRecord> {
      * @param request HTTP请求
      * @return 交易记录详情
      */
-    TradeRecord getTradeRecordDetail(Long id, HttpServletRequest request);
+    TradeRecordVO getTradeRecordDetail(Long id, HttpServletRequest request);
 
     /**
      * 获取买家的交易记录列表
      *
      * @param request HTTP请求
      * @param page 分页参数
-     * @return 交易记录列表
+     * @return 交易记录VO分页列表
      */
-    List<TradeRecord> getBuyerTradeRecords(HttpServletRequest request, Page<TradeRecord> page);
+    Page<TradeRecordVO> getBuyerTradeRecords(HttpServletRequest request, Page<TradeRecord> page);
 
     /**
      * 获取卖家的交易记录列表
      *
      * @param request HTTP请求
      * @param page 分页参数
-     * @return 交易记录列表
+     * @return 交易记录VO分页列表
      */
-    List<TradeRecord> getSellerTradeRecords(HttpServletRequest request, Page<TradeRecord> page);
+    Page<TradeRecordVO> getSellerTradeRecords(HttpServletRequest request, Page<TradeRecord> page);
 
     /**
      * 获取所有交易记录（管理员权限）
@@ -89,9 +89,9 @@ public interface TradeRecordService extends IService<TradeRecord> {
      * @param startDate 开始日期
      * @param endDate 结束日期
      * @param request HTTP请求
-     * @return 交易记录列表
+     * @return 交易记录VO分页列表
      */
-    List<TradeRecord> getAllTradeRecords(Page<TradeRecord> page, Integer tradeStatus, 
+    Page<TradeRecordVO> getAllTradeRecords(Page<TradeRecord> page, Integer tradeStatus, 
                                       Date startDate, Date endDate, HttpServletRequest request);
 
     /**

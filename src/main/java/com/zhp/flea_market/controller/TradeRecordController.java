@@ -7,6 +7,7 @@ import com.zhp.flea_market.common.BaseResponse;
 import com.zhp.flea_market.common.ResultUtils;
 import com.zhp.flea_market.constant.UserConstant;
 import com.zhp.flea_market.model.entity.TradeRecord;
+import com.zhp.flea_market.model.vo.TradeRecordVO;
 import com.zhp.flea_market.service.TradeRecordService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,7 +19,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
-import java.util.List;
 
 /**
  * 交易记录接口
@@ -42,14 +42,14 @@ public class TradeRecordController extends BaseController {
     @Operation(summary = "获取交易记录详情", description = "根据交易记录ID获取详细信息")
     @GetMapping("/get/{id}")
     @LoginRequired
-    public BaseResponse<TradeRecord> getTradeRecordDetail(
+    public BaseResponse<TradeRecordVO> getTradeRecordDetail(
             @Parameter(description = "交易记录ID") @PathVariable Long id,
             HttpServletRequest request) {
         // 参数校验
         validateId(id, "交易记录ID");
 
         // 获取交易记录详情
-        TradeRecord tradeRecord = tradeRecordService.getTradeRecordDetail(id, request);
+        TradeRecordVO tradeRecord = tradeRecordService.getTradeRecordDetail(id, request);
         
         logOperation("获取交易记录详情", request, "交易记录ID", id);
         return ResultUtils.success(tradeRecord);
@@ -66,7 +66,7 @@ public class TradeRecordController extends BaseController {
     @Operation(summary = "获取买家的交易记录列表", description = "获取当前登录用户的买家交易记录列表")
     @GetMapping("/list/buyer")
     @LoginRequired
-    public BaseResponse<Page<TradeRecord>> listBuyerTradeRecords(
+    public BaseResponse<Page<TradeRecordVO>> listBuyerTradeRecords(
             @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) {
@@ -74,13 +74,13 @@ public class TradeRecordController extends BaseController {
         Page<TradeRecord> page = validatePageParams(current, size);
 
         // 执行分页查询
-        List<TradeRecord> tradeRecords = tradeRecordService.getBuyerTradeRecords(request, page);
+        Page<TradeRecordVO> tradeRecordVOPage = tradeRecordService.getBuyerTradeRecords(request, page);
         
         logOperation("获取买家交易记录列表", request, 
                 "当前页", current,
                 "每页大小", size
         );
-        return ResultUtils.success(page);
+        return ResultUtils.success(tradeRecordVOPage);
     }
 
     /**
@@ -89,12 +89,12 @@ public class TradeRecordController extends BaseController {
      * @param current 当前页码
      * @param size 每页大小
      * @param request HTTP请求
-     * @return 分页交易记录列表
+     * @return 分页交易记录VO列表
      */
     @Operation(summary = "获取卖家的交易记录列表", description = "获取当前登录用户的卖家交易记录列表")
     @GetMapping("/list/seller")
     @LoginRequired
-    public BaseResponse<Page<TradeRecord>> listSellerTradeRecords(
+    public BaseResponse<Page<TradeRecordVO>> listSellerTradeRecords(
             @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) {
@@ -102,13 +102,13 @@ public class TradeRecordController extends BaseController {
         Page<TradeRecord> page = validatePageParams(current, size);
 
         // 执行分页查询
-        List<TradeRecord> tradeRecords = tradeRecordService.getSellerTradeRecords(request, page);
+        Page<TradeRecordVO> tradeRecordVOPage = tradeRecordService.getSellerTradeRecords(request, page);
         
         logOperation("获取卖家交易记录列表", request, 
                 "当前页", current,
                 "每页大小", size
         );
-        return ResultUtils.success(page);
+        return ResultUtils.success(tradeRecordVOPage);
     }
 
     /**
@@ -120,12 +120,12 @@ public class TradeRecordController extends BaseController {
      * @param startDate 开始日期
      * @param endDate 结束日期
      * @param request HTTP请求
-     * @return 分页交易记录列表
+     * @return 分页交易记录VO列表
      */
     @Operation(summary = "获取所有交易记录", description = "管理员获取所有交易记录列表")
     @GetMapping("/admin/list")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Page<TradeRecord>> adminListTradeRecords(
+    public BaseResponse<Page<TradeRecordVO>> adminListTradeRecords(
             @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "交易状态") @RequestParam(required = false) Integer tradeStatus,
@@ -138,7 +138,7 @@ public class TradeRecordController extends BaseController {
         Page<TradeRecord> page = validatePageParams(current, size);
 
         // 执行分页查询
-        List<TradeRecord> tradeRecords = tradeRecordService.getAllTradeRecords(page, tradeStatus, startDate, endDate, request);
+        Page<TradeRecordVO> tradeRecordVOPage = tradeRecordService.getAllTradeRecords(page, tradeStatus, startDate, endDate, request);
         
         logOperation("管理员获取所有交易记录列表", request, 
                 "当前页", current,
@@ -147,6 +147,6 @@ public class TradeRecordController extends BaseController {
                 "开始日期", startDate,
                 "结束日期", endDate
         );
-        return ResultUtils.success(page);
+        return ResultUtils.success(tradeRecordVOPage);
     }
 }

@@ -10,6 +10,7 @@ import com.zhp.flea_market.model.dto.request.ReviewRequest;
 import com.zhp.flea_market.model.entity.Order;
 import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.model.entity.Review;
+import com.zhp.flea_market.model.vo.ReviewVO;
 import com.zhp.flea_market.model.entity.TradeRecord;
 import com.zhp.flea_market.model.entity.User;
 import com.zhp.flea_market.service.OrderService;
@@ -170,7 +171,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      * @return 评价详情
      */
     @Override
-    public Review getReviewDetail(Long id) {
+    public ReviewVO getReviewDetail(Long id) {
         // 参数校验
         if (id == null || id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "评价ID无效");
@@ -181,7 +182,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "评价不存在");
         }
         
-        return review;
+        // 转换为VO对象
+        ReviewVO reviewVO = convertToReviewVO(review);
+        
+        return reviewVO;
     }
 
     /**
@@ -273,7 +277,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      * @return 评价信息
      */
     @Override
-    public Review getUserReviewForProduct(Long userId, Long productId) {
+    public ReviewVO getUserReviewForProduct(Long userId, Long productId) {
         // 参数校验
         if (userId == null || userId <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID无效");
@@ -286,7 +290,15 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         queryWrapper.eq("user_id", userId);
         queryWrapper.eq("product_id", productId);
         
-        return this.getOne(queryWrapper);
+        Review review = this.getOne(queryWrapper);
+        if (review == null) {
+            return null;
+        }
+        
+        // 转换为VO对象
+        ReviewVO reviewVO = convertToReviewVO(review);
+        
+        return reviewVO;
     }
 
     /**
@@ -443,7 +455,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "评价信息不能为空");
         }
         
-        if (review.getProduct() == null || review.getProduct().getId() == null || review.getProduct().getId() <= 0) {
+        if (review.getProductId() == null || review.getProductId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "商品ID无效");
         }
         
@@ -479,5 +491,39 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             case 1 -> -10; // 一星评价：卖家扣除10积分
             default -> 0;
         };
+    }
+
+    /**
+     * 将评价实体转换为VO对象
+     *
+     * @param review 评价实体
+     * @return 评价VO对象
+     */
+    private ReviewVO convertToReviewVO(Review review) {
+        ReviewVO reviewVO = new ReviewVO();
+        
+        // 复制基本属性
+        reviewVO.setId(review.getId());
+        reviewVO.setUserId(review.getUserId());
+        reviewVO.setProductId(review.getProductId());
+        reviewVO.setOrderId(review.getOrderId());
+        reviewVO.setRating(review.getRating());
+        reviewVO.setContent(review.getContent());
+        reviewVO.setCreateTime(review.getCreateTime());
+        
+        // 获取用户信息
+        User user = userService.getById(review.getUserId());
+        if (user != null) {
+            reviewVO.setUserName(user.getUserName());
+            reviewVO.setUserAvatar(user.getUserAvatar());
+        }
+        
+        // 获取商品信息
+        Product product = productService.getById(review.getProductId());
+        if (product != null) {
+            reviewVO.setProductName(product.getProductName());
+        }
+        
+        return reviewVO;
     }
 }

@@ -63,10 +63,4 @@ public class PointsRecord {
      */
     @TableLogic
     private Integer deleted = 0;
-    
-    /**
-     * 关联用户，非数据库字段
-     */
-    @TableField(exist = false)
-    private User user;
 }

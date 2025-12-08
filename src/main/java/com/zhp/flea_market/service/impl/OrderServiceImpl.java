@@ -10,6 +10,7 @@ import com.zhp.flea_market.model.dto.request.OrderRequest;
 import com.zhp.flea_market.model.dto.request.PaymentProofRequest;
 import com.zhp.flea_market.model.dto.request.OrderConfirmRequest;
 import com.zhp.flea_market.model.entity.Order;
+import com.zhp.flea_market.model.vo.OrderVO;
 import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.model.entity.User;
 import com.zhp.flea_market.service.OrderService;
@@ -18,6 +19,7 @@ import com.zhp.flea_market.service.UserService;
 import com.zhp.flea_market.service.TradeRecordService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -35,6 +37,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     private ProductService productService;
     
     @Autowired
+    @Lazy
     private TradeRecordService tradeRecordService;
 
     /**
@@ -282,7 +285,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * @param orderId 订单ID
      */
     @Override
-    public Order getOrderDetail(Long orderId, HttpServletRequest request) {
+    public OrderVO getOrderDetail(Long orderId, HttpServletRequest request) {
         // 参数校验
         if (orderId == null || orderId <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单ID无效");
@@ -305,7 +308,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限查看该订单");
         }
         
-        return order;
+        // 转换为VO对象
+
+        return convertToOrderVO(order);
     }
 
     /**
@@ -622,7 +627,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             try {
                 // 计算买家获得的积分：商品价格除以10，保留小数点后一位
                 BigDecimal pointsToAdd = order.getAmount().divide(new BigDecimal("10"), 1, RoundingMode.HALF_UP);
-                userService.updateUserPoints(order.getBuyer().getId(), pointsToAdd);
+                userService.updateUserPoints(order.getBuyerId(), pointsToAdd);
             } catch (Exception e) {
                 System.err.println("订单完成时积分发放失败: " + e.getMessage());
             }
@@ -657,7 +662,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 权限校验：只有买家可以支付
-        if (!order.getBuyer().getId().equals(currentUser.getId())) {
+        if (!order.getBuyerId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限操作该订单");
         }
         
@@ -719,7 +724,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 权限校验：只有买家可以支付
-        if (!order.getBuyer().getId().equals(currentUser.getId())) {
+        if (!order.getBuyerId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限操作该订单");
         }
         
@@ -734,7 +739,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 检查商品是否允许积分购买
-        Product product = order.getProduct();
+        Long productId = order.getProductId();
+        if (productId == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "商品不存在");
+        }
+        
+        // 获取商品信息
+        Product product = productService.getById(productId);
         if (product == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "商品不存在");
         }
@@ -796,7 +807,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 权限校验：只有买家可以申请交换
-        if (!order.getBuyer().getId().equals(currentUser.getId())) {
+        if (!order.getBuyerId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限操作该订单");
         }
         
@@ -845,7 +856,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         
         // 权限校验：只有卖家可以确认交换
-        if (!order.getSeller().getId().equals(currentUser.getId())) {
+        if (!order.getSellerId().equals(currentUser.getId())) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限操作该订单");
         }
         
@@ -883,6 +894,69 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             case 2 -> "积分兑换";
             case 3 -> "物品交换";
             default -> "未知支付方式";
+        };
+    }
+
+    /**
+     * 将订单实体转换为VO对象
+     *
+     * @param order 订单实体
+     * @return 订单VO对象
+     */
+    private OrderVO convertToOrderVO(Order order) {
+        OrderVO orderVO = new OrderVO();
+        
+        // 复制基本属性
+        orderVO.setId(order.getId());
+        orderVO.setProductId(order.getProductId());
+        orderVO.setBuyerId(order.getBuyerId());
+        orderVO.setSellerId(order.getSellerId());
+        orderVO.setAmount(order.getAmount());
+        orderVO.setPaymentMethod(order.getPaymentMethod());
+        orderVO.setPaymentMethodDesc(getPaymentMethodDesc(order.getPaymentMethod()));
+        orderVO.setStatus(order.getStatus());
+        orderVO.setStatusDesc(getOrderStatusDesc(order.getStatus()));
+        orderVO.setPaymentProof(order.getPaymentProof());
+        orderVO.setBuyerConfirmed(order.getBuyerConfirmed());
+        orderVO.setSellerConfirmed(order.getSellerConfirmed());
+        orderVO.setCreateTime(order.getCreateTime());
+        orderVO.setFinishTime(order.getFinishTime());
+        
+        // 获取商品信息
+        Product product = productService.getById(order.getProductId());
+        if (product != null) {
+            orderVO.setProductName(product.getProductName());
+            orderVO.setProductImage(product.getImageUrl());
+        }
+        
+        // 获取买家信息
+        User buyer = userService.getById(order.getBuyerId());
+        if (buyer != null) {
+            orderVO.setBuyerName(buyer.getUserName());
+        }
+        
+        // 获取卖家信息
+        User seller = userService.getById(order.getSellerId());
+        if (seller != null) {
+            orderVO.setSellerName(seller.getUserName());
+        }
+        
+        return orderVO;
+    }
+
+    /**
+     * 获取订单状态描述
+     *
+     * @param status 订单状态
+     * @return 状态描述
+     */
+    private String getOrderStatusDesc(Integer status) {
+        return switch (status) {
+            case 0 -> "待支付";
+            case 1 -> "已支付";
+            case 2 -> "已完成";
+            case 3 -> "已取消";
+            default -> "未知状态";
         };
     }
 }

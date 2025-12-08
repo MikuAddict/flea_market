@@ -6,8 +6,13 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.exception.BusinessException;
 import com.zhp.flea_market.mapper.TradeRecordMapper;
+import com.zhp.flea_market.model.entity.Order;
+import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.model.entity.TradeRecord;
+import com.zhp.flea_market.model.vo.TradeRecordVO;
 import com.zhp.flea_market.model.entity.User;
+import com.zhp.flea_market.service.OrderService;
+import com.zhp.flea_market.service.ProductService;
 import com.zhp.flea_market.service.TradeRecordService;
 import com.zhp.flea_market.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +24,7 @@ import org.springframework.util.CollectionUtils;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 交易记录服务实现类
@@ -28,6 +34,12 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private OrderService orderService;
+
+    @Autowired
+    private ProductService productService;
 
     /**
      * 创建交易记录
@@ -158,7 +170,7 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
      * @return 交易记录详情
      */
     @Override
-    public TradeRecord getTradeRecordDetail(Long id, HttpServletRequest request) {
+    public TradeRecordVO getTradeRecordDetail(Long id, HttpServletRequest request) {
         // 参数校验
         if (id == null || id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "交易记录ID无效");
@@ -182,7 +194,9 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限查看该交易记录");
         }
 
-        return tradeRecord;
+        // 转换为VO对象
+
+        return convertToTradeRecordVO(tradeRecord);
     }
 
     /**
@@ -190,10 +204,10 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
      *
      * @param request HTTP请求
      * @param page 分页参数
-     * @return 交易记录列表
+     * @return 交易记录VO分页列表
      */
     @Override
-    public List<TradeRecord> getBuyerTradeRecords(HttpServletRequest request, Page<TradeRecord> page) {
+    public Page<TradeRecordVO> getBuyerTradeRecords(HttpServletRequest request, Page<TradeRecord> page) {
         // 获取当前登录用户
         User currentUser = userService.getLoginUserPermitNull(request);
         if (currentUser == null) {
@@ -205,7 +219,14 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
         queryWrapper.orderByDesc("trade_time");
 
         Page<TradeRecord> resultPage = this.page(page, queryWrapper);
-        return resultPage.getRecords();
+        
+        // 转换为VO对象
+        Page<TradeRecordVO> voPage = new Page<>(resultPage.getCurrent(), resultPage.getSize(), resultPage.getTotal());
+        voPage.setRecords(resultPage.getRecords().stream()
+                .map(this::convertToTradeRecordVO)
+                .collect(Collectors.toList()));
+                
+        return voPage;
     }
 
     /**
@@ -213,10 +234,10 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
      *
      * @param request HTTP请求
      * @param page 分页参数
-     * @return 交易记录列表
+     * @return 交易记录VO分页列表
      */
     @Override
-    public List<TradeRecord> getSellerTradeRecords(HttpServletRequest request, Page<TradeRecord> page) {
+    public Page<TradeRecordVO> getSellerTradeRecords(HttpServletRequest request, Page<TradeRecord> page) {
         // 获取当前登录用户
         User currentUser = userService.getLoginUserPermitNull(request);
         if (currentUser == null) {
@@ -228,7 +249,14 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
         queryWrapper.orderByDesc("trade_time");
 
         Page<TradeRecord> resultPage = this.page(page, queryWrapper);
-        return resultPage.getRecords();
+        
+        // 转换为VO对象
+        Page<TradeRecordVO> voPage = new Page<>(resultPage.getCurrent(), resultPage.getSize(), resultPage.getTotal());
+        voPage.setRecords(resultPage.getRecords().stream()
+                .map(this::convertToTradeRecordVO)
+                .collect(Collectors.toList()));
+                
+        return voPage;
     }
 
     /**
@@ -239,10 +267,10 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
      * @param startDate 开始日期
      * @param endDate 结束日期
      * @param request HTTP请求
-     * @return 交易记录列表
+     * @return 交易记录VO分页列表
      */
     @Override
-    public List<TradeRecord> getAllTradeRecords(Page<TradeRecord> page, Integer tradeStatus, 
+    public Page<TradeRecordVO> getAllTradeRecords(Page<TradeRecord> page, Integer tradeStatus, 
                                              Date startDate, Date endDate, HttpServletRequest request) {
         // 获取当前登录用户
         User currentUser = userService.getLoginUserPermitNull(request);
@@ -258,7 +286,14 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
         QueryWrapper<TradeRecord> queryWrapper = getQueryWrapper(null, null, tradeStatus, startDate, endDate);
         
         Page<TradeRecord> resultPage = this.page(page, queryWrapper);
-        return resultPage.getRecords();
+        
+        // 转换为VO对象
+        Page<TradeRecordVO> voPage = new Page<>(resultPage.getCurrent(), resultPage.getSize(), resultPage.getTotal());
+        voPage.setRecords(resultPage.getRecords().stream()
+                .map(this::convertToTradeRecordVO)
+                .collect(Collectors.toList()));
+                
+        return voPage;
     }
 
     /**
@@ -279,8 +314,15 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (TradeRecord record : records) {
-            if (record.getOrderId() != null && record.getOrderId().getAmount() != null) {
-                totalAmount = totalAmount.add(record.getOrderId().getAmount());
+            if (record.getOrderId() != null) {
+                try {
+                    Order order = orderService.getById(record.getOrderId());
+                    if (order != null && order.getAmount() != null) {
+                        totalAmount = totalAmount.add(order.getAmount());
+                    }
+                } catch (Exception e) {
+                    // 忽略获取订单失败的情况
+                }
             }
         }
         
@@ -349,7 +391,98 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
      */
     @Override
     public boolean validateTradeRecordPermission(TradeRecord tradeRecord, Long userId) {
-        return (tradeRecord.getBuyerId() != null && tradeRecord.getBuyerId().getId() != null && tradeRecord.getBuyerId().getId().equals(userId)) ||
-               (tradeRecord.getSellerId() != null && tradeRecord.getSellerId().getId() != null && tradeRecord.getSellerId().getId().equals(userId));
+        return (tradeRecord.getBuyerId() != null && tradeRecord.getBuyerId().equals(userId)) ||
+               (tradeRecord.getSellerId() != null && tradeRecord.getSellerId().equals(userId));
+    }
+
+    /**
+     * 将交易记录实体转换为VO对象
+     *
+     * @param tradeRecord 交易记录实体
+     * @return 交易记录VO对象
+     */
+    private TradeRecordVO convertToTradeRecordVO(TradeRecord tradeRecord) {
+        TradeRecordVO tradeRecordVO = new TradeRecordVO();
+        
+        // 复制基本属性
+        tradeRecordVO.setId(tradeRecord.getId());
+        tradeRecordVO.setOrderId(tradeRecord.getOrderId());
+        tradeRecordVO.setProductId(tradeRecord.getProductId());
+        tradeRecordVO.setBuyerId(tradeRecord.getBuyerId());
+        tradeRecordVO.setSellerId(tradeRecord.getSellerId());
+        tradeRecordVO.setPaymentMethodDesc(tradeRecord.getPaymentMethodDesc());
+        tradeRecordVO.setTradeTime(tradeRecord.getTradeTime());
+        tradeRecordVO.setTradeStatus(tradeRecord.getTradeStatus());
+        tradeRecordVO.setTradeStatusDesc(getTradeStatusDesc(tradeRecord.getTradeStatus()));
+        tradeRecordVO.setRemark(tradeRecord.getRemark());
+        
+        // 获取订单信息以获取金额
+        if (tradeRecord.getOrderId() != null) {
+            try {
+                Order order = orderService.getById(tradeRecord.getOrderId());
+                if (order != null) {
+                    tradeRecordVO.setAmount(order.getAmount());
+                }
+            } catch (Exception e) {
+                // 如果获取订单失败，金额设为null
+                tradeRecordVO.setAmount(null);
+            }
+        }
+        
+        // 获取商品信息
+        if (tradeRecord.getProductId() != null) {
+            try {
+                Product product = productService.getById(tradeRecord.getProductId());
+                if (product != null) {
+                    tradeRecordVO.setProductName(product.getProductName());
+                }
+            } catch (Exception e) {
+                // 如果获取商品失败，商品名称设为null
+                tradeRecordVO.setProductName(null);
+            }
+        }
+        
+        // 获取买家信息
+        if (tradeRecord.getBuyerId() != null) {
+            try {
+                User buyer = userService.getById(tradeRecord.getBuyerId());
+                if (buyer != null) {
+                    tradeRecordVO.setBuyerName(buyer.getUserName());
+                }
+            } catch (Exception e) {
+                // 如果获取买家失败，买家名称设为null
+                tradeRecordVO.setBuyerName(null);
+            }
+        }
+        
+        // 获取卖家信息
+        if (tradeRecord.getSellerId() != null) {
+            try {
+                User seller = userService.getById(tradeRecord.getSellerId());
+                if (seller != null) {
+                    tradeRecordVO.setSellerName(seller.getUserName());
+                }
+            } catch (Exception e) {
+                // 如果获取卖家失败，卖家名称设为null
+                tradeRecordVO.setSellerName(null);
+            }
+        }
+        
+        return tradeRecordVO;
+    }
+
+    /**
+     * 获取交易状态描述
+     *
+     * @param tradeStatus 交易状态
+     * @return 状态描述
+     */
+    private String getTradeStatusDesc(Integer tradeStatus) {
+        return switch (tradeStatus) {
+            case 1 -> "交易成功";
+            case 2 -> "已完成评价";
+            case 3 -> "已退款";
+            default -> "未知状态";
+        };
     }
 }
