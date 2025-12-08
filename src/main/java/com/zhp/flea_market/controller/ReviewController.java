@@ -63,18 +63,18 @@ public class ReviewController extends BaseController {
             HttpServletRequest request) {
         // 参数校验
         validateNotNull(review, "评价信息");
-        validateNotNull(review.getProduct(), "商品信息");
-        validateId(review.getProduct().getId(), "商品ID");
+        validateNotNull(review.getProductId(), "商品信息");
+        validateId(review.getProductId().getId(), "商品ID");
         validateNotNull(review.getRating(), "评分");
         validateNotBlank(review.getContent(), "评价内容");
 
         // 检查商品是否存在
-        Product product = productService.getById(review.getProduct().getId());
+        Product product = productService.getById(review.getProductId().getId());
         validateResourceExists(product, "商品");
 
         // 检查订单是否存在（如果提供了订单ID）
-        if (review.getOrder() != null && review.getOrder().getId() != null) {
-            Order order = orderService.getById(review.getOrder().getId());
+        if (review.getOrderId() != null && review.getOrderId().getId() != null) {
+            Order order = orderService.getById(review.getOrderId().getId());
             validateResourceExists(order, "订单");
         }
 
@@ -82,8 +82,8 @@ public class ReviewController extends BaseController {
         boolean result = reviewService.addReview(review, request);
         
         logOperation("添加评价", result, request, 
-                "商品ID", review.getProduct(),
-                "订单ID", review.getOrder(),
+                "商品ID", review.getProductId(),
+                "订单ID", review.getOrderId(),
                 "评分", review.getRating()
         );
         return handleOperationResult(result, "评价添加成功", review.getId());

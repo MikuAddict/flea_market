@@ -66,8 +66,8 @@ public class StatisticsServiceImpl implements StatisticsService {
 
         // 按商品ID分组，统计每个商品的交易次数和金额
         Map<Long, List<TradeRecord>> productGroups = tradeRecords.stream()
-                .filter(record -> record.getProduct() != null)
-                .collect(Collectors.groupingBy(record -> record.getProduct().getId()));
+                .filter(record -> record.getProductId() != null)
+                .collect(Collectors.groupingBy(record -> record.getProductId().getId()));
 
         // 计算每个商品的统计信息
         List<StatisticsResponse.ProductRankingItem> result = new ArrayList<>();
@@ -78,7 +78,7 @@ public class StatisticsServiceImpl implements StatisticsService {
             // 计算交易次数和总金额
             Long tradeCount = (long) records.size();
             BigDecimal tradeAmount = records.stream()
-                    .map(record -> record.getOrder() != null && record.getOrder().getAmount() != null ? record.getOrder().getAmount() : BigDecimal.ZERO)
+                    .map(record -> record.getOrderId() != null && record.getOrderId().getAmount() != null ? record.getOrderId().getAmount() : BigDecimal.ZERO)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
             // 获取商品信息
@@ -132,12 +132,12 @@ public class StatisticsServiceImpl implements StatisticsService {
 
         // 按用户ID分组，统计每个用户（买家和卖家）的交易次数和金额
         Map<Long, List<TradeRecord>> userBuyerGroups = tradeRecords.stream()
-                .filter(record -> record.getBuyer() != null)
-                .collect(Collectors.groupingBy(record -> record.getBuyer().getId()));
+                .filter(record -> record.getBuyerId() != null)
+                .collect(Collectors.groupingBy(record -> record.getBuyerId().getId()));
 
         Map<Long, List<TradeRecord>> userSellerGroups = tradeRecords.stream()
-                .filter(record -> record.getSeller() != null)
-                .collect(Collectors.groupingBy(record -> record.getSeller().getId()));
+                .filter(record -> record.getSellerId() != null)
+                .collect(Collectors.groupingBy(record -> record.getSellerId().getId()));
 
         // 合并买卖双方的交易记录
         Set<Long> allUserIds = new HashSet<>();
@@ -154,11 +154,11 @@ public class StatisticsServiceImpl implements StatisticsService {
             Long tradeCount = (long) (buyerRecords.size() + sellerRecords.size());
             
             BigDecimal buyerAmount = buyerRecords.stream()
-                    .map(record -> record.getOrder() != null && record.getOrder().getAmount() != null ? record.getOrder().getAmount() : BigDecimal.ZERO)
+                    .map(record -> record.getOrderId() != null && record.getOrderId().getAmount() != null ? record.getOrderId().getAmount() : BigDecimal.ZERO)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             
             BigDecimal sellerAmount = sellerRecords.stream()
-                    .map(record -> record.getOrder() != null && record.getOrder().getAmount() != null ? record.getOrder().getAmount() : BigDecimal.ZERO)
+                    .map(record -> record.getOrderId() != null && record.getOrderId().getAmount() != null ? record.getOrderId().getAmount() : BigDecimal.ZERO)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             
             BigDecimal totalAmount = buyerAmount.add(sellerAmount);
@@ -391,11 +391,11 @@ public class StatisticsServiceImpl implements StatisticsService {
 
         // 计算总交易金额和数量
         BigDecimal buyerAmount = buyerRecords.stream()
-                .map(record -> record.getOrder() != null && record.getOrder().getAmount() != null ? record.getOrder().getAmount() : BigDecimal.ZERO)
+                .map(record -> record.getOrderId() != null && record.getOrderId().getAmount() != null ? record.getOrderId().getAmount() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         
         BigDecimal sellerAmount = sellerRecords.stream()
-                .map(record -> record.getOrder() != null && record.getOrder().getAmount() != null ? record.getOrder().getAmount() : BigDecimal.ZERO)
+                .map(record -> record.getOrderId() != null && record.getOrderId().getAmount() != null ? record.getOrderId().getAmount() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         
         BigDecimal totalAmount = buyerAmount.add(sellerAmount);
@@ -427,7 +427,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
         // 计算总交易金额和数量
         BigDecimal totalAmount = records.stream()
-                .map(record -> record.getOrder() != null && record.getOrder().getAmount() != null ? record.getOrder().getAmount() : BigDecimal.ZERO)
+                .map(record -> record.getOrderId() != null && record.getOrderId().getAmount() != null ? record.getOrderId().getAmount() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         
         Long totalCount = (long) records.size();
