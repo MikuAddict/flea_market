@@ -42,7 +42,7 @@ public class OrderController extends BaseController {
      * @return 订单ID
      */
     @Operation(summary = "创建订单", description = "用户创建新的订单，自动使用二手物品设置的支付方式")
-    @PostMapping("/create")
+    @PostMapping("")
     @LoginRequired
     public BaseResponse<Long> createOrder(
             @Parameter(description = "二手物品ID") @RequestParam Long productId,
@@ -68,7 +68,7 @@ public class OrderController extends BaseController {
      * @return 是否支付成功
      */
     @Operation(summary = "支付订单", description = "用户支付订单")
-    @PostMapping("/pay/{orderId}")
+    @PutMapping("/{orderId}/pay")
     @LoginRequired
     public BaseResponse<Boolean> payOrder(
             @Parameter(description = "订单ID") @PathVariable Long orderId,
@@ -91,7 +91,7 @@ public class OrderController extends BaseController {
      * @return 是否取消成功
      */
     @Operation(summary = "取消订单", description = "用户取消订单")
-    @PostMapping("/cancel/{orderId}")
+    @PutMapping("/{orderId}/cancel")
     @LoginRequired
     public BaseResponse<Boolean> cancelOrder(
             @Parameter(description = "订单ID") @PathVariable Long orderId,
@@ -114,7 +114,7 @@ public class OrderController extends BaseController {
      * @return 是否完成成功
      */
     @Operation(summary = "完成订单", description = "卖家或买家确认订单完成")
-    @PostMapping("/complete/{orderId}")
+    @PutMapping("/{orderId}/complete")
     @LoginRequired
     public BaseResponse<Boolean> completeOrder(
             @Parameter(description = "订单ID") @PathVariable Long orderId,
@@ -137,7 +137,7 @@ public class OrderController extends BaseController {
      * @return 订单详情
      */
     @Operation(summary = "获取订单详情", description = "根据订单ID获取订单详细信息")
-    @GetMapping("/get/{orderId}")
+    @GetMapping("/{orderId}")
     @LoginRequired
     public BaseResponse<OrderVO> getOrderById(
             @Parameter(description = "订单ID") @PathVariable Long orderId,
@@ -265,7 +265,7 @@ public class OrderController extends BaseController {
      * @return 是否提交成功
      */
     @Operation(summary = "提交支付凭证", description = "买家上传现金支付凭证")
-    @PostMapping("/submit/proof")
+    @PostMapping("/payment-proof")
     @LoginRequired
     public BaseResponse<Boolean> submitPaymentProof(
             @Parameter(description = "支付凭证请求") @RequestBody PaymentProofRequest proofRequest,
@@ -288,7 +288,7 @@ public class OrderController extends BaseController {
      * @return 是否确认成功
      */
     @Operation(summary = "确认订单", description = "买家确认收货")
-    @PostMapping("/confirm")
+    @PutMapping("/confirm")
     @LoginRequired
     public BaseResponse<Boolean> confirmOrder(
             @Parameter(description = "订单确认请求") @RequestBody OrderConfirmRequest confirmRequest,
@@ -311,7 +311,7 @@ public class OrderController extends BaseController {
      * @return 是否支付成功
      */
     @Operation(summary = "模拟微信支付", description = "模拟微信支付流程")
-    @PostMapping("/pay/wechat/{orderId}")
+    @PutMapping("/{orderId}/pay/wechat")
     @LoginRequired
     public BaseResponse<Boolean> simulateWechatPay(
             @Parameter(description = "订单ID") @PathVariable Long orderId,
@@ -334,7 +334,7 @@ public class OrderController extends BaseController {
      * @return 是否兑换成功
      */
     @Operation(summary = "积分兑换二手物品", description = "使用积分兑换二手物品")
-    @PostMapping("/pay/points/{orderId}")
+    @PutMapping("/{orderId}/pay/points")
     @LoginRequired
     public BaseResponse<Boolean> exchangeWithPoints(
             @Parameter(description = "订单ID") @PathVariable Long orderId,
@@ -357,7 +357,7 @@ public class OrderController extends BaseController {
      * @return 是否申请成功
      */
     @Operation(summary = "申请物品交换", description = "买家申请物品交换")
-    @PostMapping("/exchange/apply/{orderId}")
+    @PostMapping("/{orderId}/exchange/apply")
     @LoginRequired
     public BaseResponse<Boolean> applyForExchange(
             @Parameter(description = "订单ID") @PathVariable Long orderId,
@@ -380,7 +380,7 @@ public class OrderController extends BaseController {
      * @return 是否确认成功
      */
     @Operation(summary = "确认物品交换", description = "卖家确认物品交换")
-    @PostMapping("/exchange/confirm/{orderId}")
+    @PutMapping("/{orderId}/exchange/confirm")
     @LoginRequired
     public BaseResponse<Boolean> confirmExchange(
             @Parameter(description = "订单ID") @PathVariable Long orderId,

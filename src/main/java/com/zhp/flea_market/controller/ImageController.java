@@ -32,7 +32,7 @@ public class ImageController {
      * 上传用户头像
      */
     @Operation(summary = "上传用户头像", description = "用户上传个人头像图片")
-    @PostMapping("/upload/avatar")
+    @PostMapping("/avatar")
     @LoginRequired
     public BaseResponse<ImageUploadResponse> uploadAvatar(
             @Parameter(description = "头像图片文件") @RequestParam("file") MultipartFile file,
@@ -47,7 +47,7 @@ public class ImageController {
      * 上传二手物品图片
      */
     @Operation(summary = "上传二手物品图片", description = "上传二手物品相关图片")
-    @PostMapping("/upload/product")
+    @PostMapping("/product")
     @LoginRequired
     public BaseResponse<ImageUploadResponse> uploadProductImage(
             @Parameter(description = "二手物品图片文件") @RequestParam("file") MultipartFile file,
@@ -62,7 +62,7 @@ public class ImageController {
      * 上传新闻配图
      */
     @Operation(summary = "上传新闻配图", description = "上传新闻文章配图")
-    @PostMapping("/upload/news")
+    @PostMapping("/news")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<ImageUploadResponse> uploadNewsImage(
             @Parameter(description = "新闻配图文件") @RequestParam("file") MultipartFile file,
@@ -77,7 +77,7 @@ public class ImageController {
      * 通用图片上传
      */
     @Operation(summary = "通用图片上传", description = "通用图片上传接口，可指定图片类型")
-    @PostMapping("/upload")
+    @PostMapping("")
     @LoginRequired
     public BaseResponse<ImageUploadResponse> uploadImage(
             @Parameter(description = "图片文件") @RequestParam("file") MultipartFile file,
@@ -100,7 +100,7 @@ public class ImageController {
      * 批量上传图片
      */
     @Operation(summary = "批量上传图片", description = "批量上传多张图片")
-    @PostMapping("/upload/batch")
+    @PostMapping("/batch")
     @LoginRequired
     public BaseResponse<ImageUploadResponse[]> uploadBatchImages(
             @Parameter(description = "图片文件数组") @RequestParam("files") MultipartFile[] files,
@@ -127,7 +127,7 @@ public class ImageController {
      * 删除图片
      */
     @Operation(summary = "删除图片", description = "根据图片URL删除图片")
-    @DeleteMapping("/delete")
+    @DeleteMapping("")
     @LoginRequired
     public BaseResponse<Boolean> deleteImage(
             @Parameter(description = "图片URL") @RequestParam("imageUrl") String imageUrl,
@@ -143,7 +143,7 @@ public class ImageController {
      * 批量删除图片
      */
     @Operation(summary = "批量删除图片", description = "批量删除多张图片")
-    @DeleteMapping("/delete/batch")
+    @DeleteMapping("/batch")
     @LoginRequired
     public BaseResponse<Boolean> deleteBatchImages(
             @Parameter(description = "图片URL数组") @RequestParam("imageUrls") String[] imageUrls,

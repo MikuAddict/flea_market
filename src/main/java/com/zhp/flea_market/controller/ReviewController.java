@@ -7,7 +7,6 @@ import com.zhp.flea_market.annotation.LoginRequired;
 import com.zhp.flea_market.common.BaseResponse;
 import com.zhp.flea_market.common.ResultUtils;
 import com.zhp.flea_market.constant.UserConstant;
-import com.zhp.flea_market.model.dto.request.DeleteRequest;
 import com.zhp.flea_market.model.entity.Order;
 import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.model.entity.Review;
@@ -24,6 +23,8 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 二手物品评价接口
@@ -54,7 +55,7 @@ public class ReviewController extends BaseController {
      * @return 新增评价的ID
      */
     @Operation(summary = "添加评价", description = "用户对已完成的订单进行评价")
-    @PostMapping("/add")
+    @PostMapping("")
     @LoginRequired
     public BaseResponse<Long> addReview(
             @Parameter(description = "评价信息") @RequestBody Review review,
@@ -90,27 +91,26 @@ public class ReviewController extends BaseController {
     /**
      * 删除评价
      *
-     * @param deleteRequest 删除请求
+     * @param id 评价ID
      * @param request HTTP请求
      * @return 是否删除成功
      */
     @Operation(summary = "删除评价", description = "用户删除自己的评价")
-    @PostMapping("/delete")
+    @DeleteMapping("/{id}")
     @LoginRequired
     public BaseResponse<Boolean> deleteReview(
-            @Parameter(description = "删除请求") @RequestBody DeleteRequest deleteRequest,
+            @Parameter(description = "评价ID") @PathVariable Long id,
             HttpServletRequest request) {
         // 参数校验
-        validateNotNull(deleteRequest, "删除请求");
-        validateId(deleteRequest.getId(), "评价ID");
+        validateId(id, "评价ID");
 
         // 检查评价是否存在
-        validateResourceExists(reviewService.getById(deleteRequest.getId()), "评价");
+        validateResourceExists(reviewService.getById(id), "评价");
 
         // 删除评价
-        boolean result = reviewService.deleteReview(deleteRequest.getId(), request);
+        boolean result = reviewService.deleteReview(id, request);
         
-        logOperation("删除评价", result, request, "评价ID", deleteRequest.getId());
+        logOperation("删除评价", result, request, "评价ID", id);
         return handleOperationResult(result, "评价删除成功");
     }
 
@@ -121,7 +121,7 @@ public class ReviewController extends BaseController {
      * @return 评价详情
      */
     @Operation(summary = "获取评价详情", description = "根据评价ID获取评价详细信息")
-    @GetMapping("/get/{id}")
+    @GetMapping("/{id}")
     public BaseResponse<ReviewVO> getReviewById(
             @Parameter(description = "评价ID") @PathVariable Long id) {
         // 参数校验
@@ -150,6 +150,8 @@ public class ReviewController extends BaseController {
         // 参数校验
         Page<Review> page = validatePageParams(current, size);
 
+        // 执行分页查询
+        List<Review> reviewList = reviewService.getReviewList(page);
         
         logOperation("分页获取评价列表", null, 
                 "当前页", current,
@@ -167,7 +169,7 @@ public class ReviewController extends BaseController {
      * @return 分页评价列表
      */
     @Operation(summary = "根据用户ID获取评价列表", description = "根据用户ID分页获取评价列表")
-    @GetMapping("/list/user/{userId}")
+    @GetMapping("/user/{userId}")
     public BaseResponse<Page<Review>> listReviewsByUserId(
             @Parameter(description = "用户ID") @PathVariable Long userId,
             @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
@@ -178,6 +180,9 @@ public class ReviewController extends BaseController {
 
         // 检查用户是否存在
         validateResourceExists(userService.getById(userId), "用户");
+
+        // 执行分页查询
+        List<Review> reviewList = reviewService.getReviewsByUserId(userId, page);
 
         logOperation("根据用户ID获取评价列表", null, 
                 "用户ID", userId,
@@ -194,7 +199,7 @@ public class ReviewController extends BaseController {
      * @return 评价信息
      */
     @Operation(summary = "根据订单ID获取评价", description = "根据订单ID获取评价信息（一个订单只能有一条评价）")
-    @GetMapping("/get/order/{orderId}")
+    @GetMapping("/order/{orderId}")
     public BaseResponse<Review> getReviewByOrderId(
             @Parameter(description = "订单ID") @PathVariable Long orderId) {
         // 参数校验
@@ -230,6 +235,9 @@ public class ReviewController extends BaseController {
 
         // 获取当前登录用户
         User currentUser = userService.getLoginUser(request);
+
+        // 获取当前登录用户的评价列表
+        List<Review> reviewList = reviewService.getReviewsByUserId(currentUser.getId(), page);
 
         logOperation("获取当前用户的评价列表", request, 
                 "当前页", current,

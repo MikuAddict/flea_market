@@ -40,7 +40,7 @@ public class TradeRecordController extends BaseController {
      * @return 交易记录详情
      */
     @Operation(summary = "获取交易记录详情", description = "根据交易记录ID获取详细信息")
-    @GetMapping("/get/{id}")
+    @GetMapping("/{id}")
     @LoginRequired
     public BaseResponse<TradeRecordVO> getTradeRecordDetail(
             @Parameter(description = "交易记录ID") @PathVariable Long id,
