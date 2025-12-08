@@ -26,12 +26,6 @@ public class ShoppingCart {
      * 商品ID
      */
     private Long productId;
-
-    /**
-     * 添加时间
-     */
-    @TableField(value = "create_time", fill = FieldFill.INSERT)
-    private Date createTime;
     
     /**
      * 逻辑删除字段

@@ -87,8 +87,6 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
         tradeRecord.setBuyerId(buyerId);
         tradeRecord.setSellerId(sellerId);
         tradeRecord.setTradeStatus(1); // 交易成功
-        tradeRecord.setPaymentMethodDesc(paymentMethodDesc);
-        tradeRecord.setRemark(remark);
 
         boolean saved = this.save(tradeRecord);
         if (!saved) {
@@ -410,12 +408,10 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
         tradeRecordVO.setProductId(tradeRecord.getProductId());
         tradeRecordVO.setBuyerId(tradeRecord.getBuyerId());
         tradeRecordVO.setSellerId(tradeRecord.getSellerId());
-        tradeRecordVO.setPaymentMethodDesc(tradeRecord.getPaymentMethodDesc());
         tradeRecordVO.setTradeTime(tradeRecord.getTradeTime());
         tradeRecordVO.setTradeStatus(tradeRecord.getTradeStatus());
         tradeRecordVO.setTradeStatusDesc(getTradeStatusDesc(tradeRecord.getTradeStatus()));
-        tradeRecordVO.setRemark(tradeRecord.getRemark());
-        
+
         // 获取订单信息以获取金额
         if (tradeRecord.getOrderId() != null) {
             try {

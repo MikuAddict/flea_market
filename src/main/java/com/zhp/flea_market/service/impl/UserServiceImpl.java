@@ -406,7 +406,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User updateUser = new User();
         updateUser.setId(userId);
         updateUser.setUserStatus(auditStatus);
-        updateUser.setAuditTime(new Date());
 
         return this.updateById(updateUser);
     }

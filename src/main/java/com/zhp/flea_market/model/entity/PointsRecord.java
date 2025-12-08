@@ -34,13 +34,6 @@ public class PointsRecord {
      */
     private BigDecimal pointsAfter;
 
-    /**
-     * 积分变动类型
-     * 1: 订单完成奖励
-     * 2: 评价奖励/惩罚
-     * 3: 其他
-     */
-    private Integer changeType;
 
     /**
      * 关联的业务ID（如订单ID、评价ID等）

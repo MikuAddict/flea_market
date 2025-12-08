@@ -913,12 +913,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         orderVO.setSellerId(order.getSellerId());
         orderVO.setAmount(order.getAmount());
         orderVO.setPaymentMethod(order.getPaymentMethod());
-        orderVO.setPaymentMethodDesc(getPaymentMethodDesc(order.getPaymentMethod()));
         orderVO.setStatus(order.getStatus());
         orderVO.setStatusDesc(getOrderStatusDesc(order.getStatus()));
         orderVO.setPaymentProof(order.getPaymentProof());
         orderVO.setBuyerConfirmed(order.getBuyerConfirmed());
-        orderVO.setSellerConfirmed(order.getSellerConfirmed());
         orderVO.setCreateTime(order.getCreateTime());
         orderVO.setFinishTime(order.getFinishTime());
         

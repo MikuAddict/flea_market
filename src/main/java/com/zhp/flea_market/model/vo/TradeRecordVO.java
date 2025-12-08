@@ -56,11 +56,6 @@ public class TradeRecordVO {
     private BigDecimal amount;
 
     /**
-     * 支付方式描述
-     */
-    private String paymentMethodDesc;
-
-    /**
      * 交易时间
      */
     private Date tradeTime;

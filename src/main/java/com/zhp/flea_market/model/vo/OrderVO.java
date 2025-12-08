@@ -86,11 +86,6 @@ public class OrderVO {
     private Boolean buyerConfirmed;
 
     /**
-     * 卖家确认收款状态
-     */
-    private Boolean sellerConfirmed;
-
-    /**
      * 创建时间
      */
     private Date createTime;

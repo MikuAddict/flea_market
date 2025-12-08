@@ -40,12 +40,6 @@ public class TradeRecord {
     private Long sellerId;
 
     /**
-     * 支付方式描述
-     */
-    @TableField("payment_method_desc")
-    private String paymentMethodDesc;
-
-    /**
      * 交易时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
@@ -57,11 +51,6 @@ public class TradeRecord {
      */
     @TableField("trade_status")
     private Integer tradeStatus;
-
-    /**
-     * 交易备注
-     */
-    private String remark;
 
     /**
      * 评价ID

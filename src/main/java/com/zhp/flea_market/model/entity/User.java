@@ -57,11 +57,6 @@ public class User implements Serializable {
      */
     private BigDecimal point = BigDecimal.ZERO;
     /**
-     * 审核时间
-     */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private Date auditTime;
-    /**
      * 创建时间
      */
     @TableField(value = "create_time", fill = FieldFill.INSERT)
