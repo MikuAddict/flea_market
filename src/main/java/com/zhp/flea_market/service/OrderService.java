@@ -82,26 +82,6 @@ public interface OrderService extends IService<Order> {
     List<Order> getSellerOrders(HttpServletRequest request, Page<Order> page);
 
     /**
-     * 根据状态获取买家订单列表
-     *
-     * @param status 订单状态
-     * @param request HTTP请求
-     * @param page 分页参数
-     * @return 订单列表
-     */
-    List<Order> getBuyerOrdersByStatus(Integer status, HttpServletRequest request, Page<Order> page);
-
-    /**
-     * 根据状态获取卖家订单列表
-     *
-     * @param status 订单状态
-     * @param request HTTP请求
-     * @param page 分页参数
-     * @return 订单列表
-     */
-    List<Order> getSellerOrdersByStatus(Integer status, HttpServletRequest request, Page<Order> page);
-
-    /**
      * 获取订单统计信息
      *
      * @param request HTTP请求
@@ -155,7 +135,7 @@ public interface OrderService extends IService<Order> {
     boolean submitPaymentProof(PaymentProofRequest proofRequest, HttpServletRequest request);
 
     /**
-     * 确认订单（买家确认收货或卖家确认收款）
+     * 确认订单（买家确认收货）
      *
      * @param confirmRequest 订单确认请求
      * @param request HTTP请求

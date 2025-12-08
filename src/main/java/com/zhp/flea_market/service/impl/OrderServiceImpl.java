@@ -362,60 +362,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     /**
-     * 根据状态获取买家订单列表
-     * @param status 订单状态
-     * @return 订单列表
-     */
-    @Override
-    public List<Order> getBuyerOrdersByStatus(Integer status, HttpServletRequest request, Page<Order> page) {
-        // 参数校验
-        if (status == null || status < 0 || status > 3) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单状态无效");
-        }
-        
-        // 获取当前登录用户
-        User currentUser = userService.getLoginUserPermitNull(request);
-        if (currentUser == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
-        }
-        
-        QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("buyer_id", currentUser.getId());
-        queryWrapper.eq("status", status);
-        queryWrapper.orderByDesc("create_time");
-        
-        Page<Order> resultPage = this.page(page, queryWrapper);
-        return resultPage.getRecords();
-    }
-
-    /**
-     * 根据状态获取卖家订单列表
-     * @param status 订单状态
-     * @return 订单列表
-     */
-    @Override
-    public List<Order> getSellerOrdersByStatus(Integer status, HttpServletRequest request, Page<Order> page) {
-        // 参数校验
-        if (status == null || status < 0 || status > 3) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单状态无效");
-        }
-        
-        // 获取当前登录用户
-        User currentUser = userService.getLoginUserPermitNull(request);
-        if (currentUser == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
-        }
-        
-        QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("seller_id", currentUser.getId());
-        queryWrapper.eq("status", status);
-        queryWrapper.orderByDesc("create_time");
-        
-        Page<Order> resultPage = this.page(page, queryWrapper);
-        return resultPage.getRecords();
-    }
-
-    /**
      * 获取订单统计信息
      */
     @Override
