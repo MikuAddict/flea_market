@@ -3,6 +3,8 @@ package com.zhp.flea_market.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.exception.BusinessException;
 import com.zhp.flea_market.mapper.ProductMapper;
@@ -22,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -37,6 +40,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     @Autowired
     private ImageStorageService imageStorageService;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 添加二手物品
@@ -68,6 +73,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         if (product.getUserId() == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
         }
+        
+        // 处理图片信息：设置主图并保存所有图片URL
+        processProductImages(product);
         
         // 设置二手物品信息
         product.setStatus(0); // 默认状态为待审核
@@ -110,6 +118,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限修改该二手物品");
         }
         
+        // 处理图片信息：设置主图并保存所有图片URL
+        processProductImages(product);
+        
         // 设置更新时间
         product.setUpdateTime(new Date());
         
@@ -119,7 +130,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         updateProduct.setProductName(product.getProductName());
         updateProduct.setDescription(product.getDescription());
         updateProduct.setPrice(product.getPrice());
-        updateProduct.setImageUrl(product.getImageUrl());
+        updateProduct.setMainImageUrl(product.getMainImageUrl());
+        updateProduct.setImageUrls(product.getImageUrls());
         updateProduct.setPaymentMethod(product.getPaymentMethod());
         updateProduct.setCategoryId(product.getCategoryId());
         updateProduct.setUpdateTime(product.getUpdateTime());
@@ -163,9 +175,13 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         boolean result = this.removeById(id);
         
         // 如果删除成功且二手物品有图片，删除相关图片
-        if (result && product.getImageUrl() != null) {
+        if (result && product.getImageUrls() != null) {
             try {
-                imageStorageService.deleteImage(product.getImageUrl());
+                // 删除所有相关图片
+                List<String> imageUrls = parseImageUrls(product.getImageUrls());
+                for (String imageUrl : imageUrls) {
+                    imageStorageService.deleteImage(imageUrl);
+                }
             } catch (Exception e) {
                 // 删除图片失败不应该影响删除操作
                 System.err.println("删除二手物品图片失败: " + e.getMessage());
@@ -456,6 +472,53 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     /**
+     * 处理商品图片信息
+     *
+     * @param product 商品信息
+     */
+    @Override
+    public void processProductImages(Product product) {
+        if (product.getImageUrls() != null) {
+            try {
+                // 解析图片URL列表
+                List<String> imageUrls = parseImageUrls(product.getImageUrls());
+
+                // 设置第一张图片为主图
+                if (!imageUrls.isEmpty()) {
+                    product.setMainImageUrl(imageUrls.get(0));
+                }
+
+                // 将图片列表转换为JSON字符串保存
+                String imageUrlsJson = objectMapper.writeValueAsString(imageUrls);
+                product.setImageUrls(imageUrlsJson);
+
+            } catch (Exception e) {
+                log.error("处理商品图片信息失败: {}", e.getMessage());
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "图片信息格式错误");
+            }
+        }
+    }
+
+    /**
+     * 解析JSON格式的图片URL列表
+     *
+     * @param imageUrlsJson JSON格式的图片URL列表
+     * @return 图片URL列表
+     */
+    @Override
+    public List<String> parseImageUrls(String imageUrlsJson) {
+        try {
+            if (imageUrlsJson == null || imageUrlsJson.trim().isEmpty()) {
+                return new ArrayList<>();
+            }
+            return objectMapper.readValue(imageUrlsJson, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            log.error("解析图片URL列表失败: {}", e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    /**
      * 将Product实体转换为ProductVO
      */
     private ProductVO convertToProductVO(Product product) {
@@ -483,6 +546,18 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             }
         }
         
+        // 解析图片URL列表
+        if (product.getImageUrls() != null) {
+            try {
+                List<String> imageUrls = parseImageUrls(product.getImageUrls());
+                productVO.setImageUrls(imageUrls);
+            } catch (Exception e) {
+                log.error("解析图片URL列表失败: {}", e.getMessage());
+                productVO.setImageUrls(new ArrayList<>());
+            }
+        }
+        
         return productVO;
     }
+
 }

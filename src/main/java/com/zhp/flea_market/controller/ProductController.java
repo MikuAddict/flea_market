@@ -88,6 +88,9 @@ public class ProductController extends BaseController {
         // 设置支付方式，使用用户选择的支付方式
         product.setPaymentMethod(productAddRequest.getPaymentMethod());
         
+        // 设置图片信息
+        product.setImageUrls(productAddRequest.getImageUrls());
+        
         // 获取当前登录用户
         User currentUser = userService.getLoginUser(request);
         product.setUserId(currentUser.getId());
@@ -127,6 +130,11 @@ public class ProductController extends BaseController {
         // 创建更新对象
         Product product = new Product();
         BeanUtils.copyProperties(productUpdateRequest, product);
+        
+        // 设置图片信息（如果提供了新的图片列表）
+        if (productUpdateRequest.getImageUrls() != null) {
+            product.setImageUrls(productUpdateRequest.getImageUrls());
+        }
         
         // 如果提供了分类ID，检查分类是否存在
         if (productUpdateRequest.getCategoryId() != null) {

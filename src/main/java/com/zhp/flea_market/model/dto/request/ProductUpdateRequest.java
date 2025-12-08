@@ -30,9 +30,9 @@ public class ProductUpdateRequest {
     private BigDecimal price;
     
     /**
-     * 二手物品图片地址
+     * 二手物品图片地址列表（JSON格式）
      */
-    private String imageUrl;
+    private String imageUrls;
     
     /**
      * 二手物品分类ID

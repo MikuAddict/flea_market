@@ -34,9 +34,14 @@ public class Product {
     private BigDecimal price;
 
     /**
-     * 二手物品图片地址
+     * 主图URL（第一张图片）
      */
-    private String imageUrl;
+    private String mainImageUrl;
+
+    /**
+     * 所有图片URL列表（JSON格式存储）
+     */
+    private String imageUrls;
 
     /**
      * 二手物品状态 (0-待审核, 1-已通过, 2-已拒绝, 3-已售出)
