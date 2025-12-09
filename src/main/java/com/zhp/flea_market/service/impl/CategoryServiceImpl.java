@@ -1,12 +1,18 @@
 package com.zhp.flea_market.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zhp.flea_market.mapper.CategoryMapper;
 import com.zhp.flea_market.model.entity.Category;
+import com.zhp.flea_market.model.vo.CategoryVO;
 import com.zhp.flea_market.service.CategoryService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> implements CategoryService {
@@ -17,6 +23,33 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryMapper, Category> i
     @Override
     public List<Category> getCategoryList() {
         return this.list();
+    }
+
+    /**
+     * 查询所有二手物品类别及其商品数量
+     */
+    @Override
+    public List<CategoryVO> getCategoryListWithProductCount() {
+        // 获取所有分类
+        List<Category> categories = this.list();
+        
+        // 获取每个分类下的商品数量
+        Map<Long, Long> productCountMap = baseMapper.selectProductCountGroupByCategory();
+        
+        // 转换为CategoryVO并设置商品数量
+        List<CategoryVO> categoryVOs = new ArrayList<>();
+        for (Category category : categories) {
+            CategoryVO categoryVO = new CategoryVO();
+            BeanUtils.copyProperties(category, categoryVO);
+            
+            // 设置该分类下的商品数量
+            Long productCount = productCountMap.getOrDefault(category.getId(), 0L);
+            categoryVO.setProductCount(productCount);
+            
+            categoryVOs.add(categoryVO);
+        }
+        
+        return categoryVOs;
     }
 
     /**
