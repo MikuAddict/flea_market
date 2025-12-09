@@ -32,9 +32,6 @@ public class StatisticsServiceImpl implements StatisticsService {
     private OrderService orderService;
 
     @Autowired
-    private ShoppingCartService shoppingCartService;
-
-    @Autowired
     private CategoryService categoryService;
 
     /**
@@ -59,8 +56,9 @@ public class StatisticsServiceImpl implements StatisticsService {
         calendar.add(Calendar.DAY_OF_MONTH, -1);
         Date endDate = calendar.getTime();
 
-        // 获取指定时间范围内的交易记录
+        // 获取指定时间范围内的交易记录（只统计成功和已完成评价的交易）
         QueryWrapper<TradeRecord> queryWrapper = tradeRecordService.getQueryWrapper(null, null, null, startDate, endDate);
+        queryWrapper.in("trade_status", Arrays.asList(1, 2)); // 只统计成功(1)和已完成评价(2)的交易
         List<TradeRecord> tradeRecords = tradeRecordService.list(queryWrapper);
 
         if (CollectionUtils.isEmpty(tradeRecords)) {
@@ -142,8 +140,9 @@ public class StatisticsServiceImpl implements StatisticsService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public List<StatisticsResponse.UserRankingItem> getActiveUsersRanking(int limit, Date startDate, Date endDate) {
-        // 获取指定时间范围内的交易记录
+        // 获取指定时间范围内的交易记录（只统计成功和已完成评价的交易）
         QueryWrapper<TradeRecord> queryWrapper = tradeRecordService.getQueryWrapper(null, null, null, startDate, endDate);
+        queryWrapper.in("trade_status", Arrays.asList(1, 2)); // 只统计成功(1)和已完成评价(2)的交易
         List<TradeRecord> tradeRecords = tradeRecordService.list(queryWrapper);
 
         if (CollectionUtils.isEmpty(tradeRecords)) {
