@@ -435,10 +435,23 @@ public class UserController extends BaseController {
         // 获取当前登录用户
         User loginUser = userService.getLoginUser(request);
         
-        // 创建更新对象
+        // 创建更新对象，只更新用户提供的字段
         User user = new User();
-        BeanUtils.copyProperties(userUpdateMyRequest, user);
         user.setId(loginUser.getId());
+        if (userUpdateMyRequest.getUserName() != null) {
+            user.setUserName(userUpdateMyRequest.getUserName());
+        }
+        if (userUpdateMyRequest.getUserAvatar() != null) {
+            // 如果头像URL发生变化，则删除旧头像
+            if (loginUser.getUserAvatar() != null && !loginUser.getUserAvatar().equals(userUpdateMyRequest.getUserAvatar())) {
+                try {
+                    imageStorageService.deleteImage(loginUser.getUserAvatar());
+                } catch (Exception e) {
+                    log.error("删除旧头像失败: {}", loginUser.getUserAvatar(), e);
+                }
+            }
+            user.setUserAvatar(userUpdateMyRequest.getUserAvatar());
+        }
         
         // 执行更新
         boolean result = userService.updateById(user);

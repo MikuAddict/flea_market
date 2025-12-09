@@ -43,11 +43,11 @@ public class User implements Serializable {
     /**
      * 用户角色：user/admin/ban
      */
-    private String userRole = "user";
+    private String userRole;
     /**
      * 用户状态 (0-待审核, 1-已通过, 2-已拒绝, 3-已封禁)
      */
-    private Integer userStatus = 0;
+    private Integer userStatus;
     /**
      * 联系方式
      */
@@ -55,7 +55,7 @@ public class User implements Serializable {
     /**
      * 用户积分
      */
-    private BigDecimal point = BigDecimal.ZERO;
+    private BigDecimal point;
     /**
      * 创建时间
      */

@@ -83,6 +83,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             user.setUserPhone(userPhone);
             // 设置默认值
             user.setUserRole("user");
+            user.setUserStatus(0); // 待审核状态
             user.setPoint(BigDecimal.ZERO);
             // 设置创建时间
             user.setCreateTime(new Date());
