@@ -8,6 +8,7 @@ import com.zhp.flea_market.exception.BusinessException;
 import com.zhp.flea_market.model.dto.request.CategoryAddRequest;
 import com.zhp.flea_market.model.entity.Category;
 import com.zhp.flea_market.model.entity.Product;
+import com.zhp.flea_market.model.vo.CategoryVO;
 import com.zhp.flea_market.service.CategoryService;
 import com.zhp.flea_market.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,9 +42,9 @@ public class CategoryController extends BaseController {
      * @return 分类列表
      */
     @GetMapping("/list")
-    @Operation(summary = "获取所有二手物品分类", description = "获取系统中所有的二手物品分类信息")
-    public BaseResponse<List<Category>> getCategoryList() {
-        List<Category> categoryList = categoryService.getCategoryList();
+    @Operation(summary = "获取所有二手物品分类", description = "获取系统中所有的二手物品分类信息及其商品数量")
+    public BaseResponse<List<CategoryVO>> getCategoryList() {
+        List<CategoryVO> categoryList = categoryService.getCategoryListWithProductCount();
         logOperation("获取所有二手物品分类", null, "分类数量", categoryList.size());
         return ResultUtils.success(categoryList);
     }
@@ -150,7 +151,7 @@ public class CategoryController extends BaseController {
 
         // 检查分类下是否有二手物品，如果有则不能删除
         List<Product> productsInCategory = productService.lambdaQuery()
-                .eq(Product::getCategoryId, existCategory)
+                .eq(Product::getCategoryId, id)  // 修复：应该传入id而不是existCategory对象
                 .list();
         if (!productsInCategory.isEmpty()) {
             throw new BusinessException(com.zhp.flea_market.common.ErrorCode.OPERATION_ERROR,
