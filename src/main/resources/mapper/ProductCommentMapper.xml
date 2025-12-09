@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.zhp.flea_market.mapper.ProductCommentMapper">
-    
+
     <!-- 结果映射 -->
     <resultMap id="CommentVOMap" type="com.zhp.flea_market.model.vo.ProductCommentVO">
         <id column="id" property="id"/>
@@ -19,24 +19,27 @@
 
     <!-- 分页查询留言及其回复 -->
     <select id="selectCommentsWithReplies" resultMap="CommentVOMap">
-        SELECT 
-            c.id,
-            c.product_id,
-            c.user_id,
-            u.user_name,
-            u.user_avatar,
-            c.content,
-            c.parent_id,
-            c.reply_user_id,
-            u2.user_name as reply_user_name,
-            c.create_time,
-            c.update_time
+        SELECT
+        c.id,
+        c.product_id,
+        c.user_id,
+        u.user_name,
+        u.user_avatar,
+        c.content,
+        c.parent_id,
+        c.reply_user_id,
+        u2.user_name as reply_user_name,
+        c.create_time,
+        c.update_time
         FROM product_comment c
         LEFT JOIN user u ON c.user_id = u.id
         LEFT JOIN user u2 ON c.reply_user_id = u2.id
         WHERE c.product_id = #{productId}
         <if test="parentId != null">
             AND c.parent_id = #{parentId}
+        </if>
+        <if test="parentId == null">
+            AND c.parent_id IS NULL
         </if>
         AND c.deleted = 0
         ORDER BY c.create_time ASC

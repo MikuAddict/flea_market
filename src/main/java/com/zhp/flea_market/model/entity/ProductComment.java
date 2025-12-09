@@ -33,26 +33,20 @@ public class ProductComment {
     private String content;
 
     /**
-     * 父留言ID（0表示一级留言，非0表示回复的留言）
+     * 父留言ID（null表示一级留言，非null表示回复的留言）
      */
-    private Long parentId = 0L;
+    private Long parentId;
 
     /**
-     * 回复的用户ID（被回复的用户ID，0表示不是回复具体用户）
+     * 回复的用户ID（被回复的用户ID，null表示不是回复具体用户）
      */
-    private Long replyUserId = 0L;
+    private Long replyUserId;
 
     /**
      * 创建时间
      */
     @TableField(value = "create_time", fill = FieldFill.INSERT)
     private Date createTime;
-
-    /**
-     * 更新时间
-     */
-    @TableField(value = "update_time", fill = FieldFill.INSERT_UPDATE)
-    private Date updateTime;
     
     /**
      * 逻辑删除字段

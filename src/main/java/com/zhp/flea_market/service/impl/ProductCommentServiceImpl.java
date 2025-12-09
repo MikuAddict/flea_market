@@ -43,7 +43,7 @@ public class ProductCommentServiceImpl extends ServiceImpl<ProductCommentMapper,
      * 添加留言
      *
      * @param commentAddRequest 留言信息
-     * @param request HTTP请求
+     * @param request           HTTP请求
      * @return 添加成功的留言ID
      */
     @Override
@@ -61,19 +61,30 @@ public class ProductCommentServiceImpl extends ServiceImpl<ProductCommentMapper,
         }
 
         // 如果是回复留言，检查原留言是否存在
-        if (commentAddRequest.getParentId() != 0) {
+        if (commentAddRequest.getParentId() != null) {
             ProductComment parentComment = this.getById(commentAddRequest.getParentId());
             if (parentComment == null || !parentComment.getProductId().equals(commentAddRequest.getProductId())) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "父留言不存在或不属于该二手物品");
             }
+
+            // 如果没有指定被回复用户ID，则默认设为被回复留言的作者ID
+            if (commentAddRequest.getReplyUserId() == null) {
+                commentAddRequest.setReplyUserId(parentComment.getUserId());
+            }
+        } else {
+            // 如果是一级留言，确保parentId为null
+            commentAddRequest.setParentId(null);
         }
 
         // 如果是回复特定用户，检查用户是否存在
-        if (commentAddRequest.getReplyUserId() != 0) {
+        if (commentAddRequest.getReplyUserId() != null) {
             User replyUser = userService.getById(commentAddRequest.getReplyUserId());
             if (replyUser == null) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "被回复用户不存在");
             }
+        } else {
+            // 如果没有指定回复用户，确保replyUserId为null
+            commentAddRequest.setReplyUserId(null);
         }
 
         // 创建留言对象
@@ -100,13 +111,13 @@ public class ProductCommentServiceImpl extends ServiceImpl<ProductCommentMapper,
     public Page<ProductCommentVO> getCommentsByPage(ProductCommentQueryRequest queryRequest) {
         // 创建分页对象
         Page<ProductCommentVO> page = new Page<>(queryRequest.getCurrent(), queryRequest.getPageSize());
-        
+
         // 如果指定了二手物品ID，只获取该二手物品的留言
         if (queryRequest.getProductId() != null) {
-            // 获取一级留言
-            return baseMapper.selectCommentsWithReplies(page, queryRequest.getProductId(), 0L);
+            // 获取一级留言（parentId为null的留言）
+            return baseMapper.selectCommentsWithReplies(page, queryRequest.getProductId(), null);
         }
-        
+
         // 否则返回空结果
         return new Page<>(queryRequest.getCurrent(), queryRequest.getPageSize(), 0);
     }
@@ -122,16 +133,16 @@ public class ProductCommentServiceImpl extends ServiceImpl<ProductCommentMapper,
         QueryWrapper<ProductComment> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("parent_id", parentId);
         queryWrapper.orderByAsc("create_time");
-        
+
         List<ProductComment> comments = this.list(queryWrapper);
-        
+
         // 转换为VO
         List<ProductCommentVO> result = new ArrayList<>();
         for (ProductComment comment : comments) {
             ProductCommentVO vo = convertToVO(comment);
             result.add(vo);
         }
-        
+
         return result;
     }
 
@@ -159,7 +170,7 @@ public class ProductCommentServiceImpl extends ServiceImpl<ProductCommentMapper,
         // 检查权限：只有留言发布者或管理员可以删除
         boolean isAdmin = userService.isAdmin(loginUser);
         boolean isOwner = Objects.equals(comment.getUserId(), loginUser.getId());
-        
+
         if (!isAdmin && !isOwner) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权删除该留言");
         }
@@ -180,29 +191,29 @@ public class ProductCommentServiceImpl extends ServiceImpl<ProductCommentMapper,
         QueryWrapper<ProductComment> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("product_id", productId);
         queryWrapper.orderByAsc("create_time");
-        
+
         List<ProductComment> allComments = this.list(queryWrapper);
-        
+
         // 转换为VO
         List<ProductCommentVO> allVOs = allComments.stream()
                 .map(this::convertToVO)
                 .collect(Collectors.toList());
-        
+
         // 构建树形结构
         Map<Long, List<ProductCommentVO>> childrenMap = allVOs.stream()
-                .filter(vo -> !vo.getParentId().equals(0L))
+                .filter(vo -> vo.getParentId() != null)
                 .collect(Collectors.groupingBy(ProductCommentVO::getParentId));
-        
+
         // 设置子留言
         for (ProductCommentVO vo : allVOs) {
-            if (childrenMap.containsKey(vo.getId())) {
+            if (vo.getId() != null && childrenMap.containsKey(vo.getId())) {
                 vo.setChildren(childrenMap.get(vo.getId()));
             }
         }
-        
-        // 返回一级留言
+
+        // 返回一级留言（parentId为null的留言）
         return allVOs.stream()
-                .filter(vo -> vo.getParentId().equals(0L))
+                .filter(vo -> vo.getParentId() == null)
                 .collect(Collectors.toList());
     }
 
@@ -212,14 +223,14 @@ public class ProductCommentServiceImpl extends ServiceImpl<ProductCommentMapper,
     private ProductCommentVO convertToVO(ProductComment comment) {
         ProductCommentVO vo = new ProductCommentVO();
         BeanUtils.copyProperties(comment, vo);
-        
+
         // 设置用户信息
         User user = userService.getById(comment.getUserId());
         if (user != null) {
             vo.setUserName(user.getUserName());
             vo.setUserAvatar(user.getUserAvatar());
         }
-        
+
         // 设置被回复用户信息
         if (comment.getReplyUserId() != null && comment.getReplyUserId() > 0) {
             User replyUser = userService.getById(comment.getReplyUserId());
@@ -227,7 +238,7 @@ public class ProductCommentServiceImpl extends ServiceImpl<ProductCommentMapper,
                 vo.setReplyUserName(replyUser.getUserName());
             }
         }
-        
+
         return vo;
     }
 }
