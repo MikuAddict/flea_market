@@ -13,6 +13,7 @@ import com.zhp.flea_market.model.vo.LoginUserVO;
 import com.zhp.flea_market.model.vo.UserVO;
 import com.zhp.flea_market.service.UserService;
 import com.zhp.flea_market.service.ImageStorageService;
+import com.zhp.flea_market.utils.PageUtils;
 import com.zhp.flea_market.utils.SqlUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;

@@ -15,6 +15,7 @@ import com.zhp.flea_market.service.OrderService;
 import com.zhp.flea_market.service.ProductService;
 import com.zhp.flea_market.service.TradeRecordService;
 import com.zhp.flea_market.service.UserService;
+import com.zhp.flea_market.utils.PageUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -216,15 +217,7 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
         queryWrapper.eq("buyer_id", currentUser.getId());
         queryWrapper.orderByDesc("trade_time");
 
-        Page<TradeRecord> resultPage = this.page(page, queryWrapper);
-        
-        // 转换为VO对象
-        Page<TradeRecordVO> voPage = new Page<>(resultPage.getCurrent(), resultPage.getSize(), resultPage.getTotal());
-        voPage.setRecords(resultPage.getRecords().stream()
-                .map(this::convertToTradeRecordVO)
-                .collect(Collectors.toList()));
-                
-        return voPage;
+        return PageUtils.getTradeRecordPageResult(this, page, queryWrapper, this::convertToTradeRecordVO);
     }
 
     /**
@@ -246,15 +239,7 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
         queryWrapper.eq("seller_id", currentUser.getId());
         queryWrapper.orderByDesc("trade_time");
 
-        Page<TradeRecord> resultPage = this.page(page, queryWrapper);
-        
-        // 转换为VO对象
-        Page<TradeRecordVO> voPage = new Page<>(resultPage.getCurrent(), resultPage.getSize(), resultPage.getTotal());
-        voPage.setRecords(resultPage.getRecords().stream()
-                .map(this::convertToTradeRecordVO)
-                .collect(Collectors.toList()));
-                
-        return voPage;
+        return PageUtils.getTradeRecordPageResult(this, page, queryWrapper, this::convertToTradeRecordVO);
     }
 
     /**
@@ -283,15 +268,7 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
 
         QueryWrapper<TradeRecord> queryWrapper = getQueryWrapper(null, null, tradeStatus, startDate, endDate);
         
-        Page<TradeRecord> resultPage = this.page(page, queryWrapper);
-        
-        // 转换为VO对象
-        Page<TradeRecordVO> voPage = new Page<>(resultPage.getCurrent(), resultPage.getSize(), resultPage.getTotal());
-        voPage.setRecords(resultPage.getRecords().stream()
-                .map(this::convertToTradeRecordVO)
-                .collect(Collectors.toList()));
-                
-        return voPage;
+        return PageUtils.getTradeRecordPageResult(this, page, queryWrapper, this::convertToTradeRecordVO);
     }
 
     /**

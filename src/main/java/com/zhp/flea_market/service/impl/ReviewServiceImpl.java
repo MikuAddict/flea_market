@@ -10,6 +10,7 @@ import com.zhp.flea_market.model.dto.request.ReviewRequest;
 import com.zhp.flea_market.model.entity.*;
 import com.zhp.flea_market.model.vo.ReviewVO;
 import com.zhp.flea_market.service.*;
+import com.zhp.flea_market.utils.PageUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -189,11 +190,9 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      */
     @Override
     public List<Review> getReviewList(Page<Review> page) {
-        QueryWrapper<Review> queryWrapper = new QueryWrapper<>();
-        queryWrapper.orderByDesc("create_time");
-        
-        Page<Review> resultPage = this.page(page, queryWrapper);
-        return resultPage.getRecords();
+        return PageUtils.getPageResult(this, page, queryWrapper -> {
+            queryWrapper.orderByDesc("create_time");
+        });
     }
 
     /**
@@ -224,12 +223,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
         
         // 查询这些二手物品收到的评价
-        QueryWrapper<Review> queryWrapper = new QueryWrapper<>();
-        queryWrapper.in("product_id", productIds);
-        queryWrapper.orderByDesc("create_time");
-        
-        Page<Review> resultPage = this.page(page, queryWrapper);
-        return resultPage.getRecords();
+        return PageUtils.getPageResult(this, page, queryWrapper -> {
+            queryWrapper.in("product_id", productIds);
+            queryWrapper.orderByDesc("create_time");
+        });
     }
 
     /**

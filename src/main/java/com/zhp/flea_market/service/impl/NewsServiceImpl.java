@@ -9,6 +9,7 @@ import com.zhp.flea_market.model.vo.NewsVO;
 import com.zhp.flea_market.service.ImageStorageService;
 import com.zhp.flea_market.service.NewsService;
 import com.zhp.flea_market.service.UserService;
+import com.zhp.flea_market.utils.PageUtils;
 import org.springframework.beans.BeanUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,20 +31,14 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
 
     /**
      * 分页获取新闻列表
-     * @param page 分页参数
-     * @return 新闻列表
      */
     @Override
     public List<NewsVO> getNewsList(Page<News> page) {
-        // 使用QueryWrapper明确指定查询字段，避免查询不存在的author字段
-        QueryWrapper<News> queryWrapper = new QueryWrapper<>();
-        queryWrapper.select("id", "title", "content", "image_url", "author_id", "create_time");
+        List<News> newsList = PageUtils.getPageResult(this, page, queryWrapper -> {
+            queryWrapper.select("id", "title", "content", "image_url", "author_id", "create_time");
+            queryWrapper.orderByDesc("create_time");
+        });
         
-        // 分页查询
-        Page<News> resultPage = this.page(page, queryWrapper);
-        List<News> newsList = resultPage.getRecords();
-        
-        // 转换为VO并加载作者信息
         return convertToNewsVOList(newsList);
     }
 

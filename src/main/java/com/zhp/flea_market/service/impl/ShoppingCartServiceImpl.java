@@ -1,6 +1,7 @@
 package com.zhp.flea_market.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.exception.BusinessException;
@@ -12,6 +13,7 @@ import com.zhp.flea_market.model.vo.ShoppingCartVO;
 import com.zhp.flea_market.service.ProductService;
 import com.zhp.flea_market.service.ShoppingCartService;
 import com.zhp.flea_market.service.UserService;
+import com.zhp.flea_market.utils.PageUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -131,11 +133,10 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
         }
         
-        QueryWrapper<ShoppingCart> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", currentUser.getId());
-        queryWrapper.orderByDesc("create_time");
-        
-        return this.list(queryWrapper);
+        return PageUtils.getPageResult(this, new Page<>(), queryWrapper -> {
+            queryWrapper.eq("user_id", currentUser.getId());
+            queryWrapper.orderByDesc("create_time");
+        });
     }
 
 

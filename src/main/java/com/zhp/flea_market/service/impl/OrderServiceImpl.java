@@ -17,6 +17,7 @@ import com.zhp.flea_market.service.OrderService;
 import com.zhp.flea_market.service.ProductService;
 import com.zhp.flea_market.service.UserService;
 import com.zhp.flea_market.service.TradeRecordService;
+import com.zhp.flea_market.utils.PageUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -332,12 +333,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
         }
         
-        QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("buyer_id", currentUser.getId());
-        queryWrapper.orderByDesc("create_time");
-        
-        Page<Order> resultPage = this.page(page, queryWrapper);
-        return resultPage.getRecords();
+        return PageUtils.getPageResult(this, page, queryWrapper -> {
+            queryWrapper.eq("buyer_id", currentUser.getId());
+            queryWrapper.orderByDesc("create_time");
+        });
     }
 
     /**
@@ -353,12 +352,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
         }
         
-        QueryWrapper<Order> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("seller_id", currentUser.getId());
-        queryWrapper.orderByDesc("create_time");
-        
-        Page<Order> resultPage = this.page(page, queryWrapper);
-        return resultPage.getRecords();
+        return PageUtils.getPageResult(this, page, queryWrapper -> {
+            queryWrapper.eq("seller_id", currentUser.getId());
+            queryWrapper.orderByDesc("create_time");
+        });
     }
 
     /**

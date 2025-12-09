@@ -16,6 +16,7 @@ import com.zhp.flea_market.service.CategoryService;
 import com.zhp.flea_market.service.ImageStorageService;
 import com.zhp.flea_market.service.ProductService;
 import com.zhp.flea_market.service.UserService;
+import com.zhp.flea_market.utils.PageUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -300,12 +301,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID无效");
         }
         
-        QueryWrapper<Product> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", userId);
-        queryWrapper.orderByDesc("create_time");
-        
-        Page<Product> resultPage = this.page(page, queryWrapper);
-        return resultPage.getRecords();
+        return PageUtils.getPageResult(this, page, queryWrapper -> {
+            queryWrapper.eq("user_id", userId);
+            queryWrapper.orderByDesc("create_time");
+        });
     }
 
     /**
