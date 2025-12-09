@@ -286,6 +286,10 @@ public class ProductController extends BaseController {
 
         // 检查用户是否存在
         validateResourceExists(userService.getById(userId), "用户");
+        
+        // 查询用户的二手物品列表
+        List<Product> productList = productService.getUserProducts(userId, page);
+        page.setRecords(productList);
 
         logOperation("获取用户发布的二手物品列表", request,
                 "用户ID", userId,

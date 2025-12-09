@@ -7,23 +7,16 @@ import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.exception.BusinessException;
 import com.zhp.flea_market.mapper.ReviewMapper;
 import com.zhp.flea_market.model.dto.request.ReviewRequest;
-import com.zhp.flea_market.model.entity.Order;
-import com.zhp.flea_market.model.entity.Product;
-import com.zhp.flea_market.model.entity.Review;
+import com.zhp.flea_market.model.entity.*;
 import com.zhp.flea_market.model.vo.ReviewVO;
-import com.zhp.flea_market.model.entity.TradeRecord;
-import com.zhp.flea_market.model.entity.User;
-import com.zhp.flea_market.service.OrderService;
-import com.zhp.flea_market.service.ProductService;
-import com.zhp.flea_market.service.ReviewService;
-import com.zhp.flea_market.service.TradeRecordService;
-import com.zhp.flea_market.service.UserService;
+import com.zhp.flea_market.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -204,7 +197,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 根据用户ID获取评价列表
+     * 根据用户ID获取评价列表（作为卖家收到的评价）
      *
      * @param userId 用户ID
      * @param page 分页参数
@@ -217,8 +210,22 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID无效");
         }
         
+        // 获取该用户发布的所有二手物品ID
+        List<Product> userProducts = productService.getUserProducts(userId, new Page<>(1, Integer.MAX_VALUE));
+        List<Long> productIds = userProducts.stream()
+                .map(Product::getId)
+                .toList();
+        
+        // 如果该用户没有发布过二手物品，则返回空列表
+        if (productIds.isEmpty()) {
+            page.setRecords(new ArrayList<>());
+            page.setTotal(0);
+            return new ArrayList<>();
+        }
+        
+        // 查询这些二手物品收到的评价
         QueryWrapper<Review> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", userId);
+        queryWrapper.in("product_id", productIds);
         queryWrapper.orderByDesc("create_time");
         
         Page<Review> resultPage = this.page(page, queryWrapper);

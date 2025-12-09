@@ -183,6 +183,7 @@ public class ReviewController extends BaseController {
 
         // 执行分页查询
         List<Review> reviewList = reviewService.getReviewsByUserId(userId, page);
+        page.setRecords(reviewList);
 
         logOperation("根据用户ID获取评价列表", null, 
                 "用户ID", userId,
@@ -238,6 +239,7 @@ public class ReviewController extends BaseController {
 
         // 获取当前登录用户的评价列表
         List<Review> reviewList = reviewService.getReviewsByUserId(currentUser.getId(), page);
+        page.setRecords(reviewList);
 
         logOperation("获取当前用户的评价列表", request, 
                 "当前页", current,

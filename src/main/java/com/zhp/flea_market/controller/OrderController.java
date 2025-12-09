@@ -173,6 +173,7 @@ public class OrderController extends BaseController {
 
         // 执行分页查询
         List<Order> orderList = orderService.getBuyerOrders(request, page);
+        page.setRecords(orderList);
         
         logOperation("获取买家订单列表", request, 
                 "当前页", current,
@@ -201,6 +202,7 @@ public class OrderController extends BaseController {
 
         // 执行分页查询
         List<Order> orderList = orderService.getSellerOrders(request, page);
+        page.setRecords(orderList);
         
         logOperation("获取卖家订单列表", request, 
                 "当前页", current,
