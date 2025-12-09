@@ -1,10 +1,10 @@
 package com.zhp.flea_market.model.dto.request;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * 用户查询请求
@@ -21,6 +21,11 @@ public class UserQueryRequest extends PageRequest implements Serializable {
      * 用户昵称
      */
     private String userName;
+
+    /**
+     * 用户手机号
+     */
+    private String userPhone;
 
     /**
      * 用户积分

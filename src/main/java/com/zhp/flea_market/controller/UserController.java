@@ -338,6 +338,7 @@ public class UserController extends BaseController {
             @Parameter(description = "用户积分") @RequestParam(required = false) BigDecimal point,
             @Parameter(description = "排序字段") @RequestParam(required = false) String sortField,
             @Parameter(description = "排序顺序") @RequestParam(defaultValue = "desc") String sortOrder,
+            @Parameter(description = "手机号") @RequestParam(required = false) String userPhone,
             HttpServletRequest request) {
         // 参数校验（限制爬虫）
         Page<User> page = validatePageParams(current, size, 20);
@@ -353,11 +354,22 @@ public class UserController extends BaseController {
         userQueryRequest.setPoint(point);
         userQueryRequest.setSortField(sortField);
         userQueryRequest.setSortOrder(sortOrder);
+        userQueryRequest.setUserPhone(userPhone);
         
         // 执行分页查询
         Page<User> userPage = userService.page(page, userService.getQueryWrapper(userQueryRequest));
         Page<UserVO> userVOPage = new Page<>(current, size, userPage.getTotal());
         List<UserVO> userVO = userService.getUserVO(userPage.getRecords());
+        
+        // 设置手机号和审核状态信息
+        for (int i = 0; i < userPage.getRecords().size(); i++) {
+            User user = userPage.getRecords().get(i);
+            if (i < userVO.size()) {
+                userVO.get(i).setUserPhone(user.getUserPhone());
+                userVO.get(i).setUserStatus(user.getUserStatus());
+            }
+        }
+        
         userVOPage.setRecords(userVO);
         
         logOperation("分页获取用户视图列表", request, 
@@ -366,6 +378,43 @@ public class UserController extends BaseController {
                 "查询条件", userQueryRequest
         );
         return ResultUtils.success(userVOPage);
+    }
+    
+    /**
+     * 重置用户密码
+     *
+     * @param id 用户ID
+     * @param request HTTP请求
+     * @return 重置结果
+     */
+    @Operation(summary = "重置用户密码", description = "管理员重置用户密码为123456")
+    @PostMapping("/{id}/reset-password")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> resetUserPassword(
+            @Parameter(description = "用户ID") @PathVariable Long id,
+            HttpServletRequest request) {
+        // 参数校验
+        validateId(id, "用户ID");
+
+        // 检查用户是否存在
+        User user = userService.getById(id);
+        validateResourceExists(user, "用户");
+
+        // 重置密码为123456
+        String defaultPassword = "123456";
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + defaultPassword).getBytes());
+        
+        User updateUser = new User();
+        updateUser.setId(id);
+        updateUser.setUserPassword(encryptPassword);
+        
+        boolean result = userService.updateById(updateUser);
+        
+        logOperation("重置用户密码", result, request, 
+                "用户ID", id,
+                "重置密码", "123456"
+        );
+        return handleOperationResult(result, "密码重置成功");
     }
 
     /**
