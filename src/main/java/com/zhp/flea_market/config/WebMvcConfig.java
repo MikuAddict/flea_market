@@ -45,6 +45,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addResourceHandler(storageConfig.getBaseUrl() + "/**")
                 .addResourceLocations("file:" + absolutePath + "/");
         
+        // 添加对 /images/** 路径的映射，兼容前端直接访问
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations("file:" + absolutePath + "/");
+        
         // 配置静态资源缓存
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/static/")

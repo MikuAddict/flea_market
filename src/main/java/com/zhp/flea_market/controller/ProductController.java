@@ -247,6 +247,11 @@ public class ProductController extends BaseController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "支付方式无效");
         }
         
+        // 执行分页查询
+        List<Product> productList = productService.advancedSearchProducts(
+                keyword, categoryId, minPrice, maxPrice, paymentMethod, sortField, sortOrder, page);
+        page.setRecords(productList);
+        
         logOperation("高级搜索二手物品", request, 
                 "关键词", keyword,
                 "分类ID", categoryId,
