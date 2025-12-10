@@ -75,11 +75,6 @@ public class OrderVO {
     private String statusDesc;
 
     /**
-     * 支付凭证URL
-     */
-    private String paymentProof;
-
-    /**
      * 买家确认收货状态
      */
     private Boolean buyerConfirmed;

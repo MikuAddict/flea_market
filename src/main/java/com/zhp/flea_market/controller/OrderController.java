@@ -6,9 +6,8 @@ import com.zhp.flea_market.annotation.LoginRequired;
 import com.zhp.flea_market.common.BaseResponse;
 import com.zhp.flea_market.common.ResultUtils;
 import com.zhp.flea_market.constant.UserConstant;
-import com.zhp.flea_market.model.dto.request.OrderRequest;
-import com.zhp.flea_market.model.dto.request.PaymentProofRequest;
 import com.zhp.flea_market.model.dto.request.OrderConfirmRequest;
+import com.zhp.flea_market.model.dto.request.OrderRequest;
 import com.zhp.flea_market.model.entity.Order;
 import com.zhp.flea_market.model.vo.OrderVO;
 import com.zhp.flea_market.service.OrderService;
@@ -41,7 +40,7 @@ public class OrderController extends BaseController {
      * @param request HTTP请求
      * @return 订单ID
      */
-    @Operation(summary = "创建订单", description = "用户创建新的订单，自动使用二手物品设置的支付方式")
+    @Operation(summary = "创建订单", description = "用户创建新的订单，自动使用二手物品设置的支付方式。积分兑换订单会直接扣除积分，创建订单即视为支付成功")
     @PostMapping("")
     @LoginRequired
     public BaseResponse<Long> createOrder(
@@ -90,7 +89,7 @@ public class OrderController extends BaseController {
      * @param request HTTP请求
      * @return 是否取消成功
      */
-    @Operation(summary = "取消订单", description = "用户取消订单")
+    @Operation(summary = "取消订单", description = "用户取消订单。如果是积分兑换订单，取消时会返还积分")
     @PutMapping("/{orderId}/cancel")
     @LoginRequired
     public BaseResponse<Boolean> cancelOrder(
@@ -260,29 +259,6 @@ public class OrderController extends BaseController {
     }
 
     /**
-     * 提交支付凭证
-     *
-     * @param proofRequest 支付凭证请求
-     * @param request HTTP请求
-     * @return 是否提交成功
-     */
-    @Operation(summary = "提交支付凭证", description = "买家上传现金支付凭证")
-    @PostMapping("/payment-proof")
-    @LoginRequired
-    public BaseResponse<Boolean> submitPaymentProof(
-            @Parameter(description = "支付凭证请求") @RequestBody PaymentProofRequest proofRequest,
-            HttpServletRequest request) {
-        // 参数校验
-        validateNotNull(proofRequest, "支付凭证请求");
-        
-        // 提交支付凭证
-        boolean result = orderService.submitPaymentProof(proofRequest, request);
-        
-        logOperation("提交支付凭证", result, request, "订单ID", proofRequest.getOrderId());
-        return handleOperationResult(result, "支付凭证提交成功");
-    }
-
-    /**
      * 确认订单（买家确认收货）
      *
      * @param confirmRequest 订单确认请求
@@ -304,98 +280,4 @@ public class OrderController extends BaseController {
         logOperation("买家确认收货", result, request, "订单ID", confirmRequest.getOrderId());
         return handleOperationResult(result, "确认收货成功");
     }
-
-    /**
-     * 模拟微信支付
-     *
-     * @param orderId 订单ID
-     * @param request HTTP请求
-     * @return 是否支付成功
-     */
-    @Operation(summary = "模拟微信支付", description = "模拟微信支付流程")
-    @PutMapping("/{orderId}/pay/wechat")
-    @LoginRequired
-    public BaseResponse<Boolean> simulateWechatPay(
-            @Parameter(description = "订单ID") @PathVariable Long orderId,
-            HttpServletRequest request) {
-        // 参数校验
-        validateId(orderId, "订单ID");
-
-        // 模拟微信支付
-        boolean result = orderService.simulateWechatPay(orderId, request);
-        
-        logOperation("微信支付", result, request, "订单ID", orderId);
-        return handleOperationResult(result, "微信支付成功");
-    }
-
-    /**
-     * 使用积分兑换二手物品
-     *
-     * @param orderId 订单ID
-     * @param request HTTP请求
-     * @return 是否兑换成功
-     */
-    @Operation(summary = "积分兑换二手物品", description = "使用积分兑换二手物品")
-    @PutMapping("/{orderId}/pay/points")
-    @LoginRequired
-    public BaseResponse<Boolean> exchangeWithPoints(
-            @Parameter(description = "订单ID") @PathVariable Long orderId,
-            HttpServletRequest request) {
-        // 参数校验
-        validateId(orderId, "订单ID");
-
-        // 积分兑换
-        boolean result = orderService.exchangeWithPoints(orderId, request);
-        
-        logOperation("积分兑换", result, request, "订单ID", orderId);
-        return handleOperationResult(result, "积分兑换成功");
-    }
-
-    /**
-     * 申请物品交换
-     *
-     * @param orderId 订单ID
-     * @param request HTTP请求
-     * @return 是否申请成功
-     */
-    @Operation(summary = "申请物品交换", description = "买家申请物品交换")
-    @PostMapping("/{orderId}/exchange/apply")
-    @LoginRequired
-    public BaseResponse<Boolean> applyForExchange(
-            @Parameter(description = "订单ID") @PathVariable Long orderId,
-            HttpServletRequest request) {
-        // 参数校验
-        validateId(orderId, "订单ID");
-
-        // 申请物品交换
-        boolean result = orderService.applyForExchange(orderId, request);
-        
-        logOperation("申请物品交换", result, request, "订单ID", orderId);
-        return handleOperationResult(result, "物品交换申请成功，等待卖家确认");
-    }
-
-    /**
-     * 确认物品交换
-     *
-     * @param orderId 订单ID
-     * @param request HTTP请求
-     * @return 是否确认成功
-     */
-    @Operation(summary = "确认物品交换", description = "卖家确认物品交换")
-    @PutMapping("/{orderId}/exchange/confirm")
-    @LoginRequired
-    public BaseResponse<Boolean> confirmExchange(
-            @Parameter(description = "订单ID") @PathVariable Long orderId,
-            HttpServletRequest request) {
-        // 参数校验
-        validateId(orderId, "订单ID");
-
-        // 确认物品交换
-        boolean result = orderService.confirmExchange(orderId, request);
-        
-        logOperation("确认物品交换", result, request, "订单ID", orderId);
-        return handleOperationResult(result, "物品交换确认成功");
-    }
-
-
 }
