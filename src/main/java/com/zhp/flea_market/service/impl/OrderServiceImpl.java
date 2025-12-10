@@ -90,10 +90,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setProductId(productId);
         order.setBuyerId(currentUser.getId());
         order.setSellerId(product.getUserId());
-        order.setAmount(amount);
-        order.setPaymentMethod(paymentMethod);
         order.setStatus(0); // 待支付
-        order.setPaymentProof(""); // 初始化为空字符串而不是null
         order.setCreateTime(new Date());
         
         boolean saved = this.save(order);
@@ -156,7 +153,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         updateOrder.setId(orderId);
         
         // 除积分兑换外，其他支付方式点击即支付成功
-        if (order.getPaymentMethod() == 2) { // 积分兑换
+        if (product.getPaymentMethod() == 2) { // 积分兑换
             updateOrder.setStatus(0); // 待支付，需要调用积分兑换接口
         } else {
             updateOrder.setStatus(1); // 已支付
@@ -205,12 +202,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         updateOrder.setStatus(3); // 已取消
         
         boolean updated = this.updateById(updateOrder);
-        
+
+        Product product = productService.getById(order.getProductId());
         // 如果订单支付方式是积分兑换，返还积分
-        if (updated && order.getPaymentMethod() == 2) {
+        if (updated && product.getPaymentMethod() == 2) {
             try {
                 // 返还积分给买家
-                userService.updateUserPoints(order.getBuyerId(), order.getAmount());
+                userService.updateUserPoints(order.getBuyerId(), product.getPrice());
             } catch (Exception e) {
                 System.err.println("取消订单时积分返还失败: " + e.getMessage());
             }
@@ -274,6 +272,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // 订单完成后，给买家和卖家各加100积分，并创建交易记录，同时将二手物品标记为已售出
         if (updated) {
             try {
+                // 获取订单对应的商品信息
+                Product product = productService.getById(order.getProductId());
+                
                 // 买家加100积分
                 userService.updateUserPoints(order.getBuyerId(), new BigDecimal("100"));
                 // 卖家加100积分
@@ -283,10 +284,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 productService.markProductAsSold(order.getProductId());
                 
                 // 创建交易记录
-                Product product = productService.getById(order.getProductId());
                 User buyer = userService.getById(order.getBuyerId());
                 User seller = userService.getById(order.getSellerId());
-                String paymentMethodDesc = getPaymentMethodDesc(order.getPaymentMethod());
+                String paymentMethodDesc = getPaymentMethodDesc(product != null ? product.getPaymentMethod() : 0);
                 
                 tradeRecordService.createTradeRecord(
                         orderId,
@@ -296,8 +296,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                         buyer.getUserName(),
                         order.getSellerId(),
                         seller.getUserName(),
-                        order.getAmount(),
-                        order.getPaymentMethod(),
+                        product.getPrice(),
+                        product.getPaymentMethod(),
                         paymentMethodDesc,
                         "订单完成自动创建交易记录"
                 );
@@ -421,8 +421,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (Order order : completedOrders) {
-            if (order.getAmount() != null) {
-                totalAmount = totalAmount.add(order.getAmount());
+            // 获取订单对应的商品信息以获取金额
+            Product product = productService.getById(order.getProductId());
+            if (product != null && product.getPrice() != null) {
+                totalAmount = totalAmount.add(product.getPrice());
             }
         }
         statistics.setTotalAmount(totalAmount);
@@ -543,10 +545,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         updateOrder.setFinishTime(new Date());
         
         // 订单完成后，给买家发放积分（积分支付订单除外）
-        if (order.getPaymentMethod() != 2) { // 2表示积分兑换
+        Product product = productService.getById(order.getProductId());
+        if (product != null && product.getPaymentMethod() != 2) { // 2表示积分兑换
             try {
                 // 计算买家获得的积分：二手物品价格除以10，保留小数点后一位
-                BigDecimal pointsToAdd = order.getAmount().divide(new BigDecimal("10"), 1, RoundingMode.HALF_UP);
+                BigDecimal pointsToAdd = product.getPrice().divide(new BigDecimal("10"), 1, RoundingMode.HALF_UP);
                 userService.updateUserPoints(order.getBuyerId(), pointsToAdd);
             } catch (Exception e) {
                 System.err.println("订单完成时积分发放失败: " + e.getMessage());
@@ -586,8 +589,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         orderVO.setProductId(order.getProductId());
         orderVO.setBuyerId(order.getBuyerId());
         orderVO.setSellerId(order.getSellerId());
-        orderVO.setAmount(order.getAmount());
-        orderVO.setPaymentMethod(order.getPaymentMethod());
         orderVO.setStatus(order.getStatus());
         orderVO.setStatusDesc(getOrderStatusDesc(order.getStatus()));
         orderVO.setCreateTime(order.getCreateTime());
@@ -598,6 +599,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (product != null) {
             orderVO.setProductName(product.getProductName());
             orderVO.setProductImage(product.getMainImageUrl());
+            orderVO.setPrice(product.getPrice());
+            orderVO.setPaymentMethod(product.getPaymentMethod());
         }
 
         // 获取买家信息
@@ -616,9 +619,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             orderVO.setSellerPhone(seller.getUserPhone());
         }
         
-        // 设置支付方式描述
-        orderVO.setPaymentMethodDesc(getPaymentMethodDesc(order.getPaymentMethod()));
-
         return orderVO;
     }
 

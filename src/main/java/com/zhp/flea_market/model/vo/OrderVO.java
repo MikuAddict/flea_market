@@ -72,7 +72,7 @@ public class OrderVO {
     /**
      * 订单金额
      */
-    private BigDecimal amount;
+    private BigDecimal price;
 
     /**
      * 支付方式 (0-现金, 1-微信, 2-积分兑换, 3-物品交换)

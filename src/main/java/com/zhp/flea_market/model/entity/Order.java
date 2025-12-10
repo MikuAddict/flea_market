@@ -2,7 +2,7 @@ package com.zhp.flea_market.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
-import java.math.BigDecimal;
+
 import java.util.Date;
 
 /**
@@ -34,24 +34,9 @@ public class Order {
     private Long sellerId;
 
     /**
-     * 订单金额
-     */
-    private BigDecimal amount;
-
-    /**
-     * 支付方式 (0-现金, 1-微信, 2-积分兑换, 3-物品交换)
-     */
-    private Integer paymentMethod;
-
-    /**
      * 订单状态 (0-待支付, 1-已支付, 2-已完成, 3-已取消)
      */
     private Integer status;
-
-    /**
-     * 支付凭证URL (现金支付时买家上传的支付凭证)
-     */
-    private String paymentProof = "";
 
     /**
      * 创建时间
