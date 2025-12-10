@@ -296,7 +296,7 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
                     if (product.getPrice() != null && product.getPaymentMethod() != 2) {
                         totalAmount = totalAmount.add(product.getPrice());
                     }
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                 }
             }
         }

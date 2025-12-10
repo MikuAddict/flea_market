@@ -77,37 +77,6 @@ public class ShoppingCartController extends BaseController {
     }
 
     /**
-     * 清空购物车
-     */
-    @DeleteMapping("")
-    @Operation(summary = "清空购物车", description = "清空当前用户的购物车")
-    @LoginRequired
-    public BaseResponse<Boolean> clearCart(HttpServletRequest request) {
-        boolean result = shoppingCartService.clearCart(request);
-        
-        logOperation("清空购物车", result, request);
-        return handleOperationResult(result, "购物车清空成功");
-    }
-
-    /**
-     * 检查商品是否在购物车中
-     */
-    @GetMapping("/check/{productId}")
-    @Operation(summary = "检查商品是否在购物车中", description = "检查指定二手物品是否在当前用户的购物车中")
-    @LoginRequired
-    public BaseResponse<Boolean> checkProductInCart(
-            @Parameter(description = "二手物品ID") @PathVariable Long productId,
-            HttpServletRequest request) {
-        // 参数校验
-        validateId(productId, "二手物品ID");
-        
-        boolean result = shoppingCartService.isProductInCart(productId, request);
-        
-        logOperation("检查商品是否在购物车中", request, "二手物品ID", productId, "结果", result);
-        return ResultUtils.success(result);
-    }
-
-    /**
      * 校验购物车商品状态
      */
     @GetMapping("/validate")

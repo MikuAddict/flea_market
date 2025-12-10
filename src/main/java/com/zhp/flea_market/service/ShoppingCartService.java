@@ -47,23 +47,6 @@ public interface ShoppingCartService extends IService<ShoppingCart> {
     List<ShoppingCartVO> getUserCartWithProductInfo(HttpServletRequest request);
 
     /**
-     * 检查二手物品是否已在购物车中
-     *
-     * @param productId 二手物品ID
-     * @param request HTTP请求
-     * @return 是否在购物车中
-     */
-    boolean isProductInCart(Long productId, HttpServletRequest request);
-
-    /**
-     * 清空购物车
-     *
-     * @param request HTTP请求
-     * @return 是否清空成功
-     */
-    boolean clearCart(HttpServletRequest request);
-
-    /**
      * 校验购物车商品状态
      *
      * @param request HTTP请求

@@ -72,8 +72,7 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
         ShoppingCart existingCartItem = this.getOne(queryWrapper);
         
         if (existingCartItem != null) {
-            // 如果二手物品已在购物车中，直接返回成功（单件模式）
-            return true;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "该物品已添加到购物车");
         } else {
             // 创建新的购物车项
             ShoppingCart cartItem = new ShoppingCart();
@@ -139,34 +138,6 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
         });
     }
 
-
-    /**
-     * 检查二手物品是否已在购物车中
-     *
-     * @param productId 二手物品ID
-     * @param request HTTP请求
-     * @return 是否在购物车中
-     */
-    @Override
-    public boolean isProductInCart(Long productId, HttpServletRequest request) {
-        // 参数校验
-        if (productId == null || productId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
-        }
-        
-        // 获取当前登录用户
-        User currentUser = userService.getLoginUserPermitNull(request);
-        if (currentUser == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
-        }
-        
-        QueryWrapper<ShoppingCart> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", currentUser.getId());
-        queryWrapper.eq("product_id", productId);
-        
-        return this.count(queryWrapper) > 0;
-    }
-
     /**
      * 获取用户购物车列表（包含商品信息）
      *
@@ -199,31 +170,19 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
                 cartVO.setMainImageUrl(product.getMainImageUrl());
                 cartVO.setPrice(product.getPrice());
                 cartVO.setDescription(product.getDescription());
+                cartVO.setPaymentMethod(product.getPaymentMethod());
+                cartVO.setProductStatus(product.getStatus());
+                
+                // 获取卖家信息
+                User seller = userService.getById(product.getUserId());
+                if (seller != null) {
+                    cartVO.setSellerName(seller.getUserName());
+                    cartVO.setSellerAvatar(seller.getUserAvatar());
+                }
             }
             
             return cartVO;
         }).collect(Collectors.toList());
-    }
-
-    /**
-     * 清空购物车
-     *
-     * @param request HTTP请求
-     * @return 是否清空成功
-     */
-    @Override
-    @Transactional
-    public boolean clearCart(HttpServletRequest request) {
-        // 获取当前登录用户
-        User currentUser = userService.getLoginUserPermitNull(request);
-        if (currentUser == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
-        }
-
-        QueryWrapper<ShoppingCart> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", currentUser.getId());
-        
-        return this.remove(queryWrapper);
     }
 
     /**

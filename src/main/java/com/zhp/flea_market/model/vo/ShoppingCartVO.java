@@ -49,4 +49,24 @@ public class ShoppingCartVO {
      * 添加时间
      */
     private Date createTime;
+    
+    /**
+     * 卖家昵称
+     */
+    private String sellerName;
+    
+    /**
+     * 卖家头像
+     */
+    private String sellerAvatar;
+    
+    /**
+     * 商品支付方式
+     */
+    private Integer paymentMethod;
+    
+    /**
+     * 商品状态
+     */
+    private Integer productStatus;
 }
