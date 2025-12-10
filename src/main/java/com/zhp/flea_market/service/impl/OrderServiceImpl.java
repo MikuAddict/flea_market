@@ -82,9 +82,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "不能购买自己的二手物品");
         }
         
-        // 计算订单金额
-        BigDecimal amount = calculateOrderAmount(productId);
-        
         // 创建订单
         Order order = new Order();
         order.setProductId(productId);
@@ -287,7 +284,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 User buyer = userService.getById(order.getBuyerId());
                 User seller = userService.getById(order.getSellerId());
                 String paymentMethodDesc = getPaymentMethodDesc(product != null ? product.getPaymentMethod() : 0);
-                
+
                 tradeRecordService.createTradeRecord(
                         orderId,
                         product.getId(),
@@ -599,7 +596,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (product != null) {
             orderVO.setProductName(product.getProductName());
             orderVO.setProductImage(product.getMainImageUrl());
-            orderVO.setPrice(product.getPrice());
+            orderVO.setAmount(product.getPrice());
             orderVO.setPaymentMethod(product.getPaymentMethod());
         }
 

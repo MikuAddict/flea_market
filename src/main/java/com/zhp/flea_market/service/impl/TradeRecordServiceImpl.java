@@ -9,8 +9,8 @@ import com.zhp.flea_market.mapper.TradeRecordMapper;
 import com.zhp.flea_market.model.entity.Order;
 import com.zhp.flea_market.model.entity.Product;
 import com.zhp.flea_market.model.entity.TradeRecord;
-import com.zhp.flea_market.model.vo.TradeRecordVO;
 import com.zhp.flea_market.model.entity.User;
+import com.zhp.flea_market.model.vo.TradeRecordVO;
 import com.zhp.flea_market.service.OrderService;
 import com.zhp.flea_market.service.ProductService;
 import com.zhp.flea_market.service.TradeRecordService;
@@ -25,7 +25,6 @@ import org.springframework.util.CollectionUtils;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 交易记录服务实现类
@@ -292,12 +291,12 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
             if (record.getOrderId() != null) {
                 try {
                     Order order = orderService.getById(record.getOrderId());
+                    Product product = productService.getById(order.getProductId());
                     // 排除积分兑换交易（支付方式为2）
-                    if (order != null && order.getAmount() != null && order.getPaymentMethod() != 2) {
-                        totalAmount = totalAmount.add(order.getAmount());
+                    if (product.getPrice() != null && product.getPaymentMethod() != 2) {
+                        totalAmount = totalAmount.add(product.getPrice());
                     }
                 } catch (Exception e) {
-                    // 忽略获取订单失败的情况
                 }
             }
         }
@@ -394,11 +393,9 @@ public class TradeRecordServiceImpl extends ServiceImpl<TradeRecordMapper, Trade
         if (tradeRecord.getOrderId() != null) {
             try {
                 Order order = orderService.getById(tradeRecord.getOrderId());
-                if (order != null) {
-                    tradeRecordVO.setAmount(order.getAmount());
-                }
+                Product product = productService.getById(order.getProductId());
+                tradeRecordVO.setAmount(product.getPrice());
             } catch (Exception e) {
-                // 如果获取订单失败，金额设为null
                 tradeRecordVO.setAmount(null);
             }
         }

@@ -33,9 +33,9 @@ public class StatisticsResponse {
     private Long totalTradeCount;
 
     /**
-     * 月度交易二手物品排行
+     * 月度交易二手物品分类排行
      */
-    private List<ProductRankingItem> monthlyProductRanking;
+    private List<CategoryRankingItem> monthlyCategoryRanking;
 
     /**
      * 活跃用户排行
@@ -43,44 +43,39 @@ public class StatisticsResponse {
     private List<UserRankingItem> activeUserRanking;
 
     /**
-     * 需求量大二手物品排行
+     * 需求量大二手物品分类排行
      */
-    private List<ProductRankingItem> highDemandRanking;
+    private List<CategoryRankingItem> highDemandRanking;
 
     /**
-     * 闲置量大二手物品排行
+     * 闲置量大二手物品分类排行
      */
-    private List<ProductRankingItem> highInventoryRanking;
+    private List<CategoryRankingItem> highInventoryRanking;
 
     /**
-     * 二手物品排行项
+     * 二手物品分类排行项
      */
     @Data
-    public static class ProductRankingItem {
+    public static class CategoryRankingItem {
         /**
-         * 二手物品ID
+         * 二手物品分类ID
          */
-        private Long productId;
+        private Long categoryId;
 
         /**
-         * 二手物品名称
+         * 二手物品分类名称
          */
-        private String productName;
+        private String categoryName;
 
         /**
-         * 交易次数
+         * 交易次数/数量
          */
-        private Long tradeCount;
+        private Long categoryCount;
 
         /**
          * 交易金额
          */
         private BigDecimal tradeAmount;
-
-        /**
-         * 二手物品图片
-         */
-        private String imageUrl;
     }
 
     /**

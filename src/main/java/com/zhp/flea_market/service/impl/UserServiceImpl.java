@@ -40,9 +40,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     public static final String SALT = "114514";
 
-    @Autowired
-    private ImageStorageService imageStorageService;
-
     /**
      * 用户注册
      *

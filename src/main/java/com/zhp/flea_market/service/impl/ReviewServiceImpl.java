@@ -176,9 +176,8 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
         
         // 转换为VO对象
-        ReviewVO reviewVO = convertToReviewVO(review);
-        
-        return reviewVO;
+
+        return convertToReviewVO(review);
     }
 
     /**
@@ -189,9 +188,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      */
     @Override
     public List<Review> getReviewList(Page<Review> page) {
-        return PageUtils.getPageResult(this, page, queryWrapper -> {
-            queryWrapper.orderByDesc("create_time");
-        });
+        return PageUtils.getPageResult(this, page, queryWrapper -> queryWrapper.orderByDesc("create_time"));
     }
 
     /**
@@ -288,7 +285,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             }
         }
         
-        statistics.setAverageRating(reviews.size() > 0 ? totalRating / reviews.size() : 0.0);
+        statistics.setAverageRating(!reviews.isEmpty() ? totalRating / reviews.size() : 0.0);
         statistics.setFiveStarCount(fiveStarCount);
         statistics.setFourStarCount(fourStarCount);
         statistics.setThreeStarCount(threeStarCount);

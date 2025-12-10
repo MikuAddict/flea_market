@@ -1,9 +1,6 @@
 package com.zhp.flea_market.service;
 
-import com.zhp.flea_market.model.dto.response.StatisticsResponse;
-
-import java.util.Date;
-import java.util.List;
+import com.zhp.flea_market.model.dto.response.MonthlyStatisticsResponse;
 
 /**
  * 统计分析服务接口
@@ -11,72 +8,42 @@ import java.util.List;
 public interface StatisticsService {
 
     /**
-     * 获取月度交易二手物品分类排行
-     *
-     * @param month 月份
+     * 获取每月统计数据
      * @param year 年份
-     * @param limit 限制数量
-     * @return 二手物品分类排行列表
+     * @param month 月份
+     * @return 月度统计数据响应
      */
-    List<StatisticsResponse.ProductRankingItem> getMonthlyTopSellingCategories(int month, int year, int limit);
+    MonthlyStatisticsResponse getMonthlyStatistics(Integer year, Integer month);
 
     /**
-     * 获取活跃用户排行
-     *
-     * @param limit 限制数量
-     * @param startDate 开始日期
-     * @param endDate 结束日期
+     * 获取每月交易成功物品分类排行
+     * @param year 年份
+     * @param month 月份
+     * @return 分类排行列表
+     */
+    MonthlyStatisticsResponse getMonthlyCategoryRanking(Integer year, Integer month);
+
+    /**
+     * 获取每月活跃用户排行(交易次数)
+     * @param year 年份
+     * @param month 月份
      * @return 用户排行列表
      */
-    List<StatisticsResponse.UserRankingItem> getActiveUsersRanking(int limit, Date startDate, Date endDate);
+    MonthlyStatisticsResponse getMonthlyActiveUserRanking(Integer year, Integer month);
 
     /**
-     * 获取需求量大二手物品分类排行
-     *
-     * @param limit 限制数量
-     * @return 二手物品分类排行列表
-     */
-    List<StatisticsResponse.ProductRankingItem> getHighDemandCategories(int limit);
-
-    /**
-     * 获取闲置量大二手物品分类排行（闲置量 = 在售物品数量 / 已售物品数量）
-     *
-     * @param limit 限制数量
-     * @return 二手物品分类排行列表
-     */
-    List<StatisticsResponse.ProductRankingItem> getHighInventoryCategories(int limit);
-
-    /**
-     * 获取综合统计信息
-     *
-     * @param startDate 开始日期
-     * @param endDate 结束日期
-     * @return 综合统计信息
-     */
-    StatisticsResponse getComprehensiveStatistics(Date startDate, Date endDate);
-
-    /**
-     * 获取月度统计数据
-     *
-     * @param month 月份
+     * 获取每月物品分类在售量(仅限status=1)
      * @param year 年份
-     * @return 月度统计数据
+     * @param month 月份
+     * @return 分类在售量列表
      */
-    StatisticsResponse getMonthlyStatistics(int month, int year);
+    MonthlyStatisticsResponse getMonthlyCategoryOnSaleInventory(Integer year, Integer month);
 
     /**
-     * 获取用户交易统计
-     *
-     * @param userId 用户ID
-     * @return 用户交易统计
+     * 获取每月物品分类已售量(仅限status=3)
+     * @param year 年份
+     * @param month 月份
+     * @return 分类已售量列表
      */
-    StatisticsResponse getUserTradeStatistics(Long userId);
-
-    /**
-     * 获取二手物品分类交易统计
-     *
-     * @param categoryId 分类ID
-     * @return 二手物品分类交易统计
-     */
-    StatisticsResponse getCategoryTradeStatistics(Long categoryId);
+    MonthlyStatisticsResponse getMonthlyCategorySoldInventory(Integer year, Integer month);
 }
