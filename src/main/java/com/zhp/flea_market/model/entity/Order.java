@@ -51,7 +51,7 @@ public class Order {
     /**
      * 支付凭证URL (现金支付时买家上传的支付凭证)
      */
-    private String paymentProof;
+    private String paymentProof = "";
 
     /**
      * 买家确认收货状态 (false-未确认, true-已确认)

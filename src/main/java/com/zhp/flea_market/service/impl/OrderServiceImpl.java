@@ -94,12 +94,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setAmount(amount);
         order.setPaymentMethod(paymentMethod);
         order.setStatus(0); // 待支付
+        order.setBuyerConfirmed(false); // 买家未确认收货
         order.setCreateTime(new Date());
         
         boolean saved = this.save(order);
         if (!saved) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "订单创建失败");
         }
+        
+        // 将商品状态设置为3（已售出）
+        Product updateProduct = new Product();
+        updateProduct.setId(productId);
+        updateProduct.setStatus(3); // 已售出
+        productService.updateById(updateProduct);
         
         return order.getId();
     }
@@ -829,8 +836,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return this.updateById(updateOrder);
     }
 
-
-
     /**
      * 获取支付方式描述
      *
@@ -861,8 +866,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         orderVO.setProductId(order.getProductId());
         orderVO.setBuyerId(order.getBuyerId());
         orderVO.setSellerId(order.getSellerId());
-        orderVO.setAmount(order.getAmount());
-        orderVO.setPaymentMethod(order.getPaymentMethod());
+        orderVO.setAmount(order.getAmount()); // 从订单中获取价格
+        orderVO.setPaymentMethod(order.getPaymentMethod()); // 从订单中获取支付方式
         orderVO.setStatus(order.getStatus());
         orderVO.setStatusDesc(getOrderStatusDesc(order.getStatus()));
         orderVO.setPaymentProof(order.getPaymentProof());
