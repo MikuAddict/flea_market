@@ -133,6 +133,9 @@ public class ProductController extends BaseController {
         Product existingProduct = productService.getById(productUpdateRequest.getId());
         validateResourceExists(existingProduct, "二手物品");
 
+        if (existingProduct.getStatus() == 3) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品已售出，无法更新");
+        }
         // 创建更新对象
         Product product = new Product();
         BeanUtils.copyProperties(productUpdateRequest, product);

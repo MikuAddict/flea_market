@@ -119,6 +119,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限修改该二手物品");
         }
         
+        // 保存旧图片信息，用于后续删除
+        String oldImageUrls = existingProduct.getImageUrls();
+        
         // 处理图片信息：设置主图并保存所有图片URL
         processProductImages(product);
         
@@ -135,10 +138,31 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         updateProduct.setImageUrls(product.getImageUrls());
         updateProduct.setPaymentMethod(product.getPaymentMethod());
         updateProduct.setCategoryId(product.getCategoryId());
+        updateProduct.setStatus(0); // 重置状态为待审核
         updateProduct.setUpdateTime(product.getUpdateTime());
-        // 注意：不设置status字段，防止通过普通更新方法修改状态
         
-        return this.updateById(updateProduct);
+        boolean result = this.updateById(updateProduct);
+        
+        // 如果更新成功且图片发生了变化，则删除旧图片
+        if (result && oldImageUrls != null && !oldImageUrls.equals(product.getImageUrls())) {
+            try {
+                // 删除旧图片
+                List<String> oldImages = parseImageUrls(oldImageUrls);
+                List<String> newImages = parseImageUrls(product.getImageUrls());
+                
+                // 找出在旧图片列表中但不在新图片列表中的图片并删除
+                for (String oldImage : oldImages) {
+                    if (!newImages.contains(oldImage)) {
+                        imageStorageService.deleteImage(oldImage);
+                    }
+                }
+            } catch (Exception e) {
+                // 删除旧图片失败不应该影响更新操作
+                System.err.println("删除旧图片失败: " + e.getMessage());
+            }
+        }
+        
+        return result;
     }
 
     /**
