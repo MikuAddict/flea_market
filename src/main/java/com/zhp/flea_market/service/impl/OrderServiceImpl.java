@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 
@@ -571,15 +572,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         
         boolean updated = this.updateById(updateOrder);
         
-        // 订单完成后，创建交易记录并给买家和卖家各加100积分（积分支付订单除外）
+        // 订单完成后，创建交易记录并添加积分
         if (updated) {
             try {
                 // 积分支付订单不发放积分
                 if (order.getPaymentMethod() != 2) { // 2表示积分兑换
-                    // 买家加100积分
-                    userService.updateUserPoints(order.getBuyerId(), new BigDecimal("100"));
-                    // 卖家加100积分
-                    userService.updateUserPoints(order.getSellerId(), new BigDecimal("100"));
+                    BigDecimal pointsToAdd = order.getAmount().divide(new BigDecimal("10"), 1, RoundingMode.HALF_UP);
+                    userService.updateUserPoints(order.getBuyerId(), pointsToAdd);
                 }
                 
                 // 创建交易记录
