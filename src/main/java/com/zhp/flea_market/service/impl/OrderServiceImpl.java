@@ -10,12 +10,10 @@ import com.zhp.flea_market.model.dto.request.OrderConfirmRequest;
 import com.zhp.flea_market.model.dto.request.OrderRequest;
 import com.zhp.flea_market.model.entity.Order;
 import com.zhp.flea_market.model.entity.Product;
+import com.zhp.flea_market.model.entity.ShoppingCart;
 import com.zhp.flea_market.model.entity.User;
 import com.zhp.flea_market.model.vo.OrderVO;
-import com.zhp.flea_market.service.OrderService;
-import com.zhp.flea_market.service.ProductService;
-import com.zhp.flea_market.service.TradeRecordService;
-import com.zhp.flea_market.service.UserService;
+import com.zhp.flea_market.service.*;
 import com.zhp.flea_market.utils.PageUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +38,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Autowired
     @Lazy
     private TradeRecordService tradeRecordService;
+    
+    @Autowired
+    private ShoppingCartService shoppingCartService;
 
     /**
      * 创建订单
@@ -141,7 +142,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         
         // 检查二手物品是否仍然有效
         Product product = productService.getById(order.getProductId());
-        if (product == null || product.getStatus() != 1) {
+        if (product == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品已下架或不存在，无法支付");
         }
         
@@ -197,6 +198,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         Order updateOrder = new Order();
         updateOrder.setId(orderId);
         updateOrder.setStatus(3); // 已取消
+        updateOrder.setFinishTime(new Date());
         
         boolean updated = this.updateById(updateOrder);
 
@@ -265,25 +267,22 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         updateOrder.setFinishTime(new Date());
         
         boolean updated = this.updateById(updateOrder);
-        
-        // 订单完成后，给买家和卖家各加100积分，并创建交易记录，同时将二手物品标记为已售出
+
+        // 订单完成后，除了积分交易或者以物换物,给买家增加价格乘以十分之一的积分
         if (updated) {
             try {
                 // 获取订单对应的商品信息
                 Product product = productService.getById(order.getProductId());
-                
-                // 买家加100积分
-                userService.updateUserPoints(order.getBuyerId(), new BigDecimal("100"));
-                // 卖家加100积分
-                userService.updateUserPoints(order.getSellerId(), new BigDecimal("100"));
-                
+                if (product.getPaymentMethod() != 2 && product.getPaymentMethod() != 3) {
+                    userService.updateUserPoints(order.getBuyerId(), product.getPrice().multiply(new BigDecimal("0.1")));
+                }
                 // 自动将二手物品标记为已售出
                 productService.markProductAsSold(order.getProductId());
-                
+
                 // 创建交易记录
                 User buyer = userService.getById(order.getBuyerId());
                 User seller = userService.getById(order.getSellerId());
-                String paymentMethodDesc = getPaymentMethodDesc(product != null ? product.getPaymentMethod() : 0);
+                String paymentMethodDesc = getPaymentMethodDesc(product.getPaymentMethod());
 
                 tradeRecordService.createTradeRecord(
                         orderId,
@@ -298,6 +297,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                         paymentMethodDesc,
                         "订单完成自动创建交易记录"
                 );
+                
+                // 从购物车中移除已购买的商品
+                removeProductFromCart(order.getBuyerId(), order.getProductId());
             } catch (Exception e) {
                 // 积分更新、交易记录创建和二手物品状态更新失败不影响订单完成状态，但记录日志
                 System.err.println("订单完成时积分更新、交易记录创建或二手物品状态更新失败: " + e.getMessage());
@@ -633,5 +635,31 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             case 3 -> "已取消";
             default -> "未知状态";
         };
+    }
+
+    /**
+     * 从购物车中移除指定商品
+     * @param userId 用户ID
+     * @param productId 商品ID
+     */
+    private void removeProductFromCart(Long userId, Long productId) {
+        try {
+            // 查询用户购物车中是否有该商品
+            QueryWrapper<ShoppingCart> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("user_id", userId);
+            queryWrapper.eq("product_id", productId);
+            
+            ShoppingCart cartItem = shoppingCartService.getOne(queryWrapper);
+            
+            // 如果购物车中有该商品，则删除
+            if (cartItem != null) {
+                boolean removed = shoppingCartService.removeById(cartItem.getId());
+                if (!removed) {
+                    System.err.println("从购物车中移除商品失败，商品ID: " + productId);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("从购物车中移除商品时发生异常: " + e.getMessage());
+        }
     }
 }

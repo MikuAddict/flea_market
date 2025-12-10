@@ -60,6 +60,11 @@ public class ProductCommentServiceImpl extends ServiceImpl<ProductCommentMapper,
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品不存在");
         }
 
+        // 检查二手物品状态，只有状态为"已通过"(1)的物品才能留言
+        if (product.getStatus() != 1) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "只有已通过审核的二手物品才能留言");
+        }
+
         // 如果是回复留言，检查原留言是否存在
         if (commentAddRequest.getParentId() != null) {
             ProductComment parentComment = this.getById(commentAddRequest.getParentId());

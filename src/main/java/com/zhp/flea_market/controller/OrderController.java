@@ -40,7 +40,7 @@ public class OrderController extends BaseController {
      * @param request HTTP请求
      * @return 订单ID
      */
-    @Operation(summary = "创建订单", description = "用户创建新的订单，自动使用二手物品设置的支付方式。积分兑换订单会直接扣除积分，创建订单即视为支付成功")
+    @Operation(summary = "创建订单")
     @PostMapping("")
     @LoginRequired
     public BaseResponse<Long> createOrder(
@@ -49,7 +49,7 @@ public class OrderController extends BaseController {
         // 参数校验
         validateId(productId, "二手物品ID");
 
-        // 创建订单（自动使用二手物品设置的支付方式）
+        // 创建订单
         Long orderId = orderService.createOrder(productId, request);
         
         logOperation("创建订单", true, request, 

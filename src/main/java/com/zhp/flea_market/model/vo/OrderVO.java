@@ -80,11 +80,6 @@ public class OrderVO {
     private Integer paymentMethod;
 
     /**
-     * 支付方式描述
-     */
-    private String paymentMethodDesc;
-
-    /**
      * 订单状态 (0-待支付, 1-已支付, 2-已完成, 3-已取消)
      */
     private Integer status;
