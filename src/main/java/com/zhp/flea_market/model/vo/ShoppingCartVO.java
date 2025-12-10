@@ -31,9 +31,9 @@ public class ShoppingCartVO {
     private String productName;
 
     /**
-     * 二手物品图片
+     * 主图URL（第一张图片）
      */
-    private String productImage;
+    private String mainImageUrl;
 
     /**
      * 二手物品价格

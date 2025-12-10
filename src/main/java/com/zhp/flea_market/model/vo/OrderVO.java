@@ -40,6 +40,16 @@ public class OrderVO {
     private String buyerName;
 
     /**
+     * 买家头像
+     */
+    private String buyerAvatar;
+
+    /**
+     * 买家手机号
+     */
+    private String buyerPhone;
+
+    /**
      * 卖家ID
      */
     private Long sellerId;
@@ -48,6 +58,16 @@ public class OrderVO {
      * 卖家名称
      */
     private String sellerName;
+
+    /**
+     * 卖家头像
+     */
+    private String sellerAvatar;
+
+    /**
+     * 卖家手机号
+     */
+    private String sellerPhone;
 
     /**
      * 订单金额
@@ -73,11 +93,6 @@ public class OrderVO {
      * 状态描述
      */
     private String statusDesc;
-
-    /**
-     * 买家确认收货状态
-     */
-    private Boolean buyerConfirmed;
 
     /**
      * 创建时间

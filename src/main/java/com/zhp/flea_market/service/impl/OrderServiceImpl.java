@@ -85,19 +85,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // 计算订单金额
         BigDecimal amount = calculateOrderAmount(productId);
         
-        // 如果是积分兑换，检查用户积分是否足够
-        if (paymentMethod == 2) { // 2表示积分兑换
-            BigDecimal userPoints = userService.getUserPoints(currentUser.getId());
-            if (userPoints == null || userPoints.compareTo(amount) < 0) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "积分不足，无法兑换");
-            }
-            // 扣除用户积分
-            boolean pointsDeducted = userService.updateUserPoints(currentUser.getId(), amount.negate());
-            if (!pointsDeducted) {
-                throw new BusinessException(ErrorCode.OPERATION_ERROR, "积分扣除失败");
-            }
-        }
-        
         // 创建订单
         Order order = new Order();
         order.setProductId(productId);
@@ -105,8 +92,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setSellerId(product.getUserId());
         order.setAmount(amount);
         order.setPaymentMethod(paymentMethod);
-        order.setStatus(1);
-        order.setBuyerConfirmed(false);
+        order.setStatus(0); // 待支付
+        order.setPaymentProof(""); // 初始化为空字符串而不是null
         order.setCreateTime(new Date());
         
         boolean saved = this.save(order);
@@ -120,29 +107,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         updateProduct.setStatus(3); // 已售出
         productService.updateById(updateProduct);
         
-        // 如果是积分兑换，创建积分记录
-        if (paymentMethod == 2) {
-            try {
-                // 创建交易记录
-                tradeRecordService.createTradeRecord(
-                        order.getId(),
-                        product.getId(),
-                        product.getProductName(),
-                        order.getBuyerId(),
-                        currentUser.getUserName(),
-                        order.getSellerId(),
-                        userService.getById(order.getSellerId()).getUserName(),
-                        order.getAmount(),
-                        order.getPaymentMethod(),
-                        "积分兑换",
-                        "订单创建时自动使用积分兑换"
-                );
-            } catch (Exception e) {
-                // 交易记录创建失败不影响订单状态，但记录日志
-                System.err.println("积分兑换交易记录创建失败: " + e.getMessage());
-            }
-        }
-        
         return order.getId();
     }
 
@@ -152,6 +116,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * @return 是否支付成功
      */
     @Override
+    @Transactional(rollbackFor = Exception.class, timeout = 30)
     public boolean payOrder(Long orderId, HttpServletRequest request) {
         // 参数校验
         if (orderId == null || orderId <= 0) {
@@ -175,7 +140,29 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限支付该订单");
         }
         
-        return true;
+        // 检查订单状态
+        if (order.getStatus() != 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单状态异常，无法支付");
+        }
+        
+        // 检查二手物品是否仍然有效
+        Product product = productService.getById(order.getProductId());
+        if (product == null || product.getStatus() != 1) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品已下架或不存在，无法支付");
+        }
+        
+        // 根据支付方式更新订单状态
+        Order updateOrder = new Order();
+        updateOrder.setId(orderId);
+        
+        // 除积分兑换外，其他支付方式点击即支付成功
+        if (order.getPaymentMethod() == 2) { // 积分兑换
+            updateOrder.setStatus(0); // 待支付，需要调用积分兑换接口
+        } else {
+            updateOrder.setStatus(1); // 已支付
+        }
+        
+        return this.updateById(updateOrder);
     }
 
     /**
@@ -276,15 +263,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单未支付，无法确认收货");
         }
         
-        // 检查是否已经确认过
-        if (order.getBuyerConfirmed() != null && order.getBuyerConfirmed()) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单已经确认收货");
-        }
-        
         // 更新订单状态为已完成
         Order updateOrder = new Order();
         updateOrder.setId(orderId);
-        updateOrder.setBuyerConfirmed(true);
         updateOrder.setStatus(2); // 已完成
         updateOrder.setFinishTime(new Date());
         
@@ -520,7 +501,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * @param confirmRequest 订单确认请求
      */
     @Override
-    @Transactional(rollbackFor = Exception.class, timeout = 60)
     public boolean confirmOrder(OrderConfirmRequest confirmRequest, HttpServletRequest request) {
         // 参数校验
         if (confirmRequest == null || confirmRequest.getOrderId() == null || confirmRequest.getOrderId() <= 0) {
@@ -554,57 +534,26 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单状态异常，无法确认");
         }
         
-        // 检查是否已经确认过
-        if (order.getBuyerConfirmed() != null && order.getBuyerConfirmed()) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单已经确认收货");
-        }
-        
         // 更新订单确认状态
         Order updateOrder = new Order();
         updateOrder.setId(confirmRequest.getOrderId());
         
         // 买家确认收货，订单直接完成
-        updateOrder.setBuyerConfirmed(true);
         updateOrder.setStatus(2); // 已完成
         updateOrder.setFinishTime(new Date());
         
-        boolean updated = this.updateById(updateOrder);
-        
-        // 订单完成后，创建交易记录并添加积分
-        if (updated) {
+        // 订单完成后，给买家发放积分（积分支付订单除外）
+        if (order.getPaymentMethod() != 2) { // 2表示积分兑换
             try {
-                // 积分支付订单不发放积分
-                if (order.getPaymentMethod() != 2) { // 2表示积分兑换
-                    BigDecimal pointsToAdd = order.getAmount().divide(new BigDecimal("10"), 1, RoundingMode.HALF_UP);
-                    userService.updateUserPoints(order.getBuyerId(), pointsToAdd);
-                }
-                
-                // 创建交易记录
-                Product product = productService.getById(order.getProductId());
-                User buyer = userService.getById(order.getBuyerId());
-                User seller = userService.getById(order.getSellerId());
-                String paymentMethodDesc = getPaymentMethodDesc(order.getPaymentMethod());
-                
-                tradeRecordService.createTradeRecord(
-                        order.getId(),
-                        product.getId(),
-                        product.getProductName(),
-                        order.getBuyerId(),
-                        buyer.getUserName(),
-                        order.getSellerId(),
-                        seller.getUserName(),
-                        order.getAmount(),
-                        order.getPaymentMethod(),
-                        paymentMethodDesc,
-                        "买家确认收货自动创建交易记录"
-                );
+                // 计算买家获得的积分：二手物品价格除以10，保留小数点后一位
+                BigDecimal pointsToAdd = order.getAmount().divide(new BigDecimal("10"), 1, RoundingMode.HALF_UP);
+                userService.updateUserPoints(order.getBuyerId(), pointsToAdd);
             } catch (Exception e) {
-                // 交易记录创建失败不影响订单完成状态，但记录日志
-                System.err.println("订单完成时交易记录创建失败: " + e.getMessage());
+                System.err.println("订单完成时积分发放失败: " + e.getMessage());
             }
         }
         
-        return updated;
+        return this.updateById(updateOrder);
     }
 
     /**
@@ -641,7 +590,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         orderVO.setPaymentMethod(order.getPaymentMethod());
         orderVO.setStatus(order.getStatus());
         orderVO.setStatusDesc(getOrderStatusDesc(order.getStatus()));
-        orderVO.setBuyerConfirmed(order.getBuyerConfirmed());
         orderVO.setCreateTime(order.getCreateTime());
         orderVO.setFinishTime(order.getFinishTime());
         
@@ -651,22 +599,26 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             orderVO.setProductName(product.getProductName());
             orderVO.setProductImage(product.getMainImageUrl());
         }
-        
+
         // 获取买家信息
         User buyer = userService.getById(order.getBuyerId());
         if (buyer != null) {
             orderVO.setBuyerName(buyer.getUserName());
+            orderVO.setBuyerAvatar(buyer.getUserAvatar());
+            orderVO.setBuyerPhone(buyer.getUserPhone());
         }
-        
+
         // 获取卖家信息
         User seller = userService.getById(order.getSellerId());
         if (seller != null) {
             orderVO.setSellerName(seller.getUserName());
+            orderVO.setSellerAvatar(seller.getUserAvatar());
+            orderVO.setSellerPhone(seller.getUserPhone());
         }
         
         // 设置支付方式描述
         orderVO.setPaymentMethodDesc(getPaymentMethodDesc(order.getPaymentMethod()));
-        
+
         return orderVO;
     }
 

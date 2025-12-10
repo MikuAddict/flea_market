@@ -57,7 +57,6 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
         }
         
-        // 约束条件1：评论功能仅限买家对订单进行评价
         // 必须提供订单ID，且订单必须存在
         if (review.getOrderId() == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "必须提供有效的订单ID进行评价");
@@ -363,27 +362,6 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         if (review.getContent().length() > 500) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "评价内容不能超过500字");
         }
-    }
-
-    /**
-     * 根据评分计算卖家积分变化
-     *
-     * @param rating 评分 (1-5分)
-     * @return 积分变化值
-     */
-    private int calculateSellerPointsChange(Integer rating) {
-        if (rating == null) {
-            return 0;
-        }
-
-        return switch (rating) {
-            case 5 -> 10;  // 五星评价：卖家增加10积分
-            case 4 -> 5;   // 四星评价：卖家增加5积分
-            case 3 -> 0;   // 三星评价：不增减积分
-            case 2 -> -5;  // 二星评价：卖家扣除5积分
-            case 1 -> -10; // 一星评价：卖家扣除10积分
-            default -> 0;
-        };
     }
 
     /**

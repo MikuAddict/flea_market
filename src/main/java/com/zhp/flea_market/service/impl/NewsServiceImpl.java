@@ -163,6 +163,7 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
             User author = userService.getById(news.getAuthorId());
             if (author != null) {
                 newsVO.setAuthorName(author.getUserName());
+                newsVO.setAuthorAvatar(author.getUserAvatar());
             }
         }
         
@@ -203,6 +204,7 @@ public class NewsServiceImpl extends ServiceImpl<NewsMapper, News> implements Ne
                     // 设置作者姓名
                     if (news.getAuthorId() != null) {
                         newsVO.setAuthorName(authorNameMap.get(news.getAuthorId()));
+                        newsVO.setAuthorAvatar(authorNameMap.get(news.getAuthorId()));
                     }
                     return newsVO;
                 })

@@ -41,6 +41,11 @@ public class NewsVO {
     private String authorName;
 
     /**
+     * 作者头像
+     */
+    private String authorAvatar;
+
+    /**
      * 创建时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
