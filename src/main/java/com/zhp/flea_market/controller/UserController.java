@@ -316,6 +316,8 @@ public class UserController extends BaseController {
      * @param current 当前页码
      * @param size 每页大小
      * @param id 用户ID
+     * @param userAccount 用户账号
+     * @param userPhone 用户手机号
      * @param userName 用户名
      * @param userRole 用户角色
      * @param userStatus 用户状态
@@ -339,6 +341,7 @@ public class UserController extends BaseController {
             @Parameter(description = "排序字段") @RequestParam(required = false) String sortField,
             @Parameter(description = "排序顺序") @RequestParam(defaultValue = "desc") String sortOrder,
             @Parameter(description = "手机号") @RequestParam(required = false) String userPhone,
+            @Parameter(description = "用户账号") @RequestParam(required = false) String userAccount,
             HttpServletRequest request) {
         // 参数校验（限制爬虫）
         Page<User> page = validatePageParams(current, size, 20);

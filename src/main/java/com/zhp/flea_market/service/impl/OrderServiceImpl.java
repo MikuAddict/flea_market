@@ -515,8 +515,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return product.getPrice();
     }
 
-    // 提交支付凭证功能已移除，简化为创建订单即支付成功
-
     /**
      * 确认订单（买家确认收货）
      * @param confirmRequest 订单确认请求
