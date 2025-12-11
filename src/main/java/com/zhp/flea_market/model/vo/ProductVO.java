@@ -75,7 +75,10 @@ public class ProductVO {
      * 发布者头像
      */
     private String userAvatar;
-
+    /**
+     * 发布者手机号
+     */
+    private String userPhone;
     /**
      * 创建时间
      */

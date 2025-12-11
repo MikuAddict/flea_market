@@ -222,11 +222,11 @@ public class ProductController extends BaseController {
      * @param current 当前页码
      * @param size 每页大小
      * @param request HTTP请求
-     * @return 分页二手物品列表
+     * @return 分页二手物品视图列表
      */
     @Operation(summary = "高级搜索二手物品", description = "多条件组合搜索二手物品，支持分类、价格、支付方式筛选和排序")
     @GetMapping("/advanced-search")
-    public BaseResponse<Page<Product>> advancedSearchProducts(
+    public BaseResponse<Page<ProductVO>> advancedSearchProducts(
             @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "分类ID") @RequestParam(required = false) Long categoryId,
             @Parameter(description = "最低价格") @RequestParam(required = false) BigDecimal minPrice,
@@ -253,7 +253,13 @@ public class ProductController extends BaseController {
         // 执行分页查询
         List<Product> productList = productService.advancedSearchProducts(
                 keyword, categoryId, minPrice, maxPrice, paymentMethod, sortField, sortOrder, page);
-        page.setRecords(productList);
+        
+        // 转换为视图对象列表
+        List<ProductVO> productVOList = productService.convertToProductVOList(productList);
+        
+        // 创建分页视图对象
+        Page<ProductVO> productVOPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        productVOPage.setRecords(productVOList);
         
         logOperation("高级搜索二手物品", request, 
                 "关键词", keyword,
@@ -264,7 +270,7 @@ public class ProductController extends BaseController {
                 "当前页", current,
                 "每页大小", size
         );
-        return ResultUtils.success(page);
+        return ResultUtils.success(productVOPage);
     }
 
     /**
@@ -274,11 +280,11 @@ public class ProductController extends BaseController {
      * @param current 当前页码
      * @param size 每页大小
      * @param request HTTP请求
-     * @return 分页二手物品列表
+     * @return 分页二手物品视图列表
      */
     @Operation(summary = "获取用户发布的二手物品列表", description = "根据用户ID获取该用户发布的二手物品列表")
     @GetMapping("/user/{userId}")
-    public BaseResponse<Page<Product>> listUserProducts(
+    public BaseResponse<Page<ProductVO>> listUserProducts(
             @Parameter(description = "用户ID") @PathVariable Long userId,
             @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
@@ -292,14 +298,20 @@ public class ProductController extends BaseController {
         
         // 查询用户的二手物品列表
         List<Product> productList = productService.getUserProducts(userId, page);
-        page.setRecords(productList);
+        
+        // 转换为视图对象列表
+        List<ProductVO> productVOList = productService.convertToProductVOList(productList);
+        
+        // 创建分页视图对象
+        Page<ProductVO> productVOPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        productVOPage.setRecords(productVOList);
 
         logOperation("获取用户发布的二手物品列表", request,
                 "用户ID", userId,
                 "当前页", current,
                 "每页大小", size
         );
-        return ResultUtils.success(page);
+        return ResultUtils.success(productVOPage);
     }
 
     /**
@@ -308,12 +320,12 @@ public class ProductController extends BaseController {
      * @param current 当前页码
      * @param size 每页大小
      * @param request HTTP请求
-     * @return 分页二手物品列表
+     * @return 分页二手物品视图列表
      */
     @Operation(summary = "获取当前用户发布的二手物品列表", description = "获取当前登录用户发布的二手物品列表")
     @GetMapping("/list/my")
     @LoginRequired
-    public BaseResponse<Page<Product>> listMyProducts(
+    public BaseResponse<Page<ProductVO>> listMyProducts(
             @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) {
@@ -325,7 +337,13 @@ public class ProductController extends BaseController {
         
         // 查询当前用户的二手物品列表
         List<Product> productList = productService.getUserProducts(currentUser.getId(), page);
-        page.setRecords(productList);
+        
+        // 转换为视图对象列表
+        List<ProductVO> productVOList = productService.convertToProductVOList(productList);
+        
+        // 创建分页视图对象
+        Page<ProductVO> productVOPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        productVOPage.setRecords(productVOList);
 
         logOperation("获取当前用户发布的二手物品列表", request, 
                 "当前页", current,
@@ -333,7 +351,7 @@ public class ProductController extends BaseController {
                 "用户ID", currentUser.getId(),
                 "物品数量", productList.size()
         );
-        return ResultUtils.success(page);
+        return ResultUtils.success(productVOPage);
     }
 
     /**
@@ -372,11 +390,11 @@ public class ProductController extends BaseController {
      * 获取最新二手物品列表
      *
      * @param limit 限制数量
-     * @return 最新二手物品列表
+     * @return 最新二手物品视图列表
      */
     @Operation(summary = "获取最新二手物品列表", description = "获取最新发布的二手物品列表")
     @GetMapping("/latest")
-    public BaseResponse<List<Product>> getLatestProducts(
+    public BaseResponse<List<ProductVO>> getLatestProducts(
             @Parameter(description = "限制数量") @RequestParam(defaultValue = "10") int limit) {
         // 参数校验
         if (limit <= 0 || limit > 50) {
@@ -385,9 +403,12 @@ public class ProductController extends BaseController {
 
         // 获取最新二手物品
         List<Product> productList = productService.getLatestProducts(limit);
+
+        // 转换为视图对象列表
+        List<ProductVO> productVOList = productService.convertToProductVOList(productList);
         
         logOperation("获取最新二手物品列表", null, "限制数量", limit);
-        return ResultUtils.success(productList);
+        return ResultUtils.success(productVOList);
     }
 
     /**
@@ -423,7 +444,7 @@ public class ProductController extends BaseController {
     }
 
     /**
-     * 管理员获取所有二手物品列表（包括未审核的）
+     * 管理员获取所有二手物品列表视图（包括未审核的）
      *
      * @param current 当前页码
      * @param size 每页大小
@@ -431,12 +452,12 @@ public class ProductController extends BaseController {
      * @param categoryId 分类ID
      * @param status 二手物品状态
      * @param request HTTP请求
-     * @return 分页二手物品列表
+     * @return 分页二手物品视图列表
      */
-    @Operation(summary = "管理员获取所有二手物品列表", description = "管理员获取所有二手物品列表（包括未审核的）")
+    @Operation(summary = "管理员获取所有二手物品列表视图", description = "管理员获取所有二手物品列表视图（包括未审核的）")
     @GetMapping("/admin/list")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Page<Product>> adminListProducts(
+    public BaseResponse<Page<ProductVO>> adminListProducts(
             @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
@@ -454,13 +475,18 @@ public class ProductController extends BaseController {
         // 执行分页查询
         Page<Product> productPage = productService.page(page, queryWrapper);
         
-        logOperation("管理员获取所有二手物品列表", request, 
+        // 转换为视图对象
+        Page<ProductVO> productVOPage = new Page<>(productPage.getCurrent(), productPage.getSize(), productPage.getTotal());
+        List<ProductVO> productVOList = productService.convertToProductVOList(productPage.getRecords());
+        productVOPage.setRecords(productVOList);
+        
+        logOperation("管理员获取所有二手物品列表视图", request, 
                 "当前页", current,
                 "每页大小", size,
                 "关键词", keyword,
                 "分类ID", categoryId,
                 "状态", status
         );
-        return ResultUtils.success(productPage);
+        return ResultUtils.success(productVOPage);
     }
 }

@@ -136,4 +136,12 @@ public interface ProductService extends IService<Product> {
      * @return 图片URL列表
      */
     List<String> parseImageUrls(String imageUrlsJson);
+
+    /**
+     * 将Product实体列表转换为ProductVO列表
+     *
+     * @param productList 商品实体列表
+     * @return 商品视图对象列表
+     */
+    List<ProductVO> convertToProductVOList(List<Product> productList);
 }

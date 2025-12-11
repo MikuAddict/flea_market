@@ -65,6 +65,11 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品未上架，无法加入购物车");
         }
         
+        // 检查用户不能添加自己发布的商品到购物车
+        if (product.getUserId().equals(currentUser.getId())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "不能添加自己发布的商品到购物车");
+        }
+        
         // 检查二手物品是否已在购物车中
         QueryWrapper<ShoppingCart> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", currentUser.getId());
@@ -252,6 +257,35 @@ public class ShoppingCartServiceImpl extends ServiceImpl<ShoppingCartMapper, Sho
 
         // 只有状态为1（已通过）的商品可购买
         return product.getStatus() == 1;
+    }
+
+    /**
+     * 检查商品是否在购物车中
+     *
+     * @param productId 商品ID
+     * @param request HTTP请求
+     * @return 是否在购物车中
+     */
+    @Override
+    public boolean isProductInCart(Long productId, HttpServletRequest request) {
+        // 参数校验
+        if (productId == null || productId <= 0) {
+            return false;
+        }
+        
+        // 获取当前登录用户
+        User currentUser = userService.getLoginUserPermitNull(request);
+        if (currentUser == null) {
+            return false; // 未登录用户视为商品不在购物车
+        }
+        
+        // 查询购物车中是否存在该商品
+        QueryWrapper<ShoppingCart> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", currentUser.getId());
+        queryWrapper.eq("product_id", productId);
+        ShoppingCart cartItem = this.getOne(queryWrapper);
+        
+        return cartItem != null;
     }
 
 }

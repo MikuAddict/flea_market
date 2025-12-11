@@ -61,4 +61,13 @@ public interface ShoppingCartService extends IService<ShoppingCart> {
      * @return 商品是否可购买
      */
     boolean validateProductStatus(Long productId);
+
+    /**
+     * 检查商品是否在购物车中
+     *
+     * @param productId 商品ID
+     * @param request HTTP请求
+     * @return 是否在购物车中
+     */
+    boolean isProductInCart(Long productId, HttpServletRequest request);
 }

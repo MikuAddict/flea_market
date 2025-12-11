@@ -88,4 +88,22 @@ public class ShoppingCartController extends BaseController {
         logOperation("校验购物车商品状态", result, request);
         return handleOperationResult(result, "购物车商品状态校验成功");
     }
+
+    /**
+     * 检查商品是否在购物车中
+     */
+    @GetMapping("/check")
+    @Operation(summary = "检查商品是否在购物车中", description = "检查指定商品是否在当前用户的购物车中")
+    @LoginRequired
+    public BaseResponse<Boolean> checkProductInCart(
+            @Parameter(description = "商品ID") @RequestParam Long productId,
+            HttpServletRequest request) {
+        // 参数校验
+        validateId(productId, "商品ID");
+        
+        boolean result = shoppingCartService.isProductInCart(productId, request);
+        
+        logOperation("检查商品是否在购物车中", result, request, "商品ID", productId);
+        return ResultUtils.success(result);
+    }
 }

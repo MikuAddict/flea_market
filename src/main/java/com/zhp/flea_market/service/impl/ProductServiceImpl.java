@@ -28,6 +28,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -566,6 +567,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             if (user != null) {
                 productVO.setUserName(user.getUserName());
                 productVO.setUserAvatar(user.getUserAvatar());
+                productVO.setUserPhone(user.getUserPhone());
             }
         }
         
@@ -581,6 +583,20 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
         
         return productVO;
+    }
+
+    /**
+     * 将Product实体列表转换为ProductVO列表
+     */
+    @Override
+    public List<ProductVO> convertToProductVOList(List<Product> productList) {
+        if (productList == null || productList.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        return productList.stream()
+                .map(this::convertToProductVO)
+                .collect(Collectors.toList());
     }
 
 }
