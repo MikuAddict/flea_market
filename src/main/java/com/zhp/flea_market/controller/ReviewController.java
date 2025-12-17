@@ -89,32 +89,6 @@ public class ReviewController extends BaseController {
     }
 
     /**
-     * 删除评价
-     *
-     * @param id 评价ID
-     * @param request HTTP请求
-     * @return 是否删除成功
-     */
-    @Operation(summary = "删除评价", description = "用户删除自己的评价")
-    @DeleteMapping("/{id}")
-    @LoginRequired
-    public BaseResponse<Boolean> deleteReview(
-            @Parameter(description = "评价ID") @PathVariable Long id,
-            HttpServletRequest request) {
-        // 参数校验
-        validateId(id, "评价ID");
-
-        // 检查评价是否存在
-        validateResourceExists(reviewService.getById(id), "评价");
-
-        // 删除评价
-        boolean result = reviewService.deleteReview(id, request);
-        
-        logOperation("删除评价", result, request, "评价ID", id);
-        return handleOperationResult(result, "评价删除成功");
-    }
-
-    /**
      * 根据ID获取评价详情
      *
      * @param id 评价ID
@@ -140,24 +114,29 @@ public class ReviewController extends BaseController {
      *
      * @param current 当前页码
      * @param size 每页大小
-     * @return 分页评价列表
+     * @return 分页评价列表视图
      */
     @Operation(summary = "分页获取评价列表", description = "分页获取所有评价列表")
     @GetMapping("/list/page")
-    public BaseResponse<Page<Review>> listReviewByPage(
+    public BaseResponse<Page<ReviewVO>> listReviewByPage(
             @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size) {
         // 参数校验
         Page<Review> page = validatePageParams(current, size);
 
         // 执行分页查询
-        List<Review> reviewList = reviewService.getReviewList(page);
+        List<ReviewVO> reviewList = reviewService.getReviewList(page);
+        
+        // 创建新的分页对象用于返回VO列表
+        Page<ReviewVO> voPage = new Page<>(current, size);
+        voPage.setRecords(reviewList);
+        voPage.setTotal(page.getTotal());
         
         logOperation("分页获取评价列表", null, 
                 "当前页", current,
                 "每页大小", size
         );
-        return ResultUtils.success(page);
+        return ResultUtils.success(voPage);
     }
 
     /**
@@ -166,11 +145,11 @@ public class ReviewController extends BaseController {
      * @param userId 用户ID
      * @param current 当前页码
      * @param size 每页大小
-     * @return 分页评价列表
+     * @return 分页评价列表视图
      */
     @Operation(summary = "根据用户ID获取评价列表", description = "根据用户ID分页获取评价列表")
     @GetMapping("/user/{userId}")
-    public BaseResponse<Page<Review>> listReviewsByUserId(
+    public BaseResponse<Page<ReviewVO>> listReviewsByUserId(
             @Parameter(description = "用户ID") @PathVariable Long userId,
             @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size) {
@@ -182,26 +161,30 @@ public class ReviewController extends BaseController {
         validateResourceExists(userService.getById(userId), "用户");
 
         // 执行分页查询
-        List<Review> reviewList = reviewService.getReviewsByUserId(userId, page);
-        page.setRecords(reviewList);
+        List<ReviewVO> reviewList = reviewService.getReviewsByUserId(userId, page);
+        
+        // 创建新的分页对象用于返回VO列表
+        Page<ReviewVO> voPage = new Page<>(current, size);
+        voPage.setRecords(reviewList);
+        voPage.setTotal(page.getTotal());
 
         logOperation("根据用户ID获取评价列表", null, 
                 "用户ID", userId,
                 "当前页", current,
                 "每页大小", size
         );
-        return ResultUtils.success(page);
+        return ResultUtils.success(voPage);
     }
 
     /**
      * 根据订单ID获取评价
      *
      * @param orderId 订单ID
-     * @return 评价信息
+     * @return 评价信息视图
      */
     @Operation(summary = "根据订单ID获取评价", description = "根据订单ID获取评价信息（一个订单只能有一条评价）")
     @GetMapping("/order/{orderId}")
-    public BaseResponse<Review> getReviewByOrderId(
+    public BaseResponse<ReviewVO> getReviewByOrderId(
             @Parameter(description = "订单ID") @PathVariable Long orderId) {
         // 参数校验
         validateId(orderId, "订单ID");
@@ -210,7 +193,7 @@ public class ReviewController extends BaseController {
         validateResourceExists(orderService.getById(orderId), "订单");
 
         // 获取评价信息
-        Review review = reviewService.getReviewByOrderId(orderId);
+        ReviewVO review = reviewService.getReviewByOrderId(orderId);
         
         logOperation("根据订单ID获取评价", null, "订单ID", orderId);
         return ResultUtils.success(review);
@@ -222,12 +205,12 @@ public class ReviewController extends BaseController {
      * @param current 当前页码
      * @param size 每页大小
      * @param request HTTP请求
-     * @return 分页评价列表
+     * @return 分页评价列表视图
      */
     @Operation(summary = "获取当前用户的评价列表", description = "获取当前登录用户的评价列表")
     @GetMapping("/list/my")
     @LoginRequired
-    public BaseResponse<Page<Review>> listMyReviews(
+    public BaseResponse<Page<ReviewVO>> listMyReviews(
             @Parameter(description = "当前页码") @RequestParam(defaultValue = "1") int current,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) {
@@ -238,14 +221,18 @@ public class ReviewController extends BaseController {
         User currentUser = userService.getLoginUser(request);
 
         // 获取当前登录用户的评价列表
-        List<Review> reviewList = reviewService.getReviewsByUserId(currentUser.getId(), page);
-        page.setRecords(reviewList);
+        List<ReviewVO> reviewList = reviewService.getReviewsByUserId(currentUser.getId(), page);
+        
+        // 创建新的分页对象用于返回VO列表
+        Page<ReviewVO> voPage = new Page<>(current, size);
+        voPage.setRecords(reviewList);
+        voPage.setTotal(page.getTotal());
 
         logOperation("获取当前用户的评价列表", request, 
                 "当前页", current,
                 "每页大小", size
         );
-        return ResultUtils.success(page);
+        return ResultUtils.success(voPage);
     }
 
     /**

@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zhp.flea_market.common.ErrorCode;
 import com.zhp.flea_market.exception.BusinessException;
 import com.zhp.flea_market.mapper.ReviewMapper;
-import com.zhp.flea_market.model.dto.request.ReviewRequest;
 import com.zhp.flea_market.model.entity.*;
 import com.zhp.flea_market.model.vo.ReviewVO;
 import com.zhp.flea_market.service.*;
@@ -124,40 +123,6 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
     }
 
     /**
-     * 删除评价
-     *
-     * @param id 评价ID
-     * @param request HTTP请求
-     * @return 是否删除成功
-     */
-    @Override
-    public boolean deleteReview(Long id, HttpServletRequest request) {
-        // 参数校验
-        if (id == null || id <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "评价ID无效");
-        }
-        
-        // 获取当前登录用户
-        User currentUser = userService.getLoginUserPermitNull(request);
-        if (currentUser == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");
-        }
-        
-        // 检查评价是否存在
-        Review review = this.getById(id);
-        if (review == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "评价不存在");
-        }
-        
-        // 权限校验：只能删除自己的评价
-        if (!review.getUserId().equals(currentUser.getId())) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限删除该评价");
-        }
-        
-        return this.removeById(id);
-    }
-
-    /**
      * 获取评价详情
      *
      * @param id 评价ID
@@ -184,11 +149,12 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      * 分页获取评价列表
      *
      * @param page 分页参数
-     * @return 评价列表
+     * @return 评价列表视图
      */
     @Override
-    public List<Review> getReviewList(Page<Review> page) {
-        return PageUtils.getPageResult(this, page, queryWrapper -> queryWrapper.orderByDesc("create_time"));
+    public List<ReviewVO> getReviewList(Page<Review> page) {
+        List<Review> reviews = PageUtils.getPageResult(this, page, queryWrapper -> queryWrapper.orderByDesc("create_time"));
+        return convertToReviewVOList(reviews);
     }
 
     /**
@@ -196,10 +162,10 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
      *
      * @param userId 用户ID
      * @param page 分页参数
-     * @return 评价列表
+     * @return 评价列表视图
      */
     @Override
-    public List<Review> getReviewsByUserId(Long userId, Page<Review> page) {
+    public List<ReviewVO> getReviewsByUserId(Long userId, Page<Review> page) {
         // 参数校验
         if (userId == null || userId <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户ID无效");
@@ -219,80 +185,30 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
         
         // 查询这些二手物品收到的评价
-        return PageUtils.getPageResult(this, page, queryWrapper -> {
+        List<Review> reviews = PageUtils.getPageResult(this, page, queryWrapper -> {
             queryWrapper.in("product_id", productIds);
             queryWrapper.orderByDesc("create_time");
         });
+        
+        return convertToReviewVOList(reviews);
     }
 
     /**
      * 根据订单ID获取评价
      *
      * @param orderId 订单ID
-     * @return 评价信息
+     * @return 评价信息视图
      */
-    public Review getReviewByOrderId(Long orderId) {
+    public ReviewVO getReviewByOrderId(Long orderId) {
         QueryWrapper<Review> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("order_id", orderId);
-        return this.getOne(queryWrapper);
-    }
-
-    /**
-     * 获取二手物品评价统计信息
-     *
-     * @param productId 二手物品ID
-     * @return 评价统计信息
-     */
-    @Override
-    public ReviewRequest getReviewStatisticsByProductId(Long productId) {
-        // 参数校验
-        if (productId == null || productId <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "二手物品ID无效");
+        Review review = this.getOne(queryWrapper);
+        
+        if (review == null) {
+            return null;
         }
         
-        ReviewRequest statistics = new ReviewRequest();
-        
-        // 获取所有评价
-        QueryWrapper<Review> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("product_id", productId);
-        List<Review> reviews = this.list(queryWrapper);
-        
-        if (CollectionUtils.isEmpty(reviews)) {
-            return statistics;
-        }
-        
-        // 统计信息
-        statistics.setTotalReviews(reviews.size());
-        
-        double totalRating = 0.0;
-        int fiveStarCount = 0;
-        int fourStarCount = 0;
-        int threeStarCount = 0;
-        int twoStarCount = 0;
-        int oneStarCount = 0;
-        
-        for (Review review : reviews) {
-            if (review.getRating() != null) {
-                totalRating += review.getRating();
-                
-                switch (review.getRating()) {
-                    case 5: fiveStarCount++; break;
-                    case 4: fourStarCount++; break;
-                    case 3: threeStarCount++; break;
-                    case 2: twoStarCount++; break;
-                    case 1: oneStarCount++; break;
-                }
-            }
-        }
-        
-        statistics.setAverageRating(!reviews.isEmpty() ? totalRating / reviews.size() : 0.0);
-        statistics.setFiveStarCount(fiveStarCount);
-        statistics.setFourStarCount(fourStarCount);
-        statistics.setThreeStarCount(threeStarCount);
-        statistics.setTwoStarCount(twoStarCount);
-        statistics.setOneStarCount(oneStarCount);
-        
-        return statistics;
+        return convertToReviewVO(review);
     }
 
     /**
@@ -378,6 +294,7 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         reviewVO.setRating(review.getRating());
         reviewVO.setContent(review.getContent());
         reviewVO.setCreateTime(review.getCreateTime());
+
         
         // 获取用户信息
         User user = userService.getById(review.getUserId());
@@ -393,5 +310,24 @@ public class ReviewServiceImpl extends ServiceImpl<ReviewMapper, Review> impleme
         }
         
         return reviewVO;
+    }
+    
+    /**
+     * 将评价实体列表转换为VO对象列表
+     *
+     * @param reviews 评价实体列表
+     * @return 评价VO对象列表
+     */
+    private List<ReviewVO> convertToReviewVOList(List<Review> reviews) {
+        if (reviews == null || reviews.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        List<ReviewVO> reviewVOs = new ArrayList<>();
+        for (Review review : reviews) {
+            reviewVOs.add(convertToReviewVO(review));
+        }
+        
+        return reviewVOs;
     }
 }

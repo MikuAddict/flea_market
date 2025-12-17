@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zhp.flea_market.model.entity.Review;
 import com.zhp.flea_market.model.vo.ReviewVO;
-import com.zhp.flea_market.model.dto.request.ReviewRequest;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
@@ -25,15 +24,6 @@ public interface ReviewService extends IService<Review> {
     boolean addReview(Review review, HttpServletRequest request);
 
     /**
-     * 删除评价
-     *
-     * @param id 评价ID
-     * @param request HTTP请求
-     * @return 是否删除成功
-     */
-    boolean deleteReview(Long id, HttpServletRequest request);
-
-    /**
      * 获取评价详情
      *
      * @param id 评价ID
@@ -45,34 +35,26 @@ public interface ReviewService extends IService<Review> {
      * 分页获取评价列表
      *
      * @param page 分页参数
-     * @return 评价列表
+     * @return 评价列表视图
      */
-    List<Review> getReviewList(Page<Review> page);
+    List<ReviewVO> getReviewList(Page<Review> page);
 
     /**
      * 根据用户ID获取评价列表
      *
      * @param userId 用户ID
      * @param page 分页参数
-     * @return 评价列表
+     * @return 评价列表视图
      */
-    List<Review> getReviewsByUserId(Long userId, Page<Review> page);
+    List<ReviewVO> getReviewsByUserId(Long userId, Page<Review> page);
 
     /**
      * 根据订单ID获取评价
      *
      * @param orderId 订单ID
-     * @return 评价信息
+     * @return 评价信息视图
      */
-    Review getReviewByOrderId(Long orderId);
-
-    /**
-     * 获取二手物品评价统计信息
-     *
-     * @param productId 二手物品ID
-     * @return 评价统计信息
-     */
-    ReviewRequest getReviewStatisticsByProductId(Long productId);
+    ReviewVO getReviewByOrderId(Long orderId);
 
     /**
      * 获取查询条件
