@@ -171,7 +171,6 @@ public class UnifiedAuthInterceptor implements HandlerInterceptor {
             return;
         }
 
-        // 处理LoginRequired注解
         if (loginRequired != null) {
             if (!loginRequired.permitNull() && currentUser == null) {
                 log.error("接口需要登录，但用户未登录");
@@ -179,9 +178,7 @@ public class UnifiedAuthInterceptor implements HandlerInterceptor {
             }
         }
 
-        // 处理AuthCheck注解
         if (authCheck != null) {
-            // 先检查是否登录
             if (currentUser == null) {
                 log.error("权限验证失败：用户未登录");
                 throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "请先登录");

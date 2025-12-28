@@ -239,25 +239,15 @@ public class ProductController extends BaseController {
             HttpServletRequest request) {
         // 参数校验
         Page<Product> page = validatePageParams(current, size);
-
-        // 验证价格范围
         if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "最低价格不能高于最高价格");
         }
-
-        // 验证支付方式
         if (paymentMethod != null && (paymentMethod < 0 || paymentMethod > 3)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "支付方式无效");
         }
-        
-        // 执行分页查询
         List<Product> productList = productService.advancedSearchProducts(
                 keyword, categoryId, minPrice, maxPrice, paymentMethod, sortField, sortOrder, page);
-        
-        // 转换为视图对象列表
         List<ProductVO> productVOList = productService.convertToProductVOList(productList);
-        
-        // 创建分页视图对象
         Page<ProductVO> productVOPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         productVOPage.setRecords(productVOList);
         

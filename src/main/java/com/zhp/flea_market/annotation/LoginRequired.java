@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 public @interface LoginRequired {
     
     /**
-     * 是否允许未登录用户访问（默认为false，需要登录）
+     * 是否允许未登录用户访问（默认为false）
      */
     boolean permitNull() default false;
 }
