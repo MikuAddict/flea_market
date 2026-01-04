@@ -83,6 +83,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "不能购买自己的二手物品");
         }
         
+        // 如果是积分兑换方式，检查用户积分是否足够
+        if (paymentMethod == 2) { // 2表示积分兑换
+            BigDecimal userPoints = userService.getUserPoints(currentUser.getId());
+            if (userPoints == null || userPoints.compareTo(product.getPrice()) < 0) {
+                String errorMsg = "积分不足，无法创建该订单。当前积分：" + (userPoints != null ? userPoints.toString() : "null") + "，所需积分：" + product.getPrice();
+                log.error(errorMsg);
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, errorMsg);
+            }
+        }
+        
         // 创建订单
         Order order = new Order();
         order.setProductId(productId);
@@ -152,7 +162,21 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         
         // 除积分兑换外，其他支付方式点击即支付成功
         if (product.getPaymentMethod() == 2) { // 积分兑换
-            updateOrder.setStatus(0); // 待支付，需要调用积分兑换接口
+            // 检查用户积分是否足够
+            BigDecimal userPoints = userService.getUserPoints(currentUser.getId());
+            if (userPoints == null || userPoints.compareTo(product.getPrice()) < 0) {
+                String errorMsg = "积分不足，无法支付该订单。当前积分：" + (userPoints != null ? userPoints.toString() : "null") + "，所需积分：" + product.getPrice();
+                log.error(errorMsg);
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, errorMsg);
+            }
+            
+            // 扣除用户积分
+            boolean pointsDeducted = userService.updateUserPoints(currentUser.getId(), product.getPrice().negate());
+            if (!pointsDeducted) {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "积分扣除失败，请重试");
+            }
+            
+            updateOrder.setStatus(1); // 已支付
         } else {
             updateOrder.setStatus(1); // 已支付
         }
@@ -506,11 +530,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // 参数校验
         if (confirmRequest == null || confirmRequest.getOrderId() == null || confirmRequest.getOrderId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "订单ID无效");
-        }
-        
-        // 确认类型只能是买家确认收货（1）
-        if (confirmRequest.getConfirmType() == null || confirmRequest.getConfirmType() != 1) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "确认类型无效，只能进行买家确认收货");
         }
         
         // 获取当前登录用户

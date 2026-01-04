@@ -325,11 +325,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户不存在");
         }
         
-        // 计算新积分（确保积分不为负数）
-        BigDecimal newPoints = user.getPoint().add(points);
+        // 计算新积分（确保积分不为负数，处理积分可能为null的情况）
+        BigDecimal currentPoints = user.getPoint() != null ? user.getPoint() : BigDecimal.ZERO;
+        BigDecimal newPoints = currentPoints.add(points);
         if (newPoints.compareTo(BigDecimal.ZERO) < 0) {
             newPoints = BigDecimal.ZERO;
         }
+        
+        System.out.println("更新用户积分 - 用户ID: " + userId + 
+                ", 当前积分: " + currentPoints + 
+                ", 积分变化: " + points + 
+                ", 新积分: " + newPoints);
         
         // 更新积分
         User updateUser = new User();
@@ -337,7 +343,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         updateUser.setPoint(newPoints);
         updateUser.setUpdateTime(new Date());
         
-        return this.updateById(updateUser);
+        boolean result = this.updateById(updateUser);
+        System.out.println("积分更新结果: " + result);
+        return result;
     }
 
     /**
@@ -357,7 +365,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "用户不存在");
         }
         
-        return user.getPoint();
+        // 处理积分可能为null的情况
+        BigDecimal points = user.getPoint() != null ? user.getPoint() : BigDecimal.ZERO;
+        System.out.println("获取用户积分 - 用户ID: " + userId + ", 积分值: " + points + ", 原始积分: " + user.getPoint());
+        return points;
     }
 
     /**

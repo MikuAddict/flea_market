@@ -14,11 +14,6 @@ public class OrderConfirmRequest {
     private Long orderId;
     
     /**
-     * 确认类型 (1-买家确认收货, 2-卖家确认收款)
-     */
-    private Integer confirmType;
-    
-    /**
      * 确认说明（可选）
      */
     private String description;
